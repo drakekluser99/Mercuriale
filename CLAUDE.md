@@ -1444,6 +1444,28 @@ ponderata, import massivo storico, estrapolazioni causali.
     riga/colonna del file PRIMA della modifica. Fix: cancellare
     `tsconfig.tsbuildinfo` e rilanciare `tsc`. Non è un file di codice
     (già in `.gitignore`, `*.tsbuildinfo`), si rigenera da solo.
+- **Freschezza visibile in home + link "Segnala un errore" — FATTO (Cowork,
+  7 set 2026), commit `c353539`.** Delle due migliorie scelte da Yuri in
+  coda all'analisi tecnica/estetica sopra, solo metà era davvero arrivata
+  su disco: la pagina `/provincia/[slug]` aveva già la riga "Controllato
+  MIMIT..." (props `checks` su `SourceNote`), ma la sezione "Carburanti in
+  Italia, provincia per provincia" della home ne era rimasta priva, e il
+  link nel footer non esisteva affatto — nonostante questo file si
+  fermasse proprio prima di documentarli. Scoperto rileggendo il codice
+  via bridge device (questa sessione Cowork non ha `device_bash`, quindi
+  niente shell sul PC di Yuri: verifica fatta a occhio, non con `tsc`/
+  `npm run lint`, eseguiti poi da Yuri prima del commit). Completato:
+  - `src/app/page.tsx`: nuova `const mimitRun = fetchRuns.find((r) =>
+    r.job === "fetch-mimit-prices")`, sullo stesso modello di
+    `euFuelRun`/`usFuelRun`; passata come `checks` alla `SourceNote` della
+    sezione MIMIT.
+  - Stesso file, footer (colonna "Progetto"): nuova voce "Segnala un
+    errore" → `${GITHUB_URL}/issues/new`, icona `Bug` di lucide-react
+    accanto a "Codice sorgente" (`Code2`).
+  - `src/components/SourceNote.tsx`: tolto dal commento un riferimento
+    ormai falso a MIMIT come fonte "senza ancora un cron tracciato in
+    fetch_runs" (lo è, dalla Fase 4/automazione cron di questa stessa
+    sessione).
 
 ## Skill: vercel-react-best-practices
 
