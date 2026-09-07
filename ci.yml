@@ -1,0 +1,35 @@
+name: CI
+
+# Rete di sicurezza minima fra "push" e "live in produzione": Vercel fa
+# deploy automatico a ogni push su main (vedi README), ma prima di questo
+# workflow non c'era NESSUN controllo automatico nel mezzo — solo la
+# convenzione in CONTRIBUTING.md di lanciare tsc/lint a mano prima di una
+# PR. Trovato nell'analisi tech debt del 7/9/2026: un errore di battitura
+# poteva raggiungere la produzione inosservato. Questo workflow non
+# sostituisce la build reale di Vercel, la precede: fallisce rumorosamente
+# su un push/PR invece che scoprirlo dopo, sul sito già online.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  typecheck-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Stesso comando che CONTRIBUTING.md chiede di lanciare a mano prima
+      # di una PR — qui gira comunque, anche se qualcuno se ne dimentica.
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
