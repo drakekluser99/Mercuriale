@@ -1318,6 +1318,40 @@ ponderata, import massivo storico, estrapolazioni causali.
   autorizzabile, preferire la modifica diretta via bridge a una patch
   da scaricare — la patch resta necessaria solo quando il device non è
   raggiungibile o non è collegato a questa sessione.
+- **`sitemap.xml`/`robots.txt` — FATTO (Cowork, 7 set 2026), giorno del
+  primo lancio del prototipo.** Ultimo punto rimasto della lista sopra
+  (Vercel Analytics) prima di una promozione attiva; confermato 404 in
+  produzione prima di questa sessione, non solo "da fare" sulla carta.
+  `src/app/sitemap.ts` e `src/app/robots.ts` (nuovi file, convenzione
+  file-based di Next: Next li serve da sé su `/sitemap.xml`/`/robots.txt`,
+  nessuna route scritta a mano). La sitemap prende gli URL da
+  `EU_COUNTRY_SLUGS` (`countries.ts`) e `ALL_PROVINCES` (`provinces.ts`)
+  — le stesse liste che alimentano `generateStaticParams` nelle route
+  vere — così un URL non può disallinearsi dal routing reale. `robots.ts`
+  permette tutto tranne `/api/`. `BASE_URL` duplicata a mano nei due file
+  (deve combaciare con `metadataBase` in `layout.tsx`) invece di importata:
+  stessa scelta "esplicito invece di derivato" di `countries.ts`/
+  `provinces.ts` — **da aggiornare in tre punti se cambia il dominio**
+  (vedi voce dominio personalizzato, ancora aperta, sotto).
+  Scritti via bridge device direttamente in `src/app/`, non verificati con
+  `tsc`/`eslint` in questa sessione (nessun `device_bash` — da controllare
+  al primo `npm run build`/deploy di Yuri).
+- **Analisi finale pre-lancio — Cowork, 7 set 2026** (vedi
+  `mercuriale-riepilogo-7-set-2026-analisi-finale-prelancio.md` nel
+  progetto Claude). Verificato live (non solo sul codice): sito sano,
+  nessun placeholder/errore. Tre cose da sapere, non da correggere ora:
+  (1) la riga "Controllato UE ogni giovedì..." (freschezza visibile,
+  `cd201b9`) resta vuota per il job `fetch-eu-fuel-prices` finché non
+  gira il primo cron UE dopo il fix — atteso, si autopopola da sé;
+  (2) i batch materie prime 3/4/5 (alluminio/grano, mais/cotone,
+  zucchero/caffè) risultano fermi al 01/07/2026 in `/stato-dati` — il
+  sito lo dichiara onestamente col badge "non aggiornato", ma vale la
+  pena che Yuri confermi che sia davvero "fonte non ancora pubblicata"
+  e non la quota Alpha Vantage esaurita di cui parlava la Fase 1;
+  (3) dominio personalizzato ancora assente (resta su
+  `commodity-tracker-one-delta.vercel.app`) e attribuzione del footer a
+  "Yuri Copparini" con link LinkedIn — entrambe scelte di Yuri, non
+  tecniche, da confermare consapevolmente prima di promuovere attivamente.
 
 ## Skill: vercel-react-best-practices
 
