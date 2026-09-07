@@ -65,8 +65,8 @@ async function main() {
 
   const { saveMimitPrices } = await import("../src/lib/fetchers/saveMimitPrices");
   console.log("\nSalvataggio su retail_fuel_prices_it...");
-  const written = await saveMimitPrices(result, "mimit");
-  console.log(`Scritte ${written} righe (province × carburante).`);
+  const { written, recordedAt } = await saveMimitPrices(result, "mimit");
+  console.log(`Scritte ${written} righe (province × carburante), recordedAt=${recordedAt.toISOString()}.`);
 }
 
 main()

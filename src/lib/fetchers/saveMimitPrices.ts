@@ -23,7 +23,10 @@ import { averagePrice, type MimitFetchResult } from "./mimit";
  * giorno l'upsert aggiornerebbe comunque la media silenziosamente: è la
  * stessa estrazione vista due volte, non una correzione della fonte.
  */
-export async function saveMimitPrices(result: MimitFetchResult, source: string) {
+export async function saveMimitPrices(
+  result: MimitFetchResult,
+  source: string
+): Promise<{ written: number; recordedAt: Date }> {
   const retrievedAt = new Date();
 
   // Passo 1: anagrafica province, tutte e 107, sempre.
@@ -117,7 +120,11 @@ export async function saveMimitPrices(result: MimitFetchResult, source: string) 
     written += chunk.length;
   }
 
-  return written;
+  // `recordedAt` ritorna al chiamante per lo stesso motivo di
+  // `latestRecordedAt` negli altri fetcher (vedi fetchRunLog.ts): il cron
+  // lo registra su `fetch_runs` per la pagina /stato-dati, che deve poter
+  // mostrare la data del DATO salvato, non l'orario di esecuzione del run.
+  return { written, recordedAt };
 }
 
 /**

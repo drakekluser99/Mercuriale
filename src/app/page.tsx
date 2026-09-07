@@ -411,6 +411,12 @@ export default async function Home() {
         ? {
             note: `${sourcesTotal - sourcesOnline} ferma oltre l'attesa`,
             noteTone: "up" as const,
+            // Solo quando c'è un problema: la cella diventa un link diretto
+            // a /stato-dati, che elenca ESATTAMENTE quale pipeline è ferma
+            // (vedi analisi tecnica del 7/9/2026) — prima non c'era nessun
+            // modo di andare da "1 ferma" al dettaglio senza già sapere che
+            // /stato-dati esiste e passare dal footer/nav.
+            href: "/stato-dati",
           }
         : { note: "Carburanti: settimanale" }),
     },

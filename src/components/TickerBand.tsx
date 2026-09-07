@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export type TickerStat = {
   key: string;
   /** Etichetta breve, resa in maiuscolo dal CSS (il DOM resta com'è). */
@@ -14,6 +16,13 @@ export type TickerStat = {
    * porta significato, non estetica.
    */
   noteTone?: "up" | "down" | "neutral";
+  /**
+   * Quando presente, l'intera cella diventa un link (es. "Fonti in linea"
+   * verso /stato-dati quando una fonte è ferma oltre l'attesa). Opzionale
+   * apposta: in condizioni normali la cella resta un semplice valore, non
+   * tutto merita di essere cliccabile.
+   */
+  href?: string;
 };
 
 type TickerBandProps = {
@@ -54,38 +63,61 @@ export function TickerBand({ stats }: TickerBandProps) {
             davvero su una riga sola: su due colonne un border-l cadrebbe
             a metà di righe che vanno a capo. */}
         <div className="grid grid-cols-2 lg:grid-cols-5">
-          {stats.map((stat, i) => (
-            <div
-              key={stat.key}
-              className="animate-scan-in border-l border-system-chrome-border px-5 py-3.5 first:border-l-0 lg:border-l"
-              style={{ animationDelay: `${i * 80}ms` }}
-            >
-              <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-system-chrome-ink-muted">
-                {stat.label}
-              </div>
-              <div className="mt-1 font-mono text-[17px] font-medium tabular-nums text-system-chrome-ink">
-                {stat.value}
-                {stat.unit && (
-                  <span className="ml-1 text-[11px] text-system-chrome-ink-muted">
-                    {stat.unit}
-                  </span>
-                )}
-              </div>
-              {stat.note && (
-                <div
-                  className={`mt-0.5 font-mono text-[11px] tabular-nums ${
-                    stat.noteTone === "up"
-                      ? "text-system-chrome-signal-up"
-                      : stat.noteTone === "down"
-                        ? "text-system-chrome-signal-down"
-                        : "text-system-chrome-ink-muted"
-                  }`}
-                >
-                  {stat.note}
+          {stats.map((stat, i) => {
+            // Contenuto condiviso fra la cella "muta" (div) e quella
+            // cliccabile (Link, solo quando stat.href è presente — vedi
+            // TickerStat.href). Estratto per non duplicare i tre blocchi
+            // label/valore/nota in due rami JSX quasi identici.
+            const content = (
+              <>
+                <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-system-chrome-ink-muted">
+                  {stat.label}
                 </div>
-              )}
-            </div>
-          ))}
+                <div className="mt-1 font-mono text-[17px] font-medium tabular-nums text-system-chrome-ink">
+                  {stat.value}
+                  {stat.unit && (
+                    <span className="ml-1 text-[11px] text-system-chrome-ink-muted">
+                      {stat.unit}
+                    </span>
+                  )}
+                </div>
+                {stat.note && (
+                  <div
+                    className={`mt-0.5 font-mono text-[11px] tabular-nums ${
+                      stat.noteTone === "up"
+                        ? "text-system-chrome-signal-up"
+                        : stat.noteTone === "down"
+                          ? "text-system-chrome-signal-down"
+                          : "text-system-chrome-ink-muted"
+                    } ${stat.href ? "underline decoration-dotted underline-offset-2" : ""}`}
+                  >
+                    {stat.note}
+                  </div>
+                )}
+              </>
+            );
+            const cellClassName =
+              "animate-scan-in border-l border-system-chrome-border px-5 py-3.5 first:border-l-0 lg:border-l";
+
+            return stat.href ? (
+              <Link
+                key={stat.key}
+                href={stat.href}
+                className={`${cellClassName} block transition-colors hover:bg-system-chrome focus-visible:bg-system-chrome`}
+                style={{ animationDelay: `${i * 80}ms` }}
+              >
+                {content}
+              </Link>
+            ) : (
+              <div
+                key={stat.key}
+                className={cellClassName}
+                style={{ animationDelay: `${i * 80}ms` }}
+              >
+                {content}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -25,6 +25,22 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
   deploy automatico ad ogni push su `main`
 - Identità Git di questo repo: `drakekluser99@gmail.com` (NON l'account
   di lavoro dell'utente — non cambiare mai questa configurazione)
+- **`overrides` in `package.json`: `d3-color: ^3.1.0`.** Forza la
+  versione di questa dipendenza transitiva (usata sotto `react-simple-maps`,
+  la mappa Europa) invece di lasciare che npm risolva quella richiesta
+  dal pacchetto a monte. Non toccare/rimuovere senza motivo: trovato senza
+  commento durante l'analisi tecnica del 7/9/2026 — se un domani si scopre
+  perché è stato aggiunto, va scritto qui.
+- **Test automatici: Vitest** (`npm test` per una run singola, `npm run
+  test:watch` per lo sviluppo). Aggiunto il 7/9/2026, copertura ancora
+  volutamente minima: solo le funzioni PURE più delicate (formattazione in
+  `src/lib/format.ts`, il calcolo di freschezza in
+  `src/lib/freshness/compute.ts`, le statistiche fiscali/di ranking in
+  `src/lib/europeFuelStats.ts` e `src/lib/italianFuelStats.ts`). Niente
+  test di componenti React o di route: richiederebbero fixture DB/API
+  molto più pesanti per un beneficio, al momento, minore. `vitest.config.ts`
+  usa `vite-tsconfig-paths` per risolvere l'alias `@/*` leggendo lo stesso
+  `tsconfig.json` di Next.js, invece di duplicare a mano il mapping.
 
 ## Architettura
 
@@ -186,14 +202,26 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
   (prima `Bearer ${undefined}` diventava la stringa "Bearer undefined" e
   chiunque la inviasse passava — vedi "Errori noti") e confronta gli
   SHA-256 con `timingSafeEqual`. Non reintrodurre il confronto in linea
-- `src/app/api/cron/*/route.ts` — 7 route protette da `CRON_SECRET`
+- `src/app/api/cron/*/route.ts` — 8 route protette da `CRON_SECRET`
   (header `Authorization: Bearer`, via `isAuthorizedCronRequest`),
   schedulate in `vercel.json`:
   `fetch-market-prices-1`…`-5` (materie prime, ogni batch a un'ora
   diversa: 06/08/10/12/14 UTC — su Hobby i cron hanno precisione
   oraria ±59min, quindi vanno distanziati di ore non di minuti),
-  `fetch-eu-fuel-prices` (giovedì), `fetch-us-fuel-prices` (lunedì).
+  `fetch-eu-fuel-prices` (giovedì), `fetch-us-fuel-prices` (lunedì),
+  `fetch-mimit-prices` (ogni giorno, 05 UTC — prima del primo batch
+  materie prime delle 06, per distribuire il carico sulla giornata).
   Il limite Hobby è 100 cron job/progetto, uno al giorno ciascuno.
+  **`fetch-mimit-prices` (7/9/2026) è costruita su un fetcher
+  (`src/lib/fetchers/mimit.ts`) mai verificato contro un file reale**: la
+  rete di questo ambiente non raggiunge mimit.gov.it, la struttura è
+  ricostruita da un campione scaricato a mano. La route logga sempre i
+  contatori di scarto (`diagnostics`) e si rifiuta di scrivere se più del
+  50% delle righe prezzo risulta orfana (probabile parsing rotto, non un
+  problema dei dati). **Prima di fidarsi di questo cron in produzione,
+  lanciare `npm run inspect:mimit` (senza `--save`) con rete vera e
+  leggere l'output** — è il preflight che il commento in mimit.ts chiede
+  esplicitamente.
   Ogni route (via `runMarketPriceCron` o direttamente) apre e chiude un
   record in `fetch_runs`. `ok: true` = "run finita senza eccezioni", NON
   "tutto salvato": `points_saved` sotto l'atteso (es. rate limit Alpha
@@ -811,7 +839,8 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
 - Verifica SEMPRE con `npx tsc --noEmit` e `npx eslint` prima di
   committare. Per modifiche che toccano il confine Server/Client
   Components, esegui anche `npm run dev` e visita la pagina prima del
-  push (vedi errore noto sopra).
+  push (vedi errore noto sopra). Se la modifica tocca una delle funzioni
+  pure coperte da test (vedi Stack), esegui anche `npm test`.
 - Dopo il push, Vercel ridispiega automaticamente — non serve azione
   manuale su Vercel.
 - Claude su claude.ai lavora su un clone nel cloud e produce **patch git**

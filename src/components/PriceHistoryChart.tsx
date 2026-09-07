@@ -56,6 +56,25 @@ export function PriceHistoryChart({
     );
   }
 
+  // Riassunto testuale del grafico — alternativa per chi non vede il
+  // tracciato (screen reader, WCAG 1.1.1/4.1.2, trovato nell'audit del
+  // 7/9/2026). Il grafico SVG di Recharts resta `aria-hidden`: un lettore
+  // di schermo che provasse a leggerlo elemento per elemento produrrebbe
+  // rumore, non informazione — questa riga sola porta lo stesso contenuto
+  // in una forma comprensibile.
+  const values = selected.points.map((p) => p.value);
+  const first = selected.points[0];
+  const last = selected.points[selected.points.length - 1];
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const trend =
+    last.value > first.value
+      ? "in salita"
+      : last.value < first.value
+        ? "in discesa"
+        : "stabile";
+  const chartSummary = `Andamento di ${selected.label}: da ${first.value.toFixed(3)} a ${last.value.toFixed(3)} ${selected.unit}, ${trend} nel periodo. Minimo ${min.toFixed(3)}, massimo ${max.toFixed(3)} ${selected.unit}, su ${selected.points.length} rilevazioni.`;
+
   return (
     <div className="rounded-lg border border-system-border bg-system-surface p-4">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -78,7 +97,8 @@ export function PriceHistoryChart({
         </div>
       </div>
 
-      <div className="h-64 w-full">
+      <div className="h-64 w-full" role="img" aria-label={chartSummary}>
+        <div aria-hidden="true" className="h-full w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={selected.points}
@@ -141,6 +161,7 @@ export function PriceHistoryChart({
             />
           </AreaChart>
         </ResponsiveContainer>
+        </div>
       </div>
 
       <p className="mt-2 text-xs text-system-ink-muted">

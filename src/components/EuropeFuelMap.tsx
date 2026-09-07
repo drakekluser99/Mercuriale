@@ -380,14 +380,42 @@ export default function EuropeFuelMap({ prices, euAverage }: Props) {
                   cursor: data ? "pointer" : "default",
                 };
 
+                // Etichetta per chi non può vedere il colore del paese:
+                // nome + valore della metrica attualmente selezionata (lo
+                // stesso numero che il tooltip mostra al passaggio del
+                // mouse). `undefined` sui paesi senza dato: un aria-label
+                // vuoto o fuorviante sarebbe peggio di nessuna etichetta.
+                const ariaLabel = data
+                  ? `${localizedCountryName(name)}: ${
+                      value !== null
+                        ? `${activeMeasure.format(value)} ${activeMeasure.unit}`
+                        : "dato non disponibile"
+                    }`
+                  : undefined;
+
                 return (
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
+                    // tabIndex 0 solo sui paesi con dato: un tab-stop su un
+                    // paese grigio (nessun dato, niente tooltip da mostrare)
+                    // sarebbe una fermata vuota nella navigazione da tastiera.
+                    tabIndex={data ? 0 : -1}
+                    aria-label={ariaLabel}
                     onMouseEnter={() => {
                       if (data) setHovered(data);
                     }}
                     onMouseLeave={() => setHovered(null)}
+                    // Stessa logica dell'hover, sul focus da tastiera: senza
+                    // questi due, la mappa (prima di questa modifica) era
+                    // raggiungibile SOLO col mouse — un paese non riceveva
+                    // mai lo stato `hovered` premendo Tab, quindi il
+                    // tooltip con i dati non si apriva mai da tastiera
+                    // (WCAG 2.1.1, trovato nell'audit del 7/9/2026).
+                    onFocus={() => {
+                      if (data) setHovered(data);
+                    }}
+                    onBlur={() => setHovered(null)}
                     style={{
                       default: shape,
                       hover: shape,
@@ -402,7 +430,11 @@ export default function EuropeFuelMap({ prices, euAverage }: Props) {
       </ComposableMap>
 
       {hovered && (
-        <div className="pointer-events-none absolute left-4 top-16 rounded-md border border-system-border bg-system-surface px-3 py-2 text-sm shadow-md">
+        <div
+          role="status"
+          aria-live="polite"
+          className="pointer-events-none absolute left-4 top-16 rounded-md border border-system-border bg-system-surface px-3 py-2 text-sm shadow-md"
+        >
           <div className="font-medium">
             {localizedCountryName(hovered.countryName)}
           </div>
