@@ -1275,6 +1275,49 @@ ponderata, import massivo storico, estrapolazioni causali.
   settembre 2026 è chiusa per intero, incluse le due voci di Fase 3 che
   erano rimaste aperte dopo questo bullet.** La roadmap non prevede una
   "fase 5": resta ferma qui finché non emerge un motivo nuovo.
+- **Freschezza dei dati visibile accanto ai numeri — FATTO (Cowork,
+  4 set 2026).** Idea 1 del brainstorm "come rendere il sito unico,
+  diverso, utile": `/stato-dati` esisteva già ma andava scoperta
+  navigandoci apposta. `SourceNote` (`src/components/SourceNote.tsx`)
+  accetta ora un array opzionale `checks: { label, cadence, checkedAt }[]`
+  che, quando presente, mostra sotto i badge di fonte una riga tipo
+  "Controllato UE ogni giovedì, ultimo controllo 04/09/2026, 12:17" con
+  link a `/stato-dati`. Riusa `getLatestFetchRuns()`, nessuna query nuova.
+  Cablato SOLO dove un job ha cadenza singola e affidabile: home
+  ("Cosa è cambiato", mappa Europa, tabella carburanti — job
+  `fetch-eu-fuel-prices`/`fetch-us-fuel-prices`) e `/paese/[slug]`.
+  Deliberatamente ESCLUSO da materie prime (Alpha Vantage, cadenza mista
+  nello stesso job — stessa ragione di `SOURCE_LEVEL_FRESHNESS` in
+  `/stato-dati`), "numero del giorno" (ADM, non è un cron) e
+  `/provincia/[slug]` (MIMIT non scrive ancora in `fetch_runs`, mostrare
+  un "ultimo controllo" lì sarebbe un dato inventato). Pulizia di
+  contorno: `formatDateTime`, prima duplicata in tre file, ora vive in
+  `src/lib/format.ts` accanto a `formatDate`. Commit `cd201b9`.
+- **Vercel Analytics — FATTO (Cowork, 4-7 set 2026), in preparazione
+  della pubblicazione sui social.** Prima di iniziare a promuovere il
+  sito Yuri ha chiesto un parere su cosa mancasse: dominio personalizzato
+  (ancora da fare, tocca solo a lui), `sitemap.xml`/`robots.txt` (ancora
+  da fare) e misurazione del traffico (fatta, qui). `@vercel/analytics`
+  (`<Analytics />` in `src/app/layout.tsx`, via `@vercel/analytics/next`)
+  — cookieless, non richiede banner cookie. Attivato anche lato Vercel
+  (tab Analytics del progetto, Web Analytics abilitato manualmente da
+  Yuri). Commit `8c40265`.
+  **Nota sul flusso di consegna**: la patch generata nel container cloud
+  (`mercuriale-06-vercel-analytics.patch`) non è mai stata applicata —
+  Yuri non è riuscito a scaricare l'allegato dalla chat in `Downloads`
+  (`git am` falliva con "No such file or directory" più volte, il file
+  semplicemente non arrivava). Risolto passando al bridge device
+  (`mcp__remote-devices__*`): con una cartella collegata (via
+  `device_request_folder_access`), Claude può leggere/scrivere i file
+  DIRETTAMENTE sul PC di Yuri con `device_stage_files`/
+  `device_commit_files`, senza passare da un file scaricato a mano —
+  molto più affidabile per una modifica piccola. Resta vero che non c'è
+  `device_bash` in questa configurazione: Yuri lancia comunque lui
+  `npm install`/`tsc`/`eslint`/`git commit`/`git push` in PowerShell.
+  **Per la prossima volta**: se il device è collegato e la cartella è
+  autorizzabile, preferire la modifica diretta via bridge a una patch
+  da scaricare — la patch resta necessaria solo quando il device non è
+  raggiungibile o non è collegato a questa sessione.
 
 ## Skill: vercel-react-best-practices
 
