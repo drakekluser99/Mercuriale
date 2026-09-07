@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 // IBM Plex Sans + Mono: una superfamiglia disegnata insieme, quindi le
@@ -58,7 +59,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="it"
       className={`${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        {/* Vercel Analytics: conteggio pagine viste/referrer, senza cookie
+            e senza raccogliere dati personali — non serve un banner cookie
+            per questo. Aggiunta in vista della pubblicazione sui social
+            (4 set 2026): prima si attiva, prima si ha un dato reale su da
+            dove arriva il traffico invece di scoprirlo a posteriori. Il
+            pannello si legge dalla dashboard del progetto su vercel.com,
+            non da qui — questo componente si limita a spedire l'evento. */}
+        <Analytics />
+      </body>
     </html>
   );
 }
