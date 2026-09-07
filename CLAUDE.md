@@ -212,16 +212,25 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
   `fetch-mimit-prices` (ogni giorno, 05 UTC — prima del primo batch
   materie prime delle 06, per distribuire il carico sulla giornata).
   Il limite Hobby è 100 cron job/progetto, uno al giorno ciascuno.
-  **`fetch-mimit-prices` (7/9/2026) è costruita su un fetcher
-  (`src/lib/fetchers/mimit.ts`) mai verificato contro un file reale**: la
-  rete di questo ambiente non raggiunge mimit.gov.it, la struttura è
-  ricostruita da un campione scaricato a mano. La route logga sempre i
-  contatori di scarto (`diagnostics`) e si rifiuta di scrivere se più del
-  50% delle righe prezzo risulta orfana (probabile parsing rotto, non un
-  problema dei dati). **Prima di fidarsi di questo cron in produzione,
-  lanciare `npm run inspect:mimit` (senza `--save`) con rete vera e
-  leggere l'output** — è il preflight che il commento in mimit.ts chiede
-  esplicitamente.
+  **`fetch-mimit-prices` (7/9/2026)**: costruita su un fetcher
+  (`src/lib/fetchers/mimit.ts`) che al momento di scriverla non era mai
+  stato verificato contro un file reale (rete del container cloud bloccata
+  verso mimit.gov.it). **Verificato lo stesso giorno da Yuri con
+  `npm run inspect:mimit` contro il file vero**: 23.985 impianti
+  riconosciuti, 93.097 righe prezzo, **0 righe orfane, 0 sigle provincia
+  sconosciute**, 428 combinazioni provincia×carburante×self/servito. Il
+  parsing regge — i 57 "carburanti scartati" erano tutti nomi commerciali
+  attesi (Blue Diesel, HVOlution, GPL, metano, ecc.), il filtro funziona
+  come da commento in `mimit.ts`. La route continua comunque a loggare
+  sempre i contatori di scarto (`diagnostics`) e a rifiutarsi di scrivere
+  se più del 50% delle righe prezzo risulta orfana (probabile parsing
+  rotto, non un problema dei dati) — rete di sicurezza permanente, non
+  un preflight una tantum.
+  **Da questo cron, `fetch_runs` ha per la prima volta dati reali anche
+  per `source = "mimit"`** (prima il cron MIMIT non scriveva lì): questo
+  sblocca l'estensione della "freschezza visibile" (vedi sotto) anche a
+  `/provincia/[slug]`, finora esplicitamente esclusa perché quel dato
+  sarebbe stato inventato.
   Ogni route (via `runMarketPriceCron` o direttamente) apre e chiude un
   record in `fetch_runs`. `ok: true` = "run finita senza eccezioni", NON
   "tutto salvato": `points_saved` sotto l'atteso (es. rate limit Alpha
@@ -1318,10 +1327,15 @@ ponderata, import massivo storico, estrapolazioni causali.
   Deliberatamente ESCLUSO da materie prime (Alpha Vantage, cadenza mista
   nello stesso job — stessa ragione di `SOURCE_LEVEL_FRESHNESS` in
   `/stato-dati`), "numero del giorno" (ADM, non è un cron) e
-  `/provincia/[slug]` (MIMIT non scrive ancora in `fetch_runs`, mostrare
-  un "ultimo controllo" lì sarebbe un dato inventato). Pulizia di
+  `/provincia/[slug]` (MIMIT non scriveva ancora in `fetch_runs`, mostrare
+  un "ultimo controllo" lì sarebbe stato un dato inventato). Pulizia di
   contorno: `formatDateTime`, prima duplicata in tre file, ora vive in
   `src/lib/format.ts` accanto a `formatDate`. Commit `cd201b9`.
+  **Aggiornamento 7/9/2026**: con `fetch-mimit-prices` che ora apre/chiude
+  un record in `fetch_runs` (vedi cron MIMIT sopra), l'esclusione di
+  `/provincia/[slug]` non è più necessaria — il dato non sarebbe più
+  inventato. Non ancora cablato: prossimo passo naturale, stesso pattern
+  di `checks` già usato altrove, nessuna query nuova da scrivere.
 - **Vercel Analytics — FATTO (Cowork, 4-7 set 2026), in preparazione
   della pubblicazione sui social.** Prima di iniziare a promuovere il
   sito Yuri ha chiesto un parere su cosa mancasse: dominio personalizzato
@@ -1381,6 +1395,55 @@ ponderata, import massivo storico, estrapolazioni causali.
   `commodity-tracker-one-delta.vercel.app`) e attribuzione del footer a
   "Yuri Copparini" con link LinkedIn — entrambe scelte di Yuri, non
   tecniche, da confermare consapevolmente prima di promuovere attivamente.
+- **Analisi tecnica/estetica/dati + fix — FATTO (Cowork, 7 set 2026),
+  stesso giorno del lancio, seguito dell'analisi finale pre-lancio sopra.**
+  Yuri ha chiesto un'analisi tecnica ed estetica del sito con le skill di
+  design/accessibilità/tech-debt (non "senza skill"), più un controllo
+  freschezza dati, poi "risolviamo tutto". Risultati completi nel progetto
+  Claude (`mercuriale-riepilogo-7-set-2026-analisi-tecnica-estetica-dati.md`,
+  `mercuriale-riepilogo-7-set-2026-fix-post-analisi.md`). Shippato, commit
+  `90f9fd8` (+ `01507ec`, `8d30ef1` per sitemap/robots/CLAUDE.md separati):
+  - **Accessibilità (WCAG 2.1 AA)**: mappa Europa (`EuropeFuelMap.tsx`)
+    era inaccessibile da tastiera (bug critico) — aggiunti `tabIndex`,
+    `aria-label` per paese, `onFocus`/`onBlur`, tooltip con
+    `role="status"`/`aria-live`. Grafici prezzo storico
+    (`PriceHistoryChart.tsx`) senza alternativa testuale — aggiunto
+    riassunto testuale via `role="img"`/`aria-label`, SVG `aria-hidden`.
+  - **UX piccola**: la cella "fonti online" nell'header ora è un link a
+    `/stato-dati` quando c'è un problema di freschezza (`TickerBand.tsx`
+    + `page.tsx`).
+  - **CI minima**: `.github/workflows/ci.yml` (typecheck + lint su push/PR)
+    — non scrivibile via bridge device (percorso protetto), caricato a
+    mano da Yuri via GitHub web.
+  - **Suite di test Vitest** (vedi bullet Stack) — prima non esisteva
+    nessun test nel repo.
+  - **Cron MIMIT automatizzato** (vedi bullet cron sopra) — chiude
+    davvero la Fase 4 (dataset stazione-per-stazione, aggregato per
+    provincia), che finora girava solo a mano via `inspect-mimit.ts`.
+  - **Diagnosi corretta sui batch Alpha Vantage fermi** (alluminio/grano/
+    mais/cotone/zucchero/caffè, item 2 del bullet sopra): ipotesi iniziale
+    "stesso bug di silent-failure già risolto" SCARTATA leggendo
+    `alphaVantage.ts`/`savePricePoints.ts` per intero — il fetcher logga
+    esplicitamente ogni anomalia, non fallisce in silenzio. Più probabile
+    un ritardo della fonte stessa. `scripts/inspect-alphavantage.ts`
+    (nuovo, `npm run inspect:alphavantage CHIAVE`) per verificarlo contro
+    l'API vera.
+  - **Bug da tenere a mente per file `.ts` senza `import`/`export`**:
+    `scripts/inspect-alphavantage.ts` e `scripts/inspect-eia.ts`
+    dichiarano entrambi `apiKey`/`main` a livello di modulo senza nessun
+    `import`/`export` — TypeScript li tratta come "script globali" e ne
+    fonde lo scope, causando `TS2451`/`TS2393` su `tsc --noEmit` non
+    appena un secondo file dichiara gli stessi nomi. Fix:
+    `export {};` in cima al file. **Se si aggiunge un altro
+    `scripts/inspect-*.ts` in stile "argomenti da CLI, niente moduli",
+    mettere `export {};` in cima fin da subito.**
+  - **Cache di build TypeScript stantia**: `tsconfig.json` ha
+    `"incremental": true`, che scrive `tsconfig.tsbuildinfo` nella root.
+    Dopo una modifica fatta da Claude via bridge device (non attraverso
+    l'editor di Yuri), `tsc --noEmit` ha mostrato un errore con
+    riga/colonna del file PRIMA della modifica. Fix: cancellare
+    `tsconfig.tsbuildinfo` e rilanciare `tsc`. Non è un file di codice
+    (già in `.gitignore`, `*.tsbuildinfo`), si rigenera da solo.
 
 ## Skill: vercel-react-best-practices
 

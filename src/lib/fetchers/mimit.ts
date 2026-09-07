@@ -7,14 +7,21 @@ import { provinceForCode } from "@/lib/provinces";
  * provincia: la riga per singola stazione non esce mai da questa funzione,
  * per il motivo spiegato in schema.ts sopra `retailFuelPricesIt`.
  *
- * NON ancora verificato contro una run reale: la rete di questo container
- * non raggiunge mimit.gov.it (egress bloccato per policy), la struttura è
+ * Verificato contro una run reale il 7 set 2026 (`npm run inspect:mimit`,
+ * rete vera): 23.985 impianti riconosciuti, 93.097 righe prezzo, 0 righe
+ * orfane, 0 sigle provincia sconosciute, 428 combinazioni provincia×
+ * carburante×self/servito. Il parsing regge — i carburanti scartati erano
+ * tutti nomi commerciali attesi (Blue Diesel, HVOlution, GPL, metano...).
+ * Collegato a un cron giornaliero (`src/app/api/cron/fetch-mimit-prices`),
+ * che comunque mantiene un controllo automatico permanente sugli stessi
+ * contatori di scarto (`diagnostics`) ad ogni run — non solo su questo
+ * campione iniziale, in caso il formato reale cambi in futuro senza preavviso.
+ * Prima di questa verifica: la rete del container cloud non raggiunge
+ * mimit.gov.it (egress bloccato per policy), quindi la struttura era stata
  * ricostruita dai metadati pubblicati e da un campione scaricato a mano
- * dall'utente il 4 set 2026 (23.981 impianti, 93.068 righe prezzo). Prima
- * di collegarlo a un cron, lanciare `scripts/inspect-mimit.ts` e leggere i
- * contatori di scarto (`unknownProvinceCodes`, `unknownFuelTypes`,
- * `orphanPriceRows`) — se sono alti, qualcosa nel formato reale è diverso
- * da quanto documentato qui.
+ * dall'utente il 4 set 2026 — da cui i numeri leggermente diversi sopra
+ * (23.981 impianti, 93.068 righe: normale variazione giorno su giorno del
+ * dataset, non un errore).
  */
 
 const ANAGRAFICA_URL =

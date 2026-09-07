@@ -9,11 +9,13 @@
  * (a differenza del bollettino UE). Ogni lancio salva UNA rilevazione, per
  * la data che il file dichiara nella riga "Estrazione del ...".
  *
- * Senza `--save` è la modalità giusta per il primo lancio vero: la libreria
- * (`src/lib/fetchers/mimit.ts`) non è mai stata testata contro il file reale
- * da questo ambiente (rete del container cloud bloccata verso mimit.gov.it,
- * vedi CLAUDE.md) — i contatori di scarto qui sotto dicono se il parsing
- * regge o se qualcosa nel formato è diverso da quanto documentato.
+ * Senza `--save` resta la modalità giusta per un controllo: i contatori di
+ * scarto qui sotto dicono se il parsing regge o se qualcosa nel formato è
+ * cambiato rispetto a quanto documentato in mimit.ts. Verificato l'ultima
+ * volta il 7 set 2026 (0 righe orfane, 0 sigle provincia sconosciute) — dato
+ * che il MIMIT pubblica un CSV pubblico che può cambiare formato senza
+ * preavviso, vale la pena rilanciare questo script ogni tanto per
+ * riconfermarlo, non solo la prima volta.
  */
 import "dotenv/config";
 import { config } from "dotenv";

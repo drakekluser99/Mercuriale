@@ -10,10 +10,14 @@ import { isAuthorizedCronRequest } from "@/lib/cronAuth";
 
 /**
  * Cron Fase 4 (MIMIT) — stesso scheletro delle altre route in
- * src/app/api/cron/*, con due differenze dovute al fatto che
- * `fetchAndAggregateMimit` (src/lib/fetchers/mimit.ts) non è mai stata
- * verificata contro un file reale da questo ambiente (rete del container
- * cloud bloccata verso mimit.gov.it — vedi CLAUDE.md):
+ * src/app/api/cron/*. `fetchAndAggregateMimit` (src/lib/fetchers/mimit.ts)
+ * è stata verificata il 7 set 2026 con `npm run inspect:mimit` contro un
+ * file reale (0 righe orfane, 0 sigle provincia sconosciute su 93.097
+ * righe — vedi il commento in mimit.ts). Due cose in più rispetto alle
+ * altre route, mantenute come rete di sicurezza PERMANENTE, non solo per
+ * il primo lancio — un CSV pubblico può cambiare formato senza preavviso,
+ * e questa route non ha modo di saperlo se non guardando i contatori ad
+ * ogni run:
  *
  * 1. I contatori di scarto (`diagnostics`) vengono loggati SEMPRE, non
  *    solo in caso di errore: prima che qualcuno se ne accorga guardando i
@@ -22,15 +26,9 @@ import { isAuthorizedCronRequest } from "@/lib/cronAuth";
  * 2. Se più della metà delle righe prezzo risulta "orfana" (idImpianto non
  *    riconosciuto), il run si ferma PRIMA di scrivere: un parsing rotto
  *    che passasse comunque salverebbe una media calcolata su una frazione
- *    minuscola e non rappresentativa dei 23.981 impianti attesi, in modo
+ *    minuscola e non rappresentativa degli impianti attesi, in modo
  *    silenzioso — è la stessa filosofia "fail closed" di cronAuth.ts,
  *    applicata ai dati invece che alla sicurezza.
- *
- * PRIMA di affidarsi a questo cron in produzione: lanciare
- * `npm run inspect:mimit` (senza `--save`) una volta con rete vera e
- * leggere i contatori — è il preflight che il commento in mimit.ts chiede
- * esplicitamente, e che nessun ambiente di Claude ha potuto fare al posto
- * dell'utente.
  */
 
 // 24k righe di anagrafica + 93k righe di prezzo da scaricare e fare il

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getLatestItalianFuelPrices } from "@/lib/db/queries";
+import { getLatestItalianFuelPrices, getLatestFetchRuns } from "@/lib/db/queries";
 import { computeItalianFuelStats, rankByPrice } from "@/lib/italianFuelStats";
 import { ALL_PROVINCES, provinceForSlug } from "@/lib/provinces";
 import { formatFuelPrice, formatDate, currencySymbol } from "@/lib/format";
@@ -55,7 +55,16 @@ export default async function ProvincePage({ params }: PageProps) {
   const provinceRoute = provinceForSlug(slug);
   if (!provinceRoute) notFound();
 
-  const fuelPrices = await getLatestItalianFuelPrices();
+  const [fuelPrices, fetchRuns] = await Promise.all([
+    getLatestItalianFuelPrices(),
+    getLatestFetchRuns(),
+  ]);
+  // Stesso riuso di /paese/[slug]: l'ultima esecuzione registrata del cron
+  // MIMIT, mostrata accanto al dato invece che solo su /stato-dati. Prima
+  // di oggi (7/9/2026) questa riga non esisteva qui perché il cron MIMIT
+  // non scriveva ancora in fetch_runs — ora scrive, quindi il dato non è
+  // più "inventato" come lo sarebbe stato prima.
+  const mimitRun = fetchRuns.find((r) => r.job === "fetch-mimit-prices");
   const { provinces, average } = computeItalianFuelStats(fuelPrices);
   const province = provinces.find(
     (p) => p.provinceCode === provinceRoute.code
@@ -217,7 +226,12 @@ export default async function ProvincePage({ params }: PageProps) {
           </p>
         </SystemCard>
 
-        <SourceNote sources={["mimit"]}>
+        <SourceNote
+          sources={["mimit"]}
+          checks={[
+            { label: "MIMIT", cadence: "ogni giorno", checkedAt: mimitRun?.startedAt ?? null },
+          ]}
+        >
           Fonte: MIMIT, anagrafica e prezzi stazione per stazione · Ultima
           rilevazione:{" "}
           {province.recordedAt ? formatDate(province.recordedAt) : "—"}
