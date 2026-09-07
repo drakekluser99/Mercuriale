@@ -35,7 +35,7 @@ type SourceNoteProps = {
    * cui risponde /stato-dati (che oggi va scoperta navigando lì apposta),
    * mostrata qui accanto al numero stesso invece che solo in una pagina
    * a parte. Omesso per le fonti a cadenza mista (Alpha Vantage) o senza
-   * ancora un cron tracciato in fetch_runs (MIMIT, "numero del giorno").
+   * ancora un cron tracciato in fetch_runs.
    */
   checks?: PipelineCheck[];
   children: ReactNode;

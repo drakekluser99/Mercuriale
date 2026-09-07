@@ -37,6 +37,7 @@ import { TickerBand, type TickerStat } from "@/components/TickerBand";
 import Link from "next/link";
 import {
   Code2,
+  Bug,
   Fuel,
   Globe2,
   Calculator,
@@ -162,6 +163,7 @@ export default async function Home() {
   // SOURCE_LEVEL_FRESHNESS in quel file).
   const euFuelRun = fetchRuns.find((r) => r.job === "fetch-eu-fuel-prices");
   const usFuelRun = fetchRuns.find((r) => r.job === "fetch-us-fuel-prices");
+  const mimitRun = fetchRuns.find((r) => r.job === "fetch-mimit-prices");
 
   // Timestamp unico per il calcolo di freschezza di tutte le righe (vedi
   // src/lib/freshness/compute.ts). Server Component force-dynamic,
@@ -947,7 +949,12 @@ export default async function Home() {
             <div className="mt-4">
               <ItalyProvinceFuelTable rows={italyProvinceRows} />
             </div>
-            <SourceNote sources={["mimit"]}>
+            <SourceNote
+              sources={["mimit"]}
+              checks={[
+                { label: "MIMIT", cadence: "ogni giorno", checkedAt: mimitRun?.startedAt ?? null },
+              ]}
+            >
               Fonte: MIMIT, anagrafica e prezzi stazione per stazione,
               aggregati per provincia · Aggiornamento: giornaliero
             </SourceNote>
@@ -1036,6 +1043,17 @@ export default async function Home() {
                   >
                     <Code2 size={15} />
                     Codice sorgente
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={`${GITHUB_URL}/issues/new`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-system-chrome-ink transition-colors hover:text-system-chrome-accent"
+                  >
+                    <Bug size={15} />
+                    Segnala un errore
                   </a>
                 </li>
               </ul>
