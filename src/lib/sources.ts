@@ -12,7 +12,7 @@
 
 export type SourceKind = "primaria" | "aggregata";
 
-export type SourceId = "eu-commission" | "eia" | "alpha-vantage" | "mimit" | "adm";
+export type SourceId = "eu-commission" | "eia" | "alpha-vantage" | "mimit" | "adm" | "eurostat";
 
 type SourceMeta = {
   /** Nome per esteso, usato nel testo delle note "Fonte:". */
@@ -45,6 +45,12 @@ export const SOURCES: Record<SourceId, SourceMeta> = {
   // (il proprio gettito), stessa categoria delle altre fonti primarie.
   adm: {
     label: "Agenzia delle Dogane e dei Monopoli",
+    kind: "primaria",
+  },
+  // Blocco D (15 set 2026): cifre annuali della raccolta /numeri. Ufficio
+  // statistico dell'UE: fonte primaria come le altre istituzionali.
+  eurostat: {
+    label: "Eurostat",
     kind: "primaria",
   },
 };

@@ -47,6 +47,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.4,
     },
+    {
+      url: `${BASE_URL}/numeri`,
+      changeFrequency: "monthly",
+      priority: 0.4,
+    },
   ];
 
   const countryPages: MetadataRoute.Sitemap = EU_COUNTRY_SLUGS.map((slug) => ({

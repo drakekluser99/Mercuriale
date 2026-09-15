@@ -986,9 +986,9 @@ ponderata, import massivo storico, estrapolazioni causali.
   ADM, raggiungibile da un browser normale anche se non dal tool.
   **Struttura scelta apposta per non ripetere l'errore isolato
   nell'analisi competitor** (un numero statico spacciato per vivo):
-  `src/lib/annualFigures.ts`, UN oggetto `ANNUAL_FIGURE` esportato (non
-  un array — oggi c'è un solo numero), con `year` esplicito che finisce
-  in etichetta ("dati 2024"). Non è un cron: **va aggiornato A MANO**
+  `src/lib/annualFigures.ts` (in origine UN oggetto `ANNUAL_FIGURE`;
+  **dal 15 set 2026 è l'array `ANNUAL_FIGURES`**, vedi "Blocco D, parte
+  2"), con `year` esplicito che finisce in etichetta ("dati 2024"). Non è un cron: **va aggiornato A MANO**
   ogni primavera quando l'ADM pubblica il bilancio dell'anno precedente
   (i due comunicati trovati durante la ricerca sono di maggio 2025 e
   maggio 2026) — il commento in testa al file lo dice esplicitamente. Se
@@ -1596,6 +1596,19 @@ ponderata, import massivo storico, estrapolazioni causali.
   l'URL `bfs.admin.ch/asset/de/<id>` cambia a ogni rilascio). NON
   verificata: il sito BFS è bloccato dall'ambiente cloud. Aggiungerla
   richiede anche un tasso CHF→EUR dichiarato e l'etichetta "mensile".
+
+- **Blocco D, parte 2 — raccolta "Numeri" (Cowork, 15 set 2026).**
+  `ANNUAL_FIGURES` in `annualFigures.ts`: 5 cifre (ADM accise 2024 +
+  quattro Eurostat 2024: dipendenza energetica 57%, petrolio 67% delle
+  importazioni di energia, imposte sull'energia 287 mld, merci su strada
+  25,7% delle t-km). Valori copiati dai comunicati il 15/9, URL e mese di
+  pubblicazione (`publishedIn`, AAAA-MM) in ogni voce. `figureOfTheDay`
+  sceglie la cifra col giorno di **Roma** (non UTC) modulo il numero di
+  cifre: stessa per tutti, cambia a mezzanotte italiana. Nuova fonte
+  `eurostat` in `sources.ts`. Pagina statica `/numeri` (ancore = `id`),
+  in sitemap e nei link di pagina; il riquadro in home porta a
+  `/numeri#<id>`. **Manutenzione a mano**: ADM ogni primavera, Eurostat
+  quando esce l'edizione con i dati 2025 (stessi mesi, un anno dopo).
 
 ## Skill: vercel-react-best-practices
 
