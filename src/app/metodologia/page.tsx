@@ -57,10 +57,9 @@ export default function Metodologia() {
           <p className="text-sm leading-relaxed text-system-ink-secondary">
             I dati vengono raccolti automaticamente tramite processi
             pianificati (cron job): le materie prime globali giornalmente,
-            i carburanti europei settimanalmente (allineati alla
-            pubblicazione ufficiale del bollettino, il giovedì), quelli
-            USA ogni giorno — il dato EIA è settimanale, ma il giorno di
-            pubblicazione può slittare dopo una festività, e un controllo
+            i carburanti europei e USA ogni giorno — entrambi i dati sono
+            settimanali (il bollettino UE esce di norma il giovedì), ma il
+            giorno di pubblicazione può slittare, e un controllo
             quotidiano lo porta sul sito appena esce invece che una
             settimana dopo. Non sono dati in tempo reale
             minuto per minuto — il titolo &quot;in tempo quasi reale&quot; si

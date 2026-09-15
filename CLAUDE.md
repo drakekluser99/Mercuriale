@@ -208,7 +208,7 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
   `fetch-market-prices-1`…`-5` (materie prime, ogni batch a un'ora
   diversa: 06/08/10/12/14 UTC — su Hobby i cron hanno precisione
   oraria ±59min, quindi vanno distanziati di ore non di minuti),
-  `fetch-eu-fuel-prices` (giovedì), `fetch-us-fuel-prices` (**ogni giorno
+  `fetch-eu-fuel-prices` (giovedì; **ogni giorno dal 15 set 2026, sera**), `fetch-us-fuel-prices` (**ogni giorno
   alle 23 UTC** dal 15 set 2026 — prima lunedì 18 UTC, ma l'EIA sposta il
   giorno di pubblicazione dopo le festività: il dato del 7/9 è uscito
   mercoledì 9/9 ed è arrivato sul sito solo lunedì 14. Upsert idempotente,
@@ -1677,6 +1677,23 @@ sezione). Resta aperto:
     soglia (o il testo), non la pipeline.
   - Dal cloud Alpha Vantage, EIA, BFS e BCE rispondono 403: per
     verificarle si usa il browser (Claude in Chrome).
+
+- **Cron UE ogni giorno (Cowork, 15 set 2026, sera).** `fetch-eu-fuel-prices`
+  passa da `0 12 * * 4` (solo giovedì) a **`0 15 * * *`**: il bollettino
+  esce di norma il giovedì ma può slittare, e con un solo tentativo
+  settimanale un giorno di ritardo diventava una settimana di dato vecchio
+  (stesso motivo del cron USA). Negli altri giorni l'upsert riscrive la
+  stessa settimana: nessuna riga nuova, nessuna correzione registrata, e
+  la narrazione settimanale fa upsert su (settimana, tipo). Testi
+  "controllato ogni giorno" in home, `/paese/[slug]` e metodologia. Le note
+  più vecchie in questo file che parlano del "cron del giovedì" sono
+  storiche.
+- **Quando cambiano le date in home** (risposta data a Yuri il 15/9):
+  petrolio e gas dopo ogni release settimanale EIA (di solito mercoledì);
+  materie prime mensili quando l'FMI pubblica il mese successivo (la data
+  mostrata è il primo del mese = media di quel mese); carburanti UE di
+  norma il giovedì; USA a inizio settimana; MIMIT ogni giorno; Svizzera
+  nei primi giorni del mese.
 
 ## Skill: vercel-react-best-practices
 

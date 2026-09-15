@@ -16,7 +16,7 @@ import { formatDateTime } from "@/lib/format";
 export type PipelineCheck = {
   /** Etichetta breve della fonte in QUESTO controllo (es. "UE", "USA"). */
   label: string;
-  /** Cadenza dichiarata in prosa (es. "ogni giovedì"). */
+  /** Cadenza dichiarata in prosa (es. "ogni giorno"). */
   cadence: string;
   checkedAt: Date | null;
 };

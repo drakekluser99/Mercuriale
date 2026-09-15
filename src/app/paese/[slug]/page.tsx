@@ -277,7 +277,7 @@ export default async function CountryPage({ params }: PageProps) {
         <SourceNote
           sources={["eu-commission"]}
           checks={[
-            { label: "UE", cadence: "ogni giovedì", checkedAt: euFuelRun?.startedAt ?? null },
+            { label: "UE", cadence: "ogni giorno", checkedAt: euFuelRun?.startedAt ?? null },
           ]}
         >
           Fonte: Bollettino Petrolifero Settimanale, Commissione Europea ·

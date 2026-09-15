@@ -32,6 +32,14 @@ export const maxDuration = 60;
 
 const SOURCE = "eu_weekly_oil_bulletin";
 
+// OGNI GIORNO alle 15 UTC (vercel.json), non più solo il giovedì (15 set
+// 2026). Il bollettino esce di norma il giovedì, ma a volte slitta: con un
+// solo tentativo settimanale un ritardo di un giorno diventava una
+// settimana di dato vecchio sul sito. Negli altri giorni il file contiene
+// la stessa settimana già salvata e l'upsert la riscrive identica (nessuna
+// riga nuova, nessuna "correzione" registrata). Stesso ragionamento del
+// cron USA, spostato a ogni giorno il 15 set per la stessa ragione.
+
 export async function GET(request: NextRequest) {
   if (!isAuthorizedCronRequest(request)) {
     return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
@@ -41,7 +49,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // `latestOnly`: il file contiene vent'anni di settimane, ma al cron
-    // serve solo l'ultima. Senza questo ogni giovedì riscriverebbe ~56.000
+    // serve solo l'ultima. Senza questo ogni esecuzione riscriverebbe ~56.000
     // righe per aggiornarne 54 — inutile, e su `neon-http` lentissimo. Lo
     // storico completo lo carica una tantum scripts/backfill.ts.
     const workbook = await downloadEuHistoryWorkbook();

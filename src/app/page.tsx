@@ -658,7 +658,7 @@ export default async function Home() {
             <SourceNote
               sources={["eu-commission"]}
               checks={[
-                { label: "UE", cadence: "ogni giovedì", checkedAt: euFuelRun?.startedAt ?? null },
+                { label: "UE", cadence: "ogni giorno", checkedAt: euFuelRun?.startedAt ?? null },
               ]}
             >
               Fonte: Bollettino Petrolifero Settimanale, Commissione Europea ·
@@ -868,14 +868,14 @@ export default async function Home() {
             <SourceNote
               sources={swissFuel ? ["eu-commission", "bfs", "ecb"] : ["eu-commission"]}
               checks={[
-                { label: "UE", cadence: "ogni giovedì", checkedAt: euFuelRun?.startedAt ?? null },
+                { label: "UE", cadence: "ogni giorno", checkedAt: euFuelRun?.startedAt ?? null },
                 ...(swissFuel
                   ? [{ label: "Svizzera", cadence: "ogni mese", checkedAt: swissFuelRun?.startedAt ?? null }]
                   : []),
               ]}
             >
               Fonte: Bollettino Petrolifero Settimanale, Commissione Europea ·
-              Aggiornamento: ogni giovedì · Confini amministrativi: Natural
+              Dato settimanale (di norma il giovedì), controllato ogni giorno · Confini amministrativi: Natural
               Earth (dominio pubblico)
               {swissFuel &&
                 " · Svizzera: Ufficio federale di statistica (media mensile, licenza OPEN-BY), cambio di riferimento BCE"}
@@ -1069,11 +1069,11 @@ export default async function Home() {
           <SourceNote
             sources={["eu-commission", "eia"]}
             checks={[
-              { label: "UE", cadence: "ogni giovedì", checkedAt: euFuelRun?.startedAt ?? null },
+              { label: "UE", cadence: "ogni giorno", checkedAt: euFuelRun?.startedAt ?? null },
               { label: "USA", cadence: "ogni giorno", checkedAt: usFuelRun?.startedAt ?? null },
             ]}
           >
-            Fonte: Bollettino Petrolifero Settimanale (UE, ogni giovedì) ·
+            Fonte: Bollettino Petrolifero Settimanale (UE, di norma il giovedì, controllato ogni giorno) ·
             EIA (USA, dato settimanale controllato ogni giorno) · Prezzi medi nazionali, non punti vendita
             specifici
           </SourceNote>
