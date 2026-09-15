@@ -1518,6 +1518,24 @@ ponderata, import massivo storico, estrapolazioni causali.
     degli stati in pagina; MIMIT ha etichetta e badge di freschezza; il
     "dato più recente" mostra solo la data.
 
+- **Blocco A delle migliorie di settembre — FATTO (Cowork, 15 set 2026).**
+  - **Storico lungo nei grafici**: `PriceHistoryChart` ha un selettore di
+    periodo (1 mese · 3 mesi · 1 anno · 5 anni · 10 anni, definiti in
+    `src/lib/historyWindows.ts`). La home carica ancora solo la finestra
+    iniziale (3 mesi materie prime, 1 mese carburanti); le altre arrivano
+    da `GET /api/history?kind=commodities|fuel&window=…` SOLO al clic, e il
+    componente le tiene in una cache in memoria. La route valida i
+    parametri contro elenchi chiusi (400 altrimenti) e manda
+    `Cache-Control: s-maxage=3600, stale-while-revalidate=86400`.
+    Carburanti: `getFuelAverageHistory` fa la media per data NEL database
+    (`avg()` + `GROUP BY`, ~1.000 righe invece di ~27.000). Oltre 260 punti
+    per serie `downsampleSeries` raggruppa a blocchi (valore = media del
+    blocco, data = ultimo giorno del blocco), e il grafico lo dichiara.
+  - **Freschezza anche sui carburanti**: `FreshnessBadge.tsx` (condiviso con
+    la tabella materie prime) nella colonna Data di `FuelPriceTable`; lo
+    stato si calcola in `page.tsx` con `CONTINENT_SOURCES`. Le note più su
+    che dicono "i carburanti non hanno ancora un badge" sono superate.
+
 ## Skill: vercel-react-best-practices
 
 Skill installata in .claude/skills/vercel-react-best-practices/.

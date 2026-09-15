@@ -5,6 +5,8 @@ import { Search } from "lucide-react";
 import { DownloadDataButtons } from "./DownloadDataButtons";
 import { formatFuelPrice, currencySymbol } from "@/lib/format";
 import { localizedCountryName } from "@/lib/countryNames";
+import type { FreshnessState } from "@/lib/freshness/config";
+import { FreshnessBadge } from "./FreshnessBadge";
 
 // Colonne dell'export (CSV/JSON). Ordine = ordine nel file.
 const FUEL_EXPORT_COLUMNS = [
@@ -28,6 +30,11 @@ export type FuelRow = {
    * e formattiamo la data PRIMA, lato server, passando solo una stringa.
    */
   recordedAtFormatted: string;
+  /**
+   * Freschezza del dato, già calcolata lato server (15 set 2026). Facoltativa:
+   * senza, la riga mostra solo la data come prima.
+   */
+  freshness?: FreshnessState;
 };
 
 type FuelPriceTableProps = {
@@ -235,7 +242,10 @@ export function FuelPriceTable({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right text-system-ink-muted">
-                      {f.recordedAtFormatted}
+                      <span className="inline-flex items-center gap-2">
+                        {f.freshness && <FreshnessBadge state={f.freshness} />}
+                        {f.recordedAtFormatted}
+                      </span>
                     </td>
                   </tr>
                 )),

@@ -39,6 +39,7 @@ import {
 } from "@/lib/sectionHighlights";
 import { localizedCountryName } from "@/lib/countryNames";
 import { FuelPriceTable } from "@/components/FuelPriceTable";
+import { FreshnessBadge } from "@/components/FreshnessBadge";
 import { ItalyProvinceFuelTable } from "@/components/ItalyProvinceFuelTable";
 import { DownloadDataButtons } from "@/components/DownloadDataButtons";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
@@ -837,18 +838,10 @@ export default async function Home() {
                       </td>
                       <td className="px-4 py-3 text-right text-system-ink-muted">
                         <span className="inline-flex items-center gap-2">
-                          {c.freshnessState !== "aggiornato" && (
-                            <span
-                              title={`Ultimo dato ${c.ageDays} giorni fa. ${c.freshnessLabel}: il valore mostrato potrebbe non essere quello corrente.`}
-                              className={
-                                c.freshnessState === "non_aggiornato"
-                                  ? "rounded border border-system-signal-up/40 px-1.5 py-0.5 font-mono text-[10px] uppercase leading-none tracking-wider text-system-signal-up"
-                                  : "rounded border border-system-signal-wait/40 px-1.5 py-0.5 font-mono text-[10px] uppercase leading-none tracking-wider text-system-signal-wait"
-                              }
-                            >
-                              {c.freshnessState === "non_aggiornato" ? "non aggiornato" : "in attesa"}
-                            </span>
-                          )}
+                          <FreshnessBadge
+                            state={c.freshnessState}
+                            title={`Ultimo dato ${c.ageDays} giorni fa. ${c.freshnessLabel}: il valore mostrato potrebbe non essere quello corrente.`}
+                          />
                           {formatDate(c.recordedAt)}
                         </span>
                       </td>
@@ -860,8 +853,10 @@ export default async function Home() {
           )}
           <div className="mt-6">
             <PriceHistoryChart
-              title="Andamento materie prime (90 giorni)"
+              title="Andamento materie prime"
               series={commoditySeries}
+              historyKind="commodities"
+              initialWindow="3m"
             />
           </div>
           <SourceNote sources={["alpha-vantage"]}>
@@ -902,6 +897,18 @@ export default async function Home() {
                     // formatDate() gira QUI, lato server: passiamo la stringa
                     // risultante, mai la funzione (Client Component).
                     recordedAtFormatted: formatDate(f.recordedAt),
+                    // Freschezza calcolata QUI, lato server, e passata come
+                    // stringa: stessa regola della data (15 set 2026, prima
+                    // i carburanti non avevano nessuna etichetta). La fonte
+                    // si deduce dal continente; un continente non mappato
+                    // resta senza etichetta invece di far fallire la pagina.
+                    freshness: CONTINENT_SOURCES[continent]
+                      ? computeFreshness(
+                          f.recordedAt,
+                          getFreshnessConfig(CONTINENT_SOURCES[continent]),
+                          now,
+                        )
+                      : undefined,
                   }))}
                 />
               ))}
@@ -909,8 +916,10 @@ export default async function Home() {
           )}
           <div className="mt-6">
             <PriceHistoryChart
-              title="Andamento carburanti (30 giorni)"
+              title="Andamento carburanti"
               series={fuelSeries}
+              historyKind="fuel"
+              initialWindow="1m"
             />
           </div>
           <SourceNote

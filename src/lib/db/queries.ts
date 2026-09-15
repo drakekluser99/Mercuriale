@@ -1,4 +1,4 @@
-import { eq, desc, gte, and, inArray } from "drizzle-orm";
+import { eq, desc, gte, and, inArray, sql } from "drizzle-orm";
 import { db } from "./client";
 import {
   commodities,
@@ -171,6 +171,48 @@ export async function getFuelPriceHistory(
     .from(retailFuelPrices)
     .innerJoin(regions, eq(retailFuelPrices.regionId, regions.id))
     .where(gte(retailFuelPrices.recordedAt, sinceDate))
+    .orderBy(retailFuelPrices.recordedAt);
+}
+
+/**
+ * Storico carburanti già MEDIATO nel database: una riga per
+ * (continente, carburante, data) invece di una per paese (15 set 2026).
+ *
+ * Serve ai grafici con finestre lunghe (fino a 10 anni, vedi
+ * src/lib/historyWindows.ts): dieci anni di bollettino UE sono circa
+ * 27.000 righe-paese, che trasferite una a una da Neon sarebbero lente e
+ * inutili — il grafico mostra comunque solo la media. Con `avg()` +
+ * `GROUP BY` il database ne restituisce circa 1.000.
+ *
+ * Stessa media di `groupFuelHistory` (semplice, sui paesi presenti in
+ * quella data): il risultato ha la forma di `FuelHistoryRow`, così
+ * `groupFuelHistory` lo trasforma in serie come sempre (con una sola riga
+ * per gruppo, la sua media è il valore stesso). `regionName` non ha
+ * significato qui e vale "media".
+ * `avg(...)::text` perché Drizzle restituisce i `numeric` come stringa:
+ * teniamo la stessa forma delle altre query invece di un numero.
+ */
+export async function getFuelAverageHistory(
+  sinceDate: Date
+): Promise<FuelHistoryRow[]> {
+  return db
+    .select({
+      regionName: sql<string>`'media'`,
+      continent: regions.continent,
+      fuelType: retailFuelPrices.fuelType,
+      price: sql<string>`avg(${retailFuelPrices.price})::text`,
+      currency: retailFuelPrices.currency,
+      recordedAt: retailFuelPrices.recordedAt,
+    })
+    .from(retailFuelPrices)
+    .innerJoin(regions, eq(retailFuelPrices.regionId, regions.id))
+    .where(gte(retailFuelPrices.recordedAt, sinceDate))
+    .groupBy(
+      regions.continent,
+      retailFuelPrices.fuelType,
+      retailFuelPrices.currency,
+      retailFuelPrices.recordedAt
+    )
     .orderBy(retailFuelPrices.recordedAt);
 }
 
