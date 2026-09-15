@@ -6,6 +6,7 @@ import {
   getLatestWeeklyNarratives,
   getLatestItalianFuelPrices,
   getLatestFetchRuns,
+  getFuelAverageHistory,
 } from "@/lib/db/queries";
 import { groupCommodityHistory, groupFuelHistory, priceMovers } from "@/lib/priceHistory";
 import { displayCommodityPrice } from "@/lib/commodityDisplay";
@@ -38,6 +39,9 @@ import {
   provincePetrolSelfSpread,
 } from "@/lib/sectionHighlights";
 import { localizedCountryName } from "@/lib/countryNames";
+import { localizedCommodityName } from "@/lib/commodityNames";
+import { valueAtOrBefore, daysBefore } from "@/lib/pastValue";
+import { ItalyProvinceMap } from "@/components/ItalyProvinceMap";
 import { FuelPriceTable } from "@/components/FuelPriceTable";
 import { FreshnessBadge } from "@/components/FreshnessBadge";
 import { ItalyProvinceFuelTable } from "@/components/ItalyProvinceFuelTable";
@@ -152,6 +156,10 @@ export default async function Home() {
   const commodityHistorySince = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
   // eslint-disable-next-line react-hooks/purity
   const fuelHistorySince = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  // Poco più di un anno di medie carburanti, per il confronto "un anno fa"
+  // del calcolatore. Media calcolata nel database: ~120 righe, non migliaia.
+  // eslint-disable-next-line react-hooks/purity
+  const fuelYearSince = new Date(Date.now() - 400 * 24 * 60 * 60 * 1000);
   const [
     commodityPrices,
     fuelPrices,
@@ -160,6 +168,7 @@ export default async function Home() {
     weeklyNarrative,
     italianFuelPrices,
     fetchRuns,
+    fuelYearHistory,
   ] = await Promise.all([
     getLatestCommodityPrices(),
     getLatestFuelPrices(),
@@ -168,6 +177,7 @@ export default async function Home() {
     getLatestWeeklyNarratives(),
     getLatestItalianFuelPrices(),
     getLatestFetchRuns(),
+    getFuelAverageHistory(fuelYearSince),
   ]);
   const commoditySeries = groupCommodityHistory(commodityHistory);
 
@@ -293,6 +303,19 @@ export default async function Home() {
   const countrySpread = euPetrolSpread(europeanFuelData);
   const provinceSpread = provincePetrolSelfSpread(italianProvinces);
 
+  // Prezzo medio della benzina un mese e un anno fa, per regione (vedi
+  // src/lib/pastValue.ts per le regole: mai un dato successivo alla data,
+  // mai uno più vecchio di 10 giorni rispetto a essa).
+  const fuelYearSeries = groupFuelHistory(fuelYearHistory);
+  const pastPetrol = (continent: string) => {
+    const points =
+      fuelYearSeries.find((s) => s.key === `${continent}|petrol`)?.points ?? [];
+    return {
+      petrolMonthAgo: valueAtOrBefore(points, daysBefore(now, 30))?.value ?? null,
+      petrolYearAgo: valueAtOrBefore(points, daysBefore(now, 365))?.value ?? null,
+    };
+  };
+
   const usFuels = fuelsByContinent.get("north_america") ?? [];
   const usAverage = {
     petrol: usFuels.find((f) => f.fuelType === "petrol")
@@ -302,6 +325,7 @@ export default async function Home() {
       ? parseFloat(usFuels.find((f) => f.fuelType === "diesel")!.price)
       : null,
     currency: "USD",
+    ...pastPetrol("north_america"),
   };
 
   const allTimestamps = [
@@ -775,7 +799,10 @@ export default async function Home() {
               merci.
             </p>
             <div className="mt-4">
-              <FuelImpactCalculator europe={europeAverage} us={usAverage} />
+              <FuelImpactCalculator
+                europe={{ ...europeAverage, ...pastPetrol("europe") }}
+                us={usAverage}
+              />
             </div>
           </section>
         )}
@@ -821,7 +848,11 @@ export default async function Home() {
                   {commodityRows.map((c) => (
                     <tr key={c.symbol} className="border-b border-system-border-subtle transition-colors last:border-0 hover:bg-system-bg">
                       <td className="px-4 py-3">
-                        <div className="font-medium">{c.name}</div>
+                        {/* Nome italiano solo in pagina: nel database,
+                            nell'export e nell'API resta quello della fonte. */}
+                        <div className="font-medium">
+                          {localizedCommodityName(c.symbol, c.name)}
+                        </div>
                         <div className="text-xs text-system-ink-muted">{c.symbol}</div>
                       </td>
                       <td className="px-4 py-3 text-system-ink-secondary">
@@ -982,7 +1013,18 @@ export default async function Home() {
                 "Nessun dato ancora per le province italiane."
               )}
             </p>
-            <div className="mt-4">
+            {/* Mappa e tabella affiancate sugli schermi larghi (15 set 2026):
+                due modi di leggere lo stesso dato — dove costa di più, e
+                l'elenco da cercare — nella stessa schermata invece che uno
+                sotto l'altro. Su mobile tornano in colonna. */}
+            <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-start">
+              <ItalyProvinceMap
+                rows={italyProvinceRows}
+                average={{
+                  petrolSelf: italyAverage.petrolSelf,
+                  dieselSelf: italyAverage.dieselSelf,
+                }}
+              />
               <ItalyProvinceFuelTable rows={italyProvinceRows} />
             </div>
             <SourceNote
@@ -992,7 +1034,9 @@ export default async function Home() {
               ]}
             >
               Fonte: MIMIT, anagrafica e prezzi stazione per stazione,
-              aggregati per provincia · Aggiornamento: giornaliero
+              aggregati per provincia · Aggiornamento: giornaliero · Confini
+              provinciali: ISTAT (CC-BY 4.0), versione ottobre 2025 via
+              geojson-italy
             </SourceNote>
           </section>
         )}

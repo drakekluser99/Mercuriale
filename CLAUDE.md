@@ -1536,6 +1536,30 @@ ponderata, import massivo storico, estrapolazioni causali.
     stato si calcola in `page.tsx` con `CONTINENT_SOURCES`. Le note più su
     che dicono "i carburanti non hanno ancora un badge" sono superate.
 
+- **Blocco B — FATTO (Cowork, 15 set 2026).**
+  - **Mappa delle province** (`ItalyProvinceMap.tsx`), accanto alla tabella
+    nella sezione 05 (affiancate da `lg`). Confini in
+    `public/geo/italy-provinces-2025.topo.json` (69 KB): limiti ISTAT
+    CC-BY 4.0 via `guglielmo/geojson-italy`, release **2025-10-10**, solo
+    livello province, semplificato con mapshaper (`-simplify 8%
+    keep-shapes`, `quantization=1e4`). **NON aggiornarlo alla versione
+    2026 senza controllare**: ISTAT 2026 ha già le nuove province sarde
+    (Gallura, Ogliastra, Medio Campidano, Sulcis Iglesiente), mentre il
+    MIMIT usa ancora le sigle 2016–2025 (`SU`). Con la 2025 le 107 sigle
+    combaciano 1:1 (verificato il 15/9). Se un giorno il MIMIT cambia
+    sigle, `provinces.ts` e questo file vanno aggiornati insieme.
+  - **Scala di colore condivisa**: `src/lib/divergingColor.ts` (prima
+    dentro `EuropeFuelMap.tsx`), usata da entrambe le mappe.
+  - **Calcolatore nel tempo**: righe "Stesso pieno, un mese fa / un anno
+    fa" in `FuelImpactCalculator`. I prezzi passati arrivano da
+    `getFuelAverageHistory` (400 giorni) + `valueAtOrBefore`
+    (`src/lib/pastValue.ts`: mai un dato successivo alla data, mai uno più
+    vecchio di 10 giorni rispetto ad essa → altrimenti "—").
+  - **Nomi italiani delle materie prime**: `src/lib/commodityNames.ts`,
+    applicati a tabella e grafico (quindi anche alle cifre chiave e a
+    "Maggiori variazioni"). Database, export CSV/JSON e `/api/data`
+    restano con i nomi inglesi della fonte.
+
 ## Skill: vercel-react-best-practices
 
 Skill installata in .claude/skills/vercel-react-best-practices/.

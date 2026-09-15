@@ -10,6 +10,7 @@
  */
 
 import { displayCommodityPrice } from "./commodityDisplay";
+import { localizedCommodityName } from "./commodityNames";
 
 export type PricePoint = { date: string; value: number };
 export type PriceSeries = { key: string; label: string; unit: string; points: PricePoint[] };
@@ -39,7 +40,15 @@ export function groupCommodityHistory(rows: CommodityHistoryRow[]): PriceSeries[
     );
     let series = bySymbol.get(row.symbol);
     if (!series) {
-      series = { key: row.symbol, label: row.name, unit: display.unit, points: [] };
+      // Etichetta in italiano (15 set 2026): è il testo dei pulsanti del
+      // grafico e delle card "Maggiori variazioni". La chiave resta il
+      // simbolo della fonte.
+      series = {
+        key: row.symbol,
+        label: localizedCommodityName(row.symbol, row.name),
+        unit: display.unit,
+        points: [],
+      };
       bySymbol.set(row.symbol, series);
     }
     series.points.push({

@@ -14,6 +14,14 @@ export interface RegionFuelAverage {
    */
   petrolNet?: number | null;
   dieselNet?: number | null;
+  /**
+   * Prezzo medio della benzina circa un mese e un anno fa (15 set 2026),
+   * per il confronto nel tempo. `null` se lo storico non ha una
+   * rilevazione abbastanza vicina a quella data (vedi src/lib/pastValue.ts):
+   * la riga mostra "—" invece di un confronto con un dato lontano.
+   */
+  petrolMonthAgo?: number | null;
+  petrolYearAgo?: number | null;
   currency: string;
 }
 
@@ -51,6 +59,24 @@ function formatMoney(value: number, currency: string): string {
 function formatPricePerLiter(value: number, currency: string): string {
   // Stesso layer di formattazione delle tabelle (separatori it-IT).
   return `${formatFuelPrice(value)} ${currencySymbol(currency)}/L`;
+}
+
+/**
+ * Costo del pieno a un prezzo passato, con la differenza rispetto a oggi:
+ * "95,40 € (+3,1%)". La percentuale è sul pieno di oggi rispetto a quello
+ * di allora, cioè "quanto è cambiato da allora".
+ */
+function pastTankCell(
+  past: number | null | undefined,
+  now: number | null,
+  liters: number,
+  currency: string
+): string {
+  if (past === null || past === undefined || now === null || past <= 0) return "—";
+  const change = ((now - past) / past) * 100;
+  const sign = change > 0 ? "+" : change < 0 ? "−" : "";
+  const pct = Math.abs(change).toLocaleString("it-IT", { maximumFractionDigits: 1 });
+  return `${formatMoney(past * liters, currency)} (oggi ${sign}${pct}%)`;
 }
 
 function useNumericField(defaultValue: number) {
@@ -123,6 +149,21 @@ export default function FuelImpactCalculator({ europe, us }: Props) {
         d.petrol !== null
           ? formatMoney(d.petrol * tank.numericValue, d.currency)
           : "—",
+    },
+    // Confronto nel tempo (15 set 2026, punto 14 del brief): lo stesso pieno
+    // ai prezzi di un mese e di un anno fa. Stessa regione, stessa valuta:
+    // qui il confronto è corretto, a differenza di quello Europa/USA.
+    {
+      key: "tank-month",
+      label: "Stesso pieno, un mese fa",
+      value: (d) =>
+        pastTankCell(d.petrolMonthAgo, d.petrol, tank.numericValue, d.currency),
+    },
+    {
+      key: "tank-year",
+      label: "Stesso pieno, un anno fa",
+      value: (d) =>
+        pastTankCell(d.petrolYearAgo, d.petrol, tank.numericValue, d.currency),
     },
     {
       key: "truck",
@@ -252,6 +293,11 @@ export default function FuelImpactCalculator({ europe, us }: Props) {
           materiali, prodotti. Quando il diesel sale, questo costo si
           riflette (in parte) sul prezzo finale di ciò che arriva nei
           negozi.
+        </p>
+        <p>
+          I confronti &quot;un mese fa&quot; e &quot;un anno fa&quot; usano la
+          media più vicina a quella data nello storico (al massimo 10 giorni
+          prima); se non c&apos;è, la cella resta vuota.
         </p>
         <p>
           Stima approssimativa basata sui prezzi medi nazionali più

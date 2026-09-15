@@ -11,6 +11,11 @@ import Link from "next/link";
 import { localizedCountryName } from "@/lib/countryNames";
 import { formatFuelPrice } from "@/lib/format";
 import { routeForCountry } from "@/lib/countries";
+import {
+  divergingColor,
+  INK_HEX,
+  NO_DATA_FILL,
+} from "@/lib/divergingColor";
 
 const GEO_URL =
   "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
@@ -57,17 +62,8 @@ interface Props {
   };
 }
 
-// Hex reali dei token system-* (vedi globals.css @theme) — lo stile SVG di
-// react-simple-maps vuole un colore risolto, non può leggere var(--color-*)
-// in modo affidabile su tutti i browser per il fill.
-const NEUTRAL_HEX = "#e4dccb"; // system-border — centro della scala (alla media UE)
-const BELOW_HEX = "#3f6f4a"; // system-signal-down (verde bosco) — sotto la media
-const ABOVE_HEX = "#b0461f"; // system-signal-up (ruggine) — sopra la media
-const INK_HEX = "#191509"; // system-ink — bordo del paese in hover
-const NO_DATA_FILL = "#f0ebe0"; // system-border-subtle — fallback "nessun dato".
-// Deliberatamente diverso da NEUTRAL_HEX (il centro della scala), altrimenti
-// "nessun dato" e "esattamente alla media UE" sarebbero indistinguibili.
-
+// Colori e scala divergente: in src/lib/divergingColor.ts dal 15 set 2026,
+// condivisi con la mappa delle province italiane (ItalyProvinceMap).
 /**
  * Le metriche selezionabili sulla mappa.
  *
@@ -151,49 +147,6 @@ function metricValue(
   const net = fuel === "petrol" ? data.petrolNet : data.dieselNet;
   if (net === null || !Number.isFinite(net) || gross <= 0) return null;
   return ((gross - net) / gross) * 100;
-}
-
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  const clean = hex.replace("#", "");
-  return {
-    r: parseInt(clean.slice(0, 2), 16),
-    g: parseInt(clean.slice(2, 4), 16),
-    b: parseInt(clean.slice(4, 6), 16),
-  };
-}
-
-function interpolateColor(fromHex: string, toHex: string, t: number): string {
-  const from = hexToRgb(fromHex);
-  const to = hexToRgb(toHex);
-  const r = Math.round(from.r + (to.r - from.r) * t);
-  const g = Math.round(from.g + (to.g - from.g) * t);
-  const b = Math.round(from.b + (to.b - from.b) * t);
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-/**
- * Colore di un valore sulla scala divergente centrata sulla media.
- *
- * Estratta dal render perché ora serve in tre posti — i paesi, la barra
- * della legenda e i riquadri degli estremi — e tre copie della stessa
- * formula sono tre occasioni di farle divergere.
- *
- * L'intensità è `|scarto| * 2` clampata a 1: un paese a metà strada fra la
- * media e un estremo del range arriva già a saturazione piena. Il fattore
- * 2 è la manopola da girare se in pagina la scala sembra accendersi troppo
- * in fretta o troppo piano.
- */
-function divergingColor(
-  value: number,
-  average: number,
-  span: number
-): string {
-  if (span <= 0) return NEUTRAL_HEX;
-  const scarto = (value - average) / span;
-  const intensita = Math.min(Math.abs(scarto) * 2, 1);
-  return scarto < 0
-    ? interpolateColor(NEUTRAL_HEX, BELOW_HEX, intensita)
-    : interpolateColor(NEUTRAL_HEX, ABOVE_HEX, intensita);
 }
 
 /**
