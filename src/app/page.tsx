@@ -394,7 +394,7 @@ export default async function Home() {
    * Una fonte è "in linea" se almeno una delle sue serie NON è nello
    * stato `non_aggiornato` — cioè se è `aggiornato` oppure `in_attesa`.
    * La prima versione contava solo `aggiornato` ed era troppo severa:
-   * il Brent ha cadenza giornaliera con 3 giorni di tolleranza, quindi
+   * il Brent aveva allora cadenza giornaliera con 3 giorni di tolleranza, quindi
    * ogni lunedì mattina — mercati chiusi nel weekend — la fascia avrebbe
    * annunciato "0 / 3 fonti in linea" su dati perfettamente normali
    * (successo davvero il 3 set 2026). `in_attesa` significa "stiamo
@@ -1003,8 +1003,9 @@ export default async function Home() {
             />
           </div>
           <SourceNote sources={["alpha-vantage"]}>
-            Fonte: Alpha Vantage (dati di mercato) · Aggiornamento: giornaliero
-            (petrolio, gas naturale) · mensile (metalli, agricole) · il badge
+            Fonte: Alpha Vantage (dati di mercato, da EIA e FMI) · Petrolio e
+            gas: prezzi giornalieri pubblicati una volta a settimana ·
+            Metalli e agricole: medie mensili, con circa due mesi di ritardo · il badge
             &quot;non aggiornato&quot; segnala una serie ferma oltre il ritardo
             atteso per la sua cadenza
           </SourceNote>

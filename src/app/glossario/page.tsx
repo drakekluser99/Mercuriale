@@ -103,14 +103,17 @@ export default function Glossario() {
             <li>
               <strong>Petrolio e gas naturale</strong> sono scambiati ogni
               giorno su mercati finanziari molto liquidi: esiste una
-              quotazione per ogni giornata di contrattazione, quindi
-              l&apos;aggiornamento è giornaliero.
+              quotazione per ogni giornata di contrattazione. La fonte
+              originale (l&apos;agenzia statunitense EIA) però le pubblica
+              una volta a settimana, tutte insieme: per questo
+              l&apos;ultimo prezzo mostrato può avere fino a una settimana.
             </li>
             <li>
               <strong>Metalli e materie prime agricole</strong> qui arrivano
               da serie di prezzo mondiale aggregate (tipo «Global Price
-              of…»), che vengono ricalcolate e pubblicate una volta al mese,
-              spesso con due o tre settimane di ritardo. Per queste,
+              of…»), che sono medie mensili pubblicate con un ritardo di
+              circa due mesi: a metà settembre, per esempio, il dato più
+              recente è quello di luglio. Per queste,
               l&apos;aggiornamento è mensile.
             </li>
             <li>

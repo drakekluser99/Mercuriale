@@ -916,7 +916,8 @@ origine, sono stati fatti il 15 set 2026: vedi i blocchi A e C in fondo.)
 
 **Stato al 15 set 2026 (fine sessione Cowork).** Tutti i punti proposti
 quel giorno sono fatti: feedback visitatori, blocchi A, B, C e D (parti
-1-3, voci in fondo a questa sezione). Resta aperto:
+1-3) e la correzione delle soglie di freschezza (voci in fondo a questa
+sezione). Resta aperto:
 - **Dominio personalizzato**: lo configura Yuri su Vercel; poi va cambiato
   `SITE_URL` in `src/lib/site.ts` (lo usano layout, robots e sitemap) e
   `homepage` in `package.json`.
@@ -1655,6 +1656,27 @@ quel giorno sono fatti: feedback visitatori, blocchi A, B, C e D (parti
     prezzo in €, differenza con l'Italia, CHF e mese), nota sotto che il
     confronto è indicativo; fonti BFS e BCE nella nota della sezione 01;
     paragrafo in metodologia. Home: query con `.catch` → [].
+
+- **Soglie di freschezza delle materie prime corrette (Cowork, 15 set
+  2026, sera).** Yuri vedeva cotone & co. "non aggiornati". Controllo:
+  - **Pipeline OK**: i cron Alpha Vantage girano, e il dato in database
+    coincide con l'ultimo alla fonte (interrogata Alpha Vantage per tutte
+    e 7 le mensili: ultimo mese **luglio 2026**, stessi valori del sito).
+  - **Fonti vere** (dalla documentazione Alpha Vantage): petrolio e gas =
+    EIA via FRED; metalli e agricole = FMI (IMF) "Global price of …" via
+    FRED. L'EIA pubblica i prezzi spot giornalieri **una volta a
+    settimana** (release 10/9 con dati al 9/9, la successiva il 16/9);
+    l'FMI pubblica medie mensili con **circa due mesi** di ritardo.
+  - **Il problema era la soglia**, non il dato: energia 1+3 giorni e
+    mensili 30+10 segnavano "non aggiornato" serie allineate alla fonte.
+    Ora energia **8+4**, mensili **80+15** (`freshness/config.ts`, con la
+    verifica nel commento). Testi allineati in metodologia, glossario e
+    nota "Fonte" della sezione 03.
+  - Lezione: prima di toccare una soglia, confrontare l'ultimo dato in
+    database con l'ultimo **alla fonte**; se coincidono, il problema è la
+    soglia (o il testo), non la pipeline.
+  - Dal cloud Alpha Vantage, EIA, BFS e BCE rispondono 403: per
+    verificarle si usa il browser (Claude in Chrome).
 
 ## Skill: vercel-react-best-practices
 

@@ -73,14 +73,17 @@ export default function Metodologia() {
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-system-ink-secondary">
             <li>
               <strong>Aggiornato</strong> — nessun badge: l&apos;ultimo
-              valore rientra nella cadenza attesa (1 giorno per petrolio e
-              gas naturale, 7 per i carburanti, 30 per metalli e agricole).
+              valore rientra nella cadenza attesa: 8 giorni per petrolio e
+              gas naturale (prezzi giornalieri che l&apos;EIA pubblica una
+              volta a settimana), 7 per i carburanti, 80 per metalli e
+              agricole (medie mensili che arrivano con circa due mesi di
+              ritardo), 62 per i carburanti svizzeri (media mensile).
             </li>
             <li>
               <strong>&quot;In attesa&quot;</strong> — la cadenza attesa è
               passata da poco, ma restiamo dentro un margine di tolleranza
-              (3 giorni per le serie giornaliere e settimanali, 10 per le
-              mensili) pensato per coprire un ritardo occasionale della
+              (da 2 a 4 giorni per le serie giornaliere e settimanali, da 10
+              a 15 per le mensili) pensato per coprire un ritardo occasionale della
               fonte: un weekend, una festività, una pubblicazione slittata.
             </li>
             <li>
