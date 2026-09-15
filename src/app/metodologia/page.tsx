@@ -59,7 +59,10 @@ export default function Metodologia() {
             pianificati (cron job): le materie prime globali giornalmente,
             i carburanti europei settimanalmente (allineati alla
             pubblicazione ufficiale del bollettino, il giovedì), quelli
-            USA settimanalmente (il lunedì). Non sono dati in tempo reale
+            USA ogni giorno — il dato EIA è settimanale, ma il giorno di
+            pubblicazione può slittare dopo una festività, e un controllo
+            quotidiano lo porta sul sito appena esce invece che una
+            settimana dopo. Non sono dati in tempo reale
             minuto per minuto — il titolo &quot;in tempo quasi reale&quot; si
             riferisce a questo: aggiornati regolarmente, non istantanei.
           </p>

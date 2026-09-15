@@ -208,7 +208,12 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
   `fetch-market-prices-1`…`-5` (materie prime, ogni batch a un'ora
   diversa: 06/08/10/12/14 UTC — su Hobby i cron hanno precisione
   oraria ±59min, quindi vanno distanziati di ore non di minuti),
-  `fetch-eu-fuel-prices` (giovedì), `fetch-us-fuel-prices` (lunedì),
+  `fetch-eu-fuel-prices` (giovedì), `fetch-us-fuel-prices` (**ogni giorno
+  alle 23 UTC** dal 15 set 2026 — prima lunedì 18 UTC, ma l'EIA sposta il
+  giorno di pubblicazione dopo le festività: il dato del 7/9 è uscito
+  mercoledì 9/9 ed è arrivato sul sito solo lunedì 14. Upsert idempotente,
+  quindi i giorni senza novità non creano righe nuove; motivazione estesa
+  in testa alla route),
   `fetch-mimit-prices` (ogni giorno, 05 UTC — prima del primo batch
   materie prime delle 06, per distribuire il carico sulla giornata).
   Il limite Hobby è 100 cron job/progetto, uno al giorno ciascuno.

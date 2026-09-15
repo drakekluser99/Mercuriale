@@ -115,8 +115,9 @@ export default function Glossario() {
             </li>
             <li>
               <strong>Carburanti al consumo</strong> seguono la cadenza di
-              chi li rileva: settimanale per l&apos;UE (giovedì) e per gli
-              USA (lunedì).
+              chi li rileva: settimanale sia per l&apos;UE (giovedì) sia per gli
+              USA (di norma a inizio settimana, ma il giorno può slittare
+              dopo una festività: per questo li controlliamo ogni giorno).
             </li>
           </ul>
         </Section>

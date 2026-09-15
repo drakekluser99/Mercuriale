@@ -876,11 +876,11 @@ export default async function Home() {
             sources={["eu-commission", "eia"]}
             checks={[
               { label: "UE", cadence: "ogni giovedì", checkedAt: euFuelRun?.startedAt ?? null },
-              { label: "USA", cadence: "ogni lunedì", checkedAt: usFuelRun?.startedAt ?? null },
+              { label: "USA", cadence: "ogni giorno", checkedAt: usFuelRun?.startedAt ?? null },
             ]}
           >
             Fonte: Bollettino Petrolifero Settimanale (UE, ogni giovedì) ·
-            EIA (USA, ogni lunedì) · Prezzi medi nazionali, non punti vendita
+            EIA (USA, dato settimanale controllato ogni giorno) · Prezzi medi nazionali, non punti vendita
             specifici
           </SourceNote>
         </section>
