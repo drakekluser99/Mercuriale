@@ -914,6 +914,32 @@ decorative. Escluso per ora: redesign totale, Oceania/LatAm,
 estrapolazioni causali. (Media UE ponderata e storico lungo, esclusi in
 origine, sono stati fatti il 15 set 2026: vedi i blocchi A e C in fondo.)
 
+**Registro aggiornamenti del 15 set 2026** (in ordine di commit; il
+dettaglio di ciascuno è nelle voci in fondo a questa sezione o in "Errori
+noti"):
+
+| Commit | Tipo | Cosa | File / tabelle principali |
+|---|---|---|---|
+| a3a127f | feat | Indice sezioni fisso 01–05 con sezione attiva | `SectionNav.tsx`, `page.tsx` |
+| 3708f5d | fix | Cron carburanti USA ogni giorno (23 UTC) | `vercel.json`, route USA |
+| d2fa443 | fix | Data estrazione MIMIT letta anche in ISO, niente ripiego sull'ora corrente | `mimitExtractedOn.ts` (+ pulizia DB) |
+| 2f56b05 | feat | Cremisi `system-mark`, cifra chiave per sezione, "Come citare", stati più chiari in `/stato-dati` | `KeyFigure`, `SectionHeading`, `CiteBox`, `sectionHighlights.ts`, `site.ts` |
+| 9f38187 | feat | Grafici da 1 mese a 10 anni, freschezza sui carburanti (blocco A) | `/api/history`, `historyWindows.ts`, `PriceHistoryChart`, `FreshnessBadge` |
+| 3fae9b7 | feat | Mappa province, calcolatore "un mese/anno fa", nomi italiani materie prime (blocco B) | `ItalyProvinceMap`, `public/geo/…2025…`, `pastValue.ts`, `commodityNames.ts` |
+| c4473e8 | feat | Media UE ponderata + riquadri su desktop (blocco C) | tabella `eu_weighted_averages` (migr. 0011) |
+| 7cfe74f | feat | Riquadri Italia vs Francia/Austria/Slovenia (blocco D1) | `NeighbourTiles.tsx`, `italyVsNeighbours` |
+| 460d64e | feat | Raccolta `/numeri`, cifra del giorno a rotazione (blocco D2) | `annualFigures.ts`, `app/numeri`, fonte `eurostat` |
+| 7a1e6e4 | feat | Svizzera: BFS mensile + cambio BCE (blocco D3) | tabella `swiss_fuel_prices` (migr. 0012), cron `fetch-ch-fuel-prices` |
+| 4ac5647 | fix | Soglie di freschezza materie prime: energia 8+4, mensili 80+15 | `freshness/config.ts`, testi |
+| 89db3b4 | fix | Bollettino UE controllato ogni giorno (15 UTC) | `vercel.json`, route UE, testi |
+
+Operazioni manuali legate a questi commit (da lanciare in locale, non le
+fa il deploy): `npm run db:migrate` (0011, 0012), `npm run
+backfill:eu-fuel`, `npm run backfill:ch-fuel`, backfill delle materie
+prime mancanti con `--only`, pulizia delle righe MIMIT con data
+sbagliata. Se una tabella nuova risulta vuota in produzione, il primo
+sospetto è una di queste non lanciata.
+
 **Stato al 15 set 2026 (fine sessione Cowork).** Tutti i punti proposti
 quel giorno sono fatti: feedback visitatori, blocchi A, B, C e D (parti
 1-3) e la correzione delle soglie di freschezza (voci in fondo a questa
