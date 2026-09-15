@@ -1,8 +1,6 @@
 import type { MetadataRoute } from "next";
 
-// Stessa costante di sitemap.ts, stesso motivo: deve combaciare con
-// `metadataBase` in src/app/layout.tsx.
-const BASE_URL = "https://commodity-tracker-one-delta.vercel.app";
+import { SITE_URL as BASE_URL } from "@/lib/site";
 
 /**
  * robots.txt generato a ogni richiesta e servito automaticamente su

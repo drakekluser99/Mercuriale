@@ -124,6 +124,25 @@
    * dato", non un problema.
    */
   --color-system-signal-wait: #8a6f28;
+
+  /* --- segno di struttura (15 set 2026) --- */
+  /*
+   * `system-mark` — cremisi, il "pallino rosso" del disegno originale del
+   * logo. Nasce da un feedback reale: "aggiungerei un colore in contrasto,
+   * dopo il primo scroll ho notato un calo di attenzione". L'ambra da sola
+   * è troppo vicina all'avorio per fare da richiamo nelle sezioni chiare.
+   *
+   * REGOLA: è un colore di STRUTTURA, non di significato. Si usa solo per
+   * le etichette numerate delle sezioni (SectionHeading) e per il filo della
+   * cifra chiave (KeyFigure). MAI su un prezzo o una variazione: lì il
+   * rosso-ruggine `signal-up` vuol dire "in salita", e due rossi con due
+   * significati sullo stesso numero confonderebbero. Per questo il cremisi
+   * è spostato verso il blu (tonalità 345°) mentre la ruggine va verso
+   * l'arancio (16°), e compare solo come blocco pieno o filo, mai come
+   * colore di un testo numerico.
+   * Contrasto del testo avorio sopra: circa 7,6:1 (AA anche a 12px).
+   */
+  --color-system-mark: #a3163a;
   /*
    * Stessa storia delle due ambre: i colori di segnale tarati per il
    * fondo avorio sono troppo scuri sul bruno del chrome (la ruggine

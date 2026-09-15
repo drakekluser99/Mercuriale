@@ -9,7 +9,7 @@ import {
   type DataCorrectionRow,
 } from "@/lib/db/queries";
 import { computeFreshness, getFreshnessConfig } from "@/lib/freshness/compute";
-import { formatCommodityPrice, formatFuelPrice, formatDateTime } from "@/lib/format";
+import { formatCommodityPrice, formatFuelPrice, formatDate, formatDateTime } from "@/lib/format";
 
 export const metadata = {
   title: "Stato dei dati — Mercuriale",
@@ -39,6 +39,7 @@ const JOB_LABELS: Record<string, string> = {
   "fetch-market-prices-5": "Materie prime — batch 5 (zucchero, caffè)",
   "fetch-eu-fuel-prices": "Carburanti — Unione Europea",
   "fetch-us-fuel-prices": "Carburanti — Stati Uniti",
+  "fetch-mimit-prices": "Carburanti — Italia, per provincia (MIMIT)",
 };
 
 /**
@@ -53,7 +54,10 @@ const JOB_LABELS: Record<string, string> = {
  * Per i due job carburanti, invece, tutta la fonte condivide un'unica
  * cadenza settimanale (vedi FRESHNESS_CONFIG), quindi lì il badge è affidabile.
  */
-const SOURCE_LEVEL_FRESHNESS = new Set(["eu_weekly_oil_bulletin", "eia_us"]);
+// `mimit` aggiunto il 15 set 2026: anche lì un solo job, una sola cadenza
+// (giornaliera), e da quel giorno `latest_recorded_at` è la data vera
+// dell'estrazione e non l'ora del download (vedi mimitExtractedOn.ts).
+const SOURCE_LEVEL_FRESHNESS = new Set(["eu_weekly_oil_bulletin", "eia_us", "mimit"]);
 
 /** Quante correzioni mostrare — vedi getRecentCorrections in queries.ts,
  *  stesso numero passato esplicitamente qui per poterlo citare nel testo. */
@@ -105,12 +109,38 @@ export default async function StatoDati() {
         <Section index="01" title="Pipeline di acquisizione">
           <p className="mb-4 text-sm leading-relaxed text-system-ink-secondary">
             L&apos;ultima esecuzione registrata di ciascun processo
-            automatico (cron). &quot;OK&quot; significa che il processo è
-            arrivato in fondo senza errori — non garantisce che la fonte
-            avesse dati nuovi da dare: una fonte ferma e un nostro cron
-            fermo sono due problemi diversi, distinti qui dal campo
-            &quot;dato più recente&quot;.
+            automatico (cron). L&apos;etichetta risponde a due domande
+            diverse: se il nostro processo ha funzionato, e se la fonte ha
+            pubblicato dati nuovi.
           </p>
+          <ul className="mb-4 space-y-1 text-sm leading-relaxed text-system-ink-secondary">
+            <li>
+              <strong className="text-system-ink">Aggiornato</strong>: il
+              processo ha funzionato e il dato è recente per la cadenza della
+              fonte.
+            </li>
+            <li>
+              <strong className="text-system-ink">In attesa</strong>: il
+              processo ha funzionato, la fonte non ha ancora pubblicato il
+              dato successivo. È normale fra un&apos;uscita e l&apos;altra.
+            </li>
+            <li>
+              <strong className="text-system-ink">Fonte ferma</strong>: il
+              dato è più vecchio del ritardo tollerato per quella fonte.
+            </li>
+            <li>
+              <strong className="text-system-ink">Eseguito</strong>: il
+              processo ha funzionato, ma qui non diamo un giudizio sulla
+              freschezza (vedi &quot;Limiti di questa pagina&quot;): guarda la
+              data del dato più recente.
+            </li>
+            <li>
+              <strong className="text-system-ink">Errore</strong> /{" "}
+              <strong className="text-system-ink">interrotto</strong>: il
+              nostro processo non è arrivato in fondo. Il problema è nostro,
+              non della fonte.
+            </li>
+          </ul>
           {runs.length === 0 ? (
             <SystemCard>
               <p className="text-sm text-system-ink-secondary">
@@ -178,10 +208,10 @@ export default async function StatoDati() {
               materia prima resta quella già mostrata in homepage.
             </li>
             <li>
-              Il cron MIMIT (prezzi provinciali italiani) non scrive ancora
-              in questa tabella: registra solo il conteggio delle righe
-              salvate, non uno stato di esecuzione strutturato — non è
-              incluso qui finché non lo farà.
+              Per i prezzi provinciali italiani (MIMIT) la data del dato è
+              affidabile dal 15 settembre 2026: prima veniva registrata
+              l&apos;ora del download invece della data dell&apos;estrazione,
+              e le rilevazioni di quei giorni sono state rimosse.
             </li>
             <li>
               &quot;Correzioni recenti&quot; è un registro degli ultimi
@@ -242,7 +272,10 @@ function RunCard({ run, now }: { run: FetchRunSummary; now: Date }) {
             Dato più recente
           </dt>
           <dd className="mt-0.5 font-mono tabular-nums text-system-ink">
-            {run.latestRecordedAt ? formatDateTime(run.latestRecordedAt) : "—"}
+            {/* Solo la data, senza ora: `latest_recorded_at` è il giorno a
+                cui si riferisce il dato (sempre mezzanotte), e un "00:00"
+                in pagina faceva pensare a un orario di rilevazione. */}
+            {run.latestRecordedAt ? formatDate(run.latestRecordedAt) : "—"}
           </dd>
         </div>
       </dl>
@@ -293,17 +326,26 @@ function StatusBadge({
   if (freshness === "in_attesa") {
     return <Badge tone="wait">in attesa</Badge>;
   }
-  return <Badge tone="down">ok</Badge>;
+  if (freshness === "aggiornato") {
+    return <Badge tone="down">aggiornato</Badge>;
+  }
+  // Nessun giudizio di freschezza (i batch Alpha Vantage, vedi
+  // SOURCE_LEVEL_FRESHNESS): fino al 15 set 2026 qui c'era un "ok" verde,
+  // che accanto a un dato fermo da 76 giorni si leggeva come "tutto
+  // aggiornato". "Eseguito", neutro, dice solo ciò che sappiamo: il
+  // processo ha funzionato.
+  return <Badge tone="neutral">eseguito</Badge>;
 }
 
 function Badge({
   tone,
   children,
 }: {
-  tone: "up" | "down" | "wait";
+  tone: "up" | "down" | "wait" | "neutral";
   children: ReactNode;
 }) {
   const toneClass = {
+    neutral: "border-system-border text-system-ink-secondary",
     up: "border-system-signal-up/40 text-system-signal-up",
     down: "border-system-signal-down/40 text-system-signal-down",
     wait: "border-system-signal-wait/40 text-system-signal-wait",

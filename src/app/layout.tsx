@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 // IBM Plex Sans + Mono: una superfamiglia disegnata insieme, quindi le
@@ -27,7 +28,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://commodity-tracker-one-delta.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title: "Mercuriale · Prezzi materie prime e carburanti",
   description:
     "Prezzi di materie prime globali (petrolio, gas, metalli, agricole) e carburanti al consumo per regione. Dati pubblici, con fonte, data e limiti dichiarati; nessuna garanzia di accuratezza.",
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
     title: "Mercuriale",
     description:
       "Prezzi di materie prime e carburanti — dati pubblici, con fonte, data e limiti.",
-    url: "https://commodity-tracker-one-delta.vercel.app",
+    url: SITE_URL,
     siteName: "Mercuriale",
     locale: "it_IT",
     type: "website",

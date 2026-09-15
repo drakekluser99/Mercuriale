@@ -2,12 +2,10 @@ import type { MetadataRoute } from "next";
 import { EU_COUNTRY_SLUGS } from "@/lib/countries";
 import { ALL_PROVINCES } from "@/lib/provinces";
 
-// Deve combaciare con `metadataBase` in src/app/layout.tsx. Non importata da
-// lì per evitare un giro di dipendenze per una singola stringa — stessa
-// scelta di "scritto a mano invece di derivato" già fatta in countries.ts e
-// provinces.ts. Se cambia il dominio (dominio personalizzato ancora in
-// sospeso, vedi CLAUDE.md), aggiornare in entrambi i punti.
-const BASE_URL = "https://commodity-tracker-one-delta.vercel.app";
+// L'indirizzo del sito vive in src/lib/site.ts (15 set 2026): prima era
+// ripetuto qui, in robots.ts e in layout.tsx, con l'obbligo di tenerli
+// allineati a mano.
+import { SITE_URL as BASE_URL } from "@/lib/site";
 
 /**
  * Sitemap generata a ogni richiesta e servita automaticamente su

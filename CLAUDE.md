@@ -1487,6 +1487,37 @@ ponderata, import massivo storico, estrapolazioni causali.
     fetch_runs" (lo è, dalla Fase 4/automazione cron di questa stessa
     sessione).
 
+- **Migliorie dai feedback dei primi visitatori — FATTO (Cowork, 15 set
+  2026).** Tre feedback reali (vedi project doc
+  `mercuriale-riepilogo-15-set-2026-fonti-feedback-indice.md`): "poco
+  comprensibile, più numeri grandi, richiami alle sezioni sotto", "lo terrò
+  presente se scriverò di temi analoghi", "comprensibile, ma serve un colore
+  in contrasto: dopo il primo scroll cala l'attenzione". Risposte:
+  - `SectionNav.tsx`: indice 01–05 fisso in alto con sezione attiva
+    (IntersectionObserver). Vive FUORI dall'header: l'`overflow-hidden`
+    dell'header rompeva `sticky`.
+  - Token `system-mark` (cremisi #a3163a) in `globals.css`: SOLO struttura
+    (etichette numerate di `SectionHeading.tsx`, filo di `KeyFigure.tsx`),
+    MAI su prezzi o variazioni — il rosso-ruggine `signal-up` significa
+    "in salita". Tonalità 345° contro i 16° della ruggine.
+  - `KeyFigure.tsx` + `src/lib/sectionHighlights.ts` (puro, testato): una
+    cifra chiave in apertura di ogni sezione — Italia vs media dei 27,
+    quota di imposte nella media, materia prima con la variazione più
+    ampia, divario paese più caro/economico, divario provincia più
+    cara/economica. Tutto da dati già calcolati; se manca un pezzo la cifra
+    non compare.
+  - `CiteBox.tsx` + `CopyButton.tsx`: "Come citare questi dati" in fondo
+    alla home, citazione copiabile che nomina SEMPRE anche le fonti
+    primarie.
+  - `src/lib/site.ts` (`SITE_URL`): l'indirizzo del sito ora vive in un
+    solo posto (layout, sitemap, robots, CiteBox). Col dominio
+    personalizzato si cambia lì, più l'esempio in prosa in
+    `metodologia/page.tsx`.
+  - `/stato-dati`: il badge verde "ok" senza giudizio di freschezza è
+    diventato "eseguito" (neutro); con giudizio dice "aggiornato"; legenda
+    degli stati in pagina; MIMIT ha etichetta e badge di freschezza; il
+    "dato più recente" mostra solo la data.
+
 ## Skill: vercel-react-best-practices
 
 Skill installata in .claude/skills/vercel-react-best-practices/.

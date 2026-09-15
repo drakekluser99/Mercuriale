@@ -27,6 +27,17 @@ import EuropeFuelMap from "@/components/EuropeFuelMap";
 import FuelImpactCalculator from "@/components/FuelImpactCalculator";
 import MobileNav from "@/components/MobileNav";
 import { SectionNav } from "@/components/SectionNav";
+import { SectionHeading } from "@/components/SectionHeading";
+import { KeyFigure } from "@/components/KeyFigure";
+import { CiteBox } from "@/components/CiteBox";
+import {
+  italyVsEuAverage,
+  euPetrolTaxShare,
+  biggestMover,
+  euPetrolSpread,
+  provincePetrolSelfSpread,
+} from "@/lib/sectionHighlights";
+import { localizedCountryName } from "@/lib/countryNames";
 import { FuelPriceTable } from "@/components/FuelPriceTable";
 import { ItalyProvinceFuelTable } from "@/components/ItalyProvinceFuelTable";
 import { DownloadDataButtons } from "@/components/DownloadDataButtons";
@@ -270,6 +281,16 @@ export default async function Home() {
       };
     })
     .filter((r): r is NonNullable<typeof r> => r !== null);
+
+  // Cifre chiave in apertura delle sezioni 01–05 (15 set 2026, dai
+  // feedback dei primi visitatori). Tutte ricavate da dati già calcolati
+  // qui sopra; ognuna può essere `null`, e allora la sezione non la mostra.
+  // Logica e motivazioni in src/lib/sectionHighlights.ts.
+  const italyGap = italyVsEuAverage(europeanFuelData, europeAverage);
+  const euTaxShare = euPetrolTaxShare(europeAverage);
+  const topCommodityMover = biggestMover(priceMovers(commoditySeries));
+  const countrySpread = euPetrolSpread(europeanFuelData);
+  const provinceSpread = provincePetrolSelfSpread(italianProvinces);
 
   const usFuels = fuelsByContinent.get("north_america") ?? [];
   const usAverage = {
@@ -686,24 +707,25 @@ export default async function Home() {
 
         {europeanFuelData.length > 0 && (
           <section id="mappa" className="scroll-mt-16">
-            <div className="flex items-baseline gap-3">
-              <span className="font-mono text-xs text-system-ink-muted">01 /</span>
-              {/* "Carburanti" e non "benzina": da quando la mappa ha il
-                  selettore, il titolo deve reggere entrambe le viste.
-                  Lasciarlo su "benzina" significava che scegliendo il
-                  diesel l'intestazione smentiva il grafico sotto.
-
-                  La strada alternativa — far seguire il titolo alla
-                  metrica attiva — richiederebbe di spostare l'h2 dentro il
-                  Client Component o di sollevare lo stato fin qui, e
-                  questa sarebbe l'unica sezione con un'intestazione
-                  renderizzata lato client: un'eccezione al modello di
-                  tutte le altre per un guadagno che i due chip, già
-                  visibili sopra la mappa, danno da soli. */}
-              <h2 className="text-lg font-semibold text-system-ink">
-                Prezzo dei carburanti in Europa
-              </h2>
-            </div>
+            {/* "Carburanti" e non "benzina": da quando la mappa ha il
+                selettore, il titolo deve reggere entrambe le viste.
+                Lasciarlo su "benzina" significava che scegliendo il diesel
+                l'intestazione smentiva il grafico sotto. Far seguire il
+                titolo alla metrica attiva richiederebbe di renderizzarlo
+                lato client: non ne vale la pena, i chip sopra la mappa
+                bastano. */}
+            <SectionHeading number="01" title="Prezzo dei carburanti in Europa" />
+            {italyGap && (
+              <KeyFigure
+                value={`${italyGap.diff >= 0 ? "+" : "−"}${formatFuelPrice(Math.abs(italyGap.diff))} €/L`}
+                tone={italyGap.diff >= 0 ? "up" : "down"}
+              >
+                La benzina in Italia ({formatFuelPrice(italyGap.italy)} €/L)
+                rispetto alla media dei 27 paesi UE
+                ({formatFuelPrice(italyGap.average)} €/L). Passa sulla mappa
+                per vedere quanto di ogni prezzo è imposta.
+              </KeyFigure>
+            )}
             <div className="mt-4 rounded-lg border border-system-border bg-system-surface p-4">
               {/* `euAverage` con entrambi i carburanti, non solo la benzina:
                   la mappa ora si può commutare su diesel, e ogni metrica ha
@@ -737,11 +759,16 @@ export default async function Home() {
 
         {(europeAverage.petrol !== null || usAverage.petrol !== null) && (
           <section id="calcolatore" className="mt-12 scroll-mt-16">
-            <div className="flex items-baseline gap-3">
-              <span className="font-mono text-xs text-system-ink-muted">02 /</span>
-              <h2 className="text-lg font-semibold text-system-ink">Cosa significa in pratica</h2>
-            </div>
-            <p className="mt-1 text-sm text-system-ink-secondary">
+            <SectionHeading number="02" title="Cosa significa in pratica" />
+            {euTaxShare !== null && (
+              // Una quota non è una variazione: togliamo il "+" che
+              // formatPercent mette davanti ai valori positivi.
+              <KeyFigure value={formatPercent(euTaxShare).replace("+", "")}>
+                del prezzo medio della benzina nei 27 paesi UE sono imposte:
+                accisa, IVA e altre voci. Il resto è il carburante.
+              </KeyFigure>
+            )}
+            <p className="mt-4 text-sm text-system-ink-secondary">
               Quanto costa un pieno per un&apos;auto normale, e quanto pesa il
               carburante sui trasporti — camion che portano cibo, materiali,
               merci.
@@ -753,11 +780,7 @@ export default async function Home() {
         )}
 
         <section id="materie-prime" className="mt-12 scroll-mt-16">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-baseline gap-3">
-              <span className="font-mono text-xs text-system-ink-muted">03 /</span>
-              <h2 className="text-lg font-semibold text-system-ink">Materie prime globali</h2>
-            </div>
+          <SectionHeading number="03" title="Materie prime globali">
             {commodityRows.length > 0 && (
               <DownloadDataButtons
                 filenameBase="mercuriale-materie-prime"
@@ -765,7 +788,19 @@ export default async function Home() {
                 rows={commodityExportRows}
               />
             )}
-          </div>
+          </SectionHeading>
+          {topCommodityMover && (
+            <KeyFigure
+              value={formatPercent(topCommodityMover.changePct)}
+              tone={topCommodityMover.changePct >= 0 ? "up" : "down"}
+            >
+              {topCommodityMover.label} negli ultimi 90 giorni (
+              {formatCommodityPrice(topCommodityMover.first)} →{" "}
+              {formatCommodityPrice(topCommodityMover.last)}{" "}
+              {shortUnit(topCommodityMover.unit)}): la variazione più ampia fra
+              le materie prime seguite.
+            </KeyFigure>
+          )}
           {commodityPrices.length === 0 ? (
             <EmptyState label="Nessun dato ancora. Il cron job non è ancora girato per questa fonte." />
           ) : (
@@ -838,10 +873,16 @@ export default async function Home() {
         </section>
 
         <section id="carburanti" className="mt-12 scroll-mt-16">
-          <div className="flex items-baseline gap-3">
-            <span className="font-mono text-xs text-system-ink-muted">04 /</span>
-            <h2 className="text-lg font-semibold text-system-ink">Carburanti al consumo</h2>
-          </div>
+          <SectionHeading number="04" title="Carburanti al consumo" />
+          {countrySpread && (
+            <KeyFigure value={`${formatFuelPrice(countrySpread.gap)} €/L`}>
+              di differenza sulla benzina fra il paese UE più caro,{" "}
+              {localizedCountryName(countrySpread.highest.countryName)} (
+              {formatFuelPrice(countrySpread.highValue)} €/L), e il più
+              economico, {localizedCountryName(countrySpread.lowest.countryName)}{" "}
+              ({formatFuelPrice(countrySpread.lowValue)} €/L).
+            </KeyFigure>
+          )}
           {fuelsByContinent.size === 0 ? (
             <EmptyState label="Nessun dato ancora. Il cron job non è ancora girato per questa fonte." />
           ) : (
@@ -893,13 +934,20 @@ export default async function Home() {
             ricercabile) che portano ciascuno alla propria pagina provincia. */}
         {italyProvinceRows.length > 0 && (
           <section id="province" className="mt-12 scroll-mt-16">
-            <div className="flex items-baseline gap-3">
-              <span className="font-mono text-xs text-system-ink-muted">05 /</span>
-              <h2 className="text-lg font-semibold text-system-ink">
-                Carburanti in Italia, provincia per provincia
-              </h2>
-            </div>
-            <p className="mt-1 text-sm leading-relaxed text-system-ink-secondary">
+            <SectionHeading
+              number="05"
+              title="Carburanti in Italia, provincia per provincia"
+            />
+            {provinceSpread && (
+              <KeyFigure value={`${formatFuelPrice(provinceSpread.gap)} €/L`}>
+                di differenza sulla benzina self fra la provincia più cara,{" "}
+                {provinceSpread.highest.provinceName} (
+                {formatFuelPrice(provinceSpread.highValue)} €/L), e la più
+                economica, {provinceSpread.lowest.provinceName}{" "}
+                ({formatFuelPrice(provinceSpread.lowValue)} €/L).
+              </KeyFigure>
+            )}
+            <p className="mt-4 text-sm leading-relaxed text-system-ink-secondary">
               {italyAverage.petrolSelf !== null ? (
                 <>
                   Media nazionale self:{" "}
@@ -939,6 +987,11 @@ export default async function Home() {
             </SourceNote>
           </section>
         )}
+
+        {/* "Come citare": per chi scrive (vedi src/components/CiteBox.tsx).
+            In fondo e non in cima: serve a chi ha già trovato il numero
+            che cercava. */}
+        <CiteBox consultedOn={formatDate(now)} />
       </main>
 
       {/* Footer sul chrome scuro, come l'header: la pagina è "incorniciata"
