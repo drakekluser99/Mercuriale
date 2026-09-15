@@ -28,12 +28,22 @@ async function main() {
   const { fetchAndAggregateMimit, averagePrice } = await import(
     "../src/lib/fetchers/mimit"
   );
+  const { parseExtractedOn } = await import(
+    "../src/lib/fetchers/mimitExtractedOn"
+  );
 
   console.log("Scaricamento anagrafica + prezzi MIMIT...");
   const result = await fetchAndAggregateMimit();
   const { diagnostics } = result;
 
   console.log(`Estrazione: ${result.extractedOn ?? "(riga non trovata)"}`);
+  // Mostra anche come la riga viene INTERPRETATA: è la data che finisce in
+  // `recorded_at`. Se qui compare "NON RICONOSCIUTA", il --save si fermerà
+  // con un errore invece di salvare (vedi mimitExtractedOn.ts).
+  const parsedDate = parseExtractedOn(result.extractedOn);
+  console.log(
+    `Data del dato (recorded_at): ${parsedDate ? parsedDate.toISOString().slice(0, 10) : "NON RICONOSCIUTA"}`,
+  );
   console.log(`Codifica: ${diagnostics.decodingUsedFallback ? "windows-1252 (fallback)" : "utf-8"}`);
   console.log(`Impianti riconosciuti (provincia nota): ${diagnostics.totalStations}`);
   console.log(`Righe prezzo lette: ${diagnostics.totalPriceRows}`);

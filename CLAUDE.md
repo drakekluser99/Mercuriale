@@ -843,6 +843,21 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
   `.gitignore` esista, verificarne l'effetto riga per riga quando un
   file nuovo compare in staging da una cartella non vista prima
 
+- **Data MIMIT letta nel formato sbagliato → righe doppie (corretto 15 set
+  2026).** `parseExtractedOn` cercava `gg/mm/aaaa`, ma la riga reale è
+  "Estrazione del 2026-09-14" (ISO). La lettura falliva sempre e
+  `saveMimitPrices` ripiegava in silenzio su `new Date()`: ogni run (cron
+  delle 05 e ogni Run manuale) salvava 214 righe con l'ORARIO del download
+  come `recorded_at`, e il vincolo unico non scattava mai. Sintomo visibile:
+  in `/stato-dati` il "dato più recente" MIMIT coincideva al minuto con
+  l'ultima esecuzione. Ora il parser vive in
+  `src/lib/fetchers/mimitExtractedOn.ts` (puro, testato, accetta ISO e
+  gg/mm/aaaa, rifiuta date impossibili) e se la data non si legge il run
+  FALLISCE invece di inventarla. Pulizia del DB: cancellate le righe con
+  `recorded_at` diverso dalla mezzanotte. Lezione generale: un parser
+  scritto senza aver visto il dato vero non deve avere un ripiego
+  silenzioso — `inspect-mimit.ts` ora stampa anche la data interpretata
+
 ## Workflow con l'utente
 
 - L'utente alterna claude.ai (chat web, dove Claude prepara modifiche in

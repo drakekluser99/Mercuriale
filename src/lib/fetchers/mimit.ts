@@ -64,7 +64,8 @@ function decodeMimitCsv(buffer: ArrayBuffer): string {
 /** Righe grezze di un CSV pipe-delimited MIMIT, saltando le due righe di intestazione. */
 function parseMimitRows(text: string): { extractedOn: string | null; rows: string[][] } {
   const lines = text.split(/\r?\n/).filter((l) => l.length > 0);
-  // Riga 1: "Estrazione del gg/mm/aaaa" o simile — non è la data DEL DATO
+  // Riga 1: "Estrazione del 2026-09-14" (formato ISO, verificato sul file
+  // reale il 15/9/2026; la lettura sta in mimitExtractedOn.ts) — non è la data DEL DATO
   // per ogni riga (quella la porta `dtComu` nel file prezzi), ma è il
   // timestamp dell'intero export ed è ciò che si salva come `recordedAt`.
   const extractedOn = lines[0]?.trim() ?? null;

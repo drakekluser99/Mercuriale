@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { provinces, retailFuelPricesIt } from "@/lib/db/schema";
 import { ALL_PROVINCES } from "@/lib/provinces";
 import { averagePrice, type MimitFetchResult } from "./mimit";
+import { parseExtractedOn } from "./mimitExtractedOn";
 
 /**
  * Salva il risultato già aggregato di fetchAndAggregateMimit(). Stesso
@@ -29,6 +30,19 @@ export async function saveMimitPrices(
 ): Promise<{ written: number; recordedAt: Date }> {
   const retrievedAt = new Date();
 
+  // La data del dato è quella dell'estrazione MIMIT, non "adesso". Si
+  // legge PRIMA di scrivere qualsiasi cosa: se non si riesce, il run si
+  // ferma con un errore (la route lo registra in fetch_runs come
+  // `ok: false`) invece di ripiegare sull'ora corrente. Il ripiego
+  // silenzioso c'era, ed è costato righe doppie a ogni esecuzione dal 7
+  // al 15 set 2026 — vedi mimitExtractedOn.ts.
+  const recordedAt = parseExtractedOn(result.extractedOn);
+  if (!recordedAt) {
+    throw new Error(
+      `Data di estrazione MIMIT non riconosciuta: ${JSON.stringify(result.extractedOn)}`,
+    );
+  }
+
   // Passo 1: anagrafica province, tutte e 107, sempre.
   const provinceIdByCode = new Map<string, number>();
   for (const p of ALL_PROVINCES) {
@@ -43,10 +57,10 @@ export async function saveMimitPrices(
     provinceIdByCode.set(p.code, row.id);
   }
 
-  // La data del dato è quella dell'estrazione MIMIT, non "adesso": se il
-  // cron gira in ritardo o viene rilanciato a mano, `recordedAt` deve
-  // restare la data che il file dichiara.
-  const recordedAt = parseExtractedOn(result.extractedOn) ?? new Date();
+  // `recordedAt` è già stato letto e validato in cima alla funzione: se il
+  // cron gira in ritardo o viene rilanciato a mano resta la data che il
+  // file dichiara, quindi l'upsert aggiorna le righe del giorno invece di
+  // crearne di nuove.
 
   // Passo 2: unisce i bucket self/servito in una riga per (provincia,
   // carburante) — lo schema li vuole come due colonne della stessa riga,
@@ -125,20 +139,4 @@ export async function saveMimitPrices(
   // lo registra su `fetch_runs` per la pagina /stato-dati, che deve poter
   // mostrare la data del DATO salvato, non l'orario di esecuzione del run.
   return { written, recordedAt };
-}
-
-/**
- * "Estrazione del gg/mm/aaaa" (o simile) -> Date. Ritorna `null` se il
- * formato non combacia — non ancora verificato contro una riga reale, vedi
- * il commento in mimit.ts. In quel caso il chiamante usa `new Date()`
- * (adesso) come ripiego, che è meglio di far fallire l'intero salvataggio
- * per una riga di metadata che non siamo riusciti a interpretare.
- */
-function parseExtractedOn(line: string | null): Date | null {
-  if (!line) return null;
-  const match = line.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (!match) return null;
-  const [, day, month, year] = match;
-  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
-  return Number.isNaN(date.getTime()) ? null : date;
 }
