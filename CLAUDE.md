@@ -910,11 +910,25 @@ Direzione di fondo (brief di allineamento): Mercuriale deve diventare un
 "osservatorio aperto dei prezzi" — quanto costa, da dove viene il dato,
 quanto è aggiornato, com'è rispetto al contesto, come sta cambiando.
 Rafforzare il principio fonte/data/limiti, non diluirlo con funzioni
-decorative. Escluso per ora: redesign totale, Oceania/LatAm, media UE
-ponderata, import massivo storico, estrapolazioni causali.
+decorative. Escluso per ora: redesign totale, Oceania/LatAm,
+estrapolazioni causali. (Media UE ponderata e storico lungo, esclusi in
+origine, sono stati fatti il 15 set 2026: vedi i blocchi A e C in fondo.)
 
-- **Freshness a 3 stati — FATTO per le materie prime (1 set 2026),
-  manca ancora per i carburanti.** `src/lib/freshness/` (config
+**Stato al 15 set 2026 (fine sessione Cowork).** Tutti i punti proposti
+quel giorno sono fatti: feedback visitatori, blocchi A, B, C e D (parti
+1-3, voci in fondo a questa sezione). Resta aperto:
+- **Dominio personalizzato**: lo configura Yuri su Vercel; poi va cambiato
+  `SITE_URL` in `src/lib/site.ts` (lo usano layout, robots e sitemap) e
+  `homepage` in `package.json`.
+- **Manutenzione annuale a mano** della raccolta `/numeri`
+  (`annualFigures.ts`): ADM ogni primavera, Eurostat quando escono i dati
+  2025 (marzo e luglio 2027).
+- Le voci qui sotto marcate come "manca"/"da fare" vanno lette alla luce
+  delle voci più recenti in fondo: diverse sono state superate (es. la
+  freschezza dei carburanti, fatta nel blocco A).
+
+- **Freshness a 3 stati — FATTO per le materie prime (1 set 2026) e per
+  i carburanti (blocco A, 15 set 2026; il testo qui sotto è storico).** `src/lib/freshness/` (config
   source/symbol-aware + calcolo con grace period) è cablato sulla
   tabella materie prime in `page.tsx`. Per estenderlo ai carburanti
   serve: aggiungere `source`/`fuelType` (o region) alle query di
@@ -1590,12 +1604,8 @@ ponderata, import massivo storico, estrapolazioni causali.
 - **Blocco D, parte 1 — confinanti (Cowork, 15 set 2026).** Riquadri
   "Italia e paesi UE confinanti" nella sezione 01 (`NeighbourTiles.tsx`,
   Server Component; logica in `italyVsNeighbours`,
-  `ITALY_EU_NEIGHBOURS` = Francia, Austria, Slovenia). **Svizzera
-  esclusa**: non è nel bollettino UE. Fonte candidata: BFS, tabella "LIK,
-  Durchschnittspreise für Energie und Treibstoffe" (mensile, CHF/L, xlsx;
-  l'URL `bfs.admin.ch/asset/de/<id>` cambia a ogni rilascio). NON
-  verificata: il sito BFS è bloccato dall'ambiente cloud. Aggiungerla
-  richiede anche un tasso CHF→EUR dichiarato e l'etichetta "mensile".
+  `ITALY_EU_NEIGHBOURS` = Francia, Austria, Slovenia). La Svizzera è
+  arrivata nella parte 3 (sotto), con fonte e tabella proprie.
 
 - **Blocco D, parte 2 — raccolta "Numeri" (Cowork, 15 set 2026).**
   `ANNUAL_FIGURES` in `annualFigures.ts`: 5 cifre (ADM accise 2024 +
@@ -1609,6 +1619,42 @@ ponderata, import massivo storico, estrapolazioni causali.
   in sitemap e nei link di pagina; il riquadro in home porta a
   `/numeri#<id>`. **Manutenzione a mano**: ADM ogni primavera, Eurostat
   quando esce l'edizione con i dati 2025 (stessi mesi, un anno dopo).
+  Il riquadro in home è in alto (niente `justify-center`: lasciava un
+  grande vuoto su desktop); sotto, solo da `lg`, l'elenco "Nei prossimi
+  giorni" (`otherFigures`, `shortLabel`, `formatFigureValueShort`).
+
+- **Blocco D, parte 3 — Svizzera (Cowork, 15 set 2026).**
+  - **Fonti** (verificate il 15/9 aprendo i file da un browser, perché
+    dal cloud BFS e BCE rispondono 403):
+    - BFS, tabella LIK "Durchschnittspreise für Energie und Treibstoffe",
+      numero **su-d-05.02.91**, licenza OPEN-BY, mensile, CHF/L. L'id del
+      file cambia a ogni uscita: si trova con l'API del catalogo
+      `dam-api.bfs.admin.ch/hub/api/dam/assets?orderNr=su-d-05.02.91`
+      (versione con `lifecycle.code = "CURRENT"`), si scarica da
+      `/assets/<damId>/master`. Foglio "Monat - Mois": riga 5 prodotti
+      ("Bleifrei 95 / sans plomb 95", "Diesel"), riga 6 unità ("1 l"),
+      dalla 7 un mese per riga (data Excel, primo del mese); in fondo mesi
+      futuri vuoti e "Quelle: LIK". Agosto 2026: 1,95 / 2,18 CHF.
+    - BCE, serie `EXR.M.CHF.EUR.SP00.A` (media mensile, **franchi per 1
+      euro**, agosto 2026 = 0,93619) da `data-api.ecb.europa.eu`, CSV.
+      **Da CHF a euro si DIVIDE** (1,95 / 0,936 = 2,083 €): c'è un test.
+  - **Tabella `swiss_fuel_prices`** (migrazione 0012), separata da
+    `retail_fuel_prices` per non entrare nella "media dei 27". Salva CHF e
+    cambio; l'euro si calcola in lettura (`src/lib/swissFuel.ts`).
+    `recorded_at` = primo del mese.
+  - **Fetcher** `src/lib/fetchers/swissFuelPrices.ts` (colonne cercate per
+    nome, unità controllata, errore esplicito se cambia),
+    `saveSwissFuelPrices.ts` (upsert; `coalesce` per non cancellare un
+    cambio già salvato). **Cron** `fetch-ch-fuel-prices`, dal 1° al 10 di
+    ogni mese alle 9 UTC, salva gli ultimi 3 mesi. **Backfill**
+    `npm run backfill:ch-fuel` (con `--dry-run` stampa gli ultimi mesi).
+  - Freschezza `bfs_lik`: 62 giorni + 10 di tolleranza (il dato di un mese
+    resta il più recente fino ai primi giorni del mese dopo il successivo).
+    In `/stato-dati` ha etichetta e badge.
+  - **UI**: quinto riquadro in `NeighbourTiles` (etichetta "mensile",
+    prezzo in €, differenza con l'Italia, CHF e mese), nota sotto che il
+    confronto è indicativo; fonti BFS e BCE nella nota della sezione 01;
+    paragrafo in metodologia. Home: query con `.catch` → [].
 
 ## Skill: vercel-react-best-practices
 

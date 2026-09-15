@@ -127,6 +127,17 @@ export default function Metodologia() {
               esplicita &quot;media dei 27&quot; invece del generico
               &quot;media UE&quot;.
             </li>
+            <li>
+              La <strong>Svizzera</strong>, unico paese confinante fuori
+              dall&apos;UE, non è nel bollettino della Commissione. Il suo
+              prezzo viene dall&apos;Ufficio federale di statistica (BFS),
+              che pubblica una <strong>media mensile</strong> in franchi
+              svizzeri; lo convertiamo in euro con il cambio di riferimento
+              medio della Banca Centrale Europea dello stesso mese. Per
+              questo il riquadro svizzero indica il mese e il prezzo in
+              franchi, e non entra nella &quot;media dei 27&quot; né nelle
+              classifiche.
+            </li>
           </ul>
         </Section>
 

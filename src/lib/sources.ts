@@ -12,7 +12,7 @@
 
 export type SourceKind = "primaria" | "aggregata";
 
-export type SourceId = "eu-commission" | "eia" | "alpha-vantage" | "mimit" | "adm" | "eurostat";
+export type SourceId = "eu-commission" | "eia" | "alpha-vantage" | "mimit" | "adm" | "eurostat" | "bfs" | "ecb";
 
 type SourceMeta = {
   /** Nome per esteso, usato nel testo delle note "Fonte:". */
@@ -51,6 +51,16 @@ export const SOURCES: Record<SourceId, SourceMeta> = {
   // statistico dell'UE: fonte primaria come le altre istituzionali.
   eurostat: {
     label: "Eurostat",
+    kind: "primaria",
+  },
+  // Blocco D, parte 3: carburanti in Svizzera (prezzi mensili in CHF) e
+  // cambio franco/euro per convertirli.
+  bfs: {
+    label: "Ufficio federale di statistica svizzero (BFS)",
+    kind: "primaria",
+  },
+  ecb: {
+    label: "Banca Centrale Europea",
     kind: "primaria",
   },
 };

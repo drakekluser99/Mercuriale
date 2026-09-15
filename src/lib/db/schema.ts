@@ -407,3 +407,43 @@ export const euWeightedAverages = pgTable(
     ),
   })
 );
+
+/**
+ * SWISS_FUEL_PRICES
+ * Blocco D, parte 3 (15 set 2026): prezzi medi mensili dei carburanti in
+ * Svizzera, dall'Ufficio federale di statistica (BFS, tabella LIK
+ * "Durchschnittspreise für Energie und Treibstoffe", su-d-05.02.91).
+ *
+ * Tabella separata, come `eu_weighted_averages`, e per la stessa ragione:
+ * `retail_fuel_prices` + `regions` con continente "europe" sono la base
+ * della "media dei 27". La Svizzera non è nell'UE, pubblica in CHF e una
+ * volta al mese: mescolarla lì la farebbe entrare in medie e classifiche
+ * a cui non appartiene.
+ *
+ * Si salva il prezzo in FRANCHI (il dato della fonte) e il cambio BCE
+ * medio dello stesso mese. L'euro si calcola in lettura: se un giorno si
+ * volesse un altro cambio, i dati originali sono intatti.
+ */
+export const swissFuelPrices = pgTable(
+  "swiss_fuel_prices",
+  {
+    id: serial("id").primaryKey(),
+    fuelType: varchar("fuel_type", { length: 32 }).notNull(), // "petrol" | "diesel"
+    // CHF al litro, come pubblicato (due decimali nella fonte).
+    priceChf: numeric("price_chf", { precision: 10, scale: 4 }).notNull(),
+    // Franchi per 1 euro, media mensile BCE. Nullable: il BFS può
+    // pubblicare prima che il cambio del mese sia disponibile, e in quel
+    // caso il prezzo in euro semplicemente non si mostra.
+    chfPerEur: numeric("chf_per_eur", { precision: 10, scale: 6 }),
+    // Primo giorno del mese a cui si riferisce la media.
+    recordedAt: timestamp("recorded_at").notNull(),
+    retrievedAt: timestamp("retrieved_at"),
+    source: varchar("source", { length: 64 }).notNull().default("bfs_lik"),
+  },
+  (table) => ({
+    fuelRecordedUnique: uniqueIndex("swiss_fuel_fuel_recorded_at_unique").on(
+      table.fuelType,
+      table.recordedAt
+    ),
+  })
+);

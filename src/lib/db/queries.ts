@@ -11,7 +11,9 @@ import {
   fetchRuns,
   dataCorrections,
   euWeightedAverages,
+  swissFuelPrices,
 } from "./schema";
+import type { SwissFuelRow } from "@/lib/swissFuel";
 import type { EuWeightedAverageRow } from "@/lib/euWeightedAverage";
 
 export interface LatestCommodityPrice {
@@ -468,4 +470,25 @@ export async function getLatestEuWeightedAverageRows(): Promise<
     })
     .from(euWeightedAverages)
     .where(sql`${euWeightedAverages.recordedAt} = (${latest})`);
+}
+
+/**
+ * Le righe dei carburanti svizzeri per il mese più recente in tabella
+ * (blocco D). Stesso schema di getLatestEuWeightedAverageRows: benzina e
+ * diesel dello STESSO mese.
+ */
+export async function getLatestSwissFuelRows(): Promise<SwissFuelRow[]> {
+  const latest = db
+    .select({ value: sql`max(${swissFuelPrices.recordedAt})` })
+    .from(swissFuelPrices);
+
+  return db
+    .select({
+      fuelType: swissFuelPrices.fuelType,
+      priceChf: swissFuelPrices.priceChf,
+      chfPerEur: swissFuelPrices.chfPerEur,
+      recordedAt: swissFuelPrices.recordedAt,
+    })
+    .from(swissFuelPrices)
+    .where(sql`${swissFuelPrices.recordedAt} = (${latest})`);
 }

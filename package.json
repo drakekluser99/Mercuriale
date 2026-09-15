@@ -26,7 +26,8 @@
     "inspect:mimit": "tsx scripts/inspect-mimit.ts",
     "backfill:commodities": "tsx scripts/backfill.ts commodities",
     "backfill:us-fuel": "tsx scripts/backfill.ts us-fuel",
-    "backfill:eu-fuel": "tsx scripts/backfill.ts eu-fuel"
+    "backfill:eu-fuel": "tsx scripts/backfill.ts eu-fuel",
+    "backfill:ch-fuel": "tsx scripts/backfill.ts ch-fuel"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

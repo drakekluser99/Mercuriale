@@ -3,6 +3,7 @@ import { routeForCountry } from "@/lib/countries";
 import { localizedCountryName } from "@/lib/countryNames";
 import { formatFuelPrice } from "@/lib/format";
 import type { NeighbourComparison } from "@/lib/sectionHighlights";
+import { formatMonthLabel, type SwissFuelSummary } from "@/lib/swissFuel";
 
 /**
  * "Italia e paesi confinanti" — blocco D, 15 set 2026.
@@ -19,18 +20,31 @@ import type { NeighbourComparison } from "@/lib/sectionHighlights";
 export function NeighbourTiles({
   italy,
   neighbours,
+  swiss,
 }: {
   italy: number;
   neighbours: NeighbourComparison[];
+  /**
+   * Svizzera (blocco D, parte 3): fonte, valuta e cadenza diverse dagli
+   * altri, quindi un riquadro a parte che lo dichiara. Compare solo se c'è
+   * il prezzo in euro, cioè se c'è anche il cambio del mese.
+   */
+  swiss?: SwissFuelSummary | null;
 }) {
+  const showSwiss = swiss != null && swiss.petrolEur !== null;
+  // Una colonna per riquadro su desktop: 4 senza Svizzera, 5 con.
+  // Classi scritte per intero (non `lg:grid-cols-${n}`): Tailwind trova le
+  // classi leggendo il codice come testo, e una classe costruita a pezzi
+  // non la vedrebbe, quindi non genererebbe il CSS.
+  const columns = showSwiss ? "lg:grid-cols-5" : "lg:grid-cols-4";
   return (
     <div className="mt-6">
       <h3 className="font-mono text-xs uppercase tracking-wider text-system-ink-secondary">
-        Benzina · Italia e paesi UE confinanti
+        {showSwiss ? "Benzina · Italia e paesi confinanti" : "Benzina · Italia e paesi UE confinanti"}
       </h3>
-      {/* `sm:grid-cols-2 lg:grid-cols-4`: quattro riquadri in riga su
-          desktop, due per due su tablet, in colonna su telefono. */}
-      <ul className="mt-2 grid gap-px overflow-hidden rounded-md border border-system-border bg-system-border sm:grid-cols-2 lg:grid-cols-4">
+      {/* Tutti in riga su desktop, due per riga su tablet, in colonna su
+          telefono. */}
+      <ul className={`mt-2 grid gap-px overflow-hidden rounded-md border border-system-border bg-system-border sm:grid-cols-2 ${columns}`}>
         <li className="bg-system-surface p-4">
           <p className="text-sm font-medium text-system-ink">Italia</p>
           <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-system-ink">
@@ -68,12 +82,62 @@ export function NeighbourTiles({
             </li>
           );
         })}
+        {/* Controllo ripetuto qui (e non solo `showSwiss`) perché così
+            TypeScript "vede" che petrolEur non è null: un booleano salvato
+            in una variabile non restringe il tipo dell'oggetto. */}
+        {swiss && swiss.petrolEur !== null && (
+          <SwissTile italy={italy} swiss={swiss} petrolEur={swiss.petrolEur} />
+        )}
       </ul>
       <p className="mt-2 text-xs text-system-ink-muted">
-        La Svizzera confina con l&apos;Italia ma non è nell&apos;UE: il
-        bollettino della Commissione non la copre, e per ora non la
-        mostriamo.
+        {swiss && showSwiss
+          ? `Svizzera: media mensile dell'Ufficio federale di statistica (${formatMonthLabel(swiss.month)}), in franchi, convertita con il cambio medio BCE dello stesso mese. Gli altri paesi sono dati settimanali della Commissione Europea: il confronto è indicativo.`
+          : "La Svizzera confina con l'Italia ma non è nell'UE: il bollettino della Commissione non la copre, e il dato mensile svizzero non è ancora disponibile."}
       </p>
     </div>
+  );
+}
+
+/**
+ * Il riquadro svizzero. Stessa struttura degli altri, con due righe in
+ * più: il prezzo in franchi (il dato originale) e il mese a cui si
+ * riferisce, perché non è la stessa settimana degli altri paesi.
+ */
+function SwissTile({
+  italy,
+  swiss,
+  petrolEur,
+}: {
+  italy: number;
+  swiss: SwissFuelSummary;
+  petrolEur: number;
+}) {
+  const diff = petrolEur - italy;
+  const cheaper = diff < 0;
+  return (
+    <li className="bg-system-surface p-4">
+      <p className="text-sm font-medium text-system-ink">
+        Svizzera{" "}
+        <span className="font-mono text-[10px] uppercase tracking-wider text-system-ink-muted">
+          mensile
+        </span>
+      </p>
+      <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-system-ink">
+        {formatFuelPrice(petrolEur)} <span className="text-sm font-normal">€/L</span>
+      </p>
+      <p
+        className={`mt-1 font-mono text-xs tabular-nums ${
+          cheaper ? "text-system-signal-down" : "text-system-signal-up"
+        }`}
+      >
+        {cheaper ? "−" : "+"}
+        {formatFuelPrice(Math.abs(diff))} €/L {cheaper ? "in meno" : "in più"}{" "}
+        dell&apos;Italia
+      </p>
+      <p className="mt-1 font-mono text-[11px] tabular-nums text-system-ink-muted">
+        {swiss.petrolChf?.toFixed(2).replace(".", ",")} CHF/L ·{" "}
+        {formatMonthLabel(swiss.month)}
+      </p>
+    </li>
   );
 }

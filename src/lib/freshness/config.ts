@@ -36,4 +36,11 @@ export const FRESHNESS_CONFIG: Record<string, FreshnessConfig> = {
   // sopra perché una cadenza giornaliera che salta un giorno è già un
   // segnale, non un weekend di mercati chiusi.
   mimit: { expectedIntervalDays: 1, graceDays: 2, label: 'MIMIT (giornaliero)' },
+
+  // BFS Svizzera (blocco D): media MENSILE, datata al primo del mese e
+  // pubblicata nei primi giorni del mese dopo. Il dato di agosto (1/8) esce
+  // il 3/9 e resta il più recente fino ai primi di ottobre, cioè fino a ~63
+  // giorni dopo la sua data: per questo 62 giorni sono ancora "aggiornato".
+  // Grace di 10 giorni per una pubblicazione che slitta.
+  bfs_lik: { expectedIntervalDays: 62, graceDays: 10, label: 'BFS Svizzera (mensile)' },
 };

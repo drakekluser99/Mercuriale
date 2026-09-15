@@ -8,7 +8,9 @@ import {
   getLatestFetchRuns,
   getFuelAverageHistory,
   getLatestEuWeightedAverageRows,
+  getLatestSwissFuelRows,
 } from "@/lib/db/queries";
+import { summarizeSwissFuel } from "@/lib/swissFuel";
 import { summarizeEuWeightedAverage } from "@/lib/euWeightedAverage";
 import { groupCommodityHistory, groupFuelHistory, priceMovers } from "@/lib/priceHistory";
 import { displayCommodityPrice } from "@/lib/commodityDisplay";
@@ -174,6 +176,7 @@ export default async function Home() {
     fetchRuns,
     fuelYearHistory,
     euWeightedRows,
+    swissFuelRows,
   ] = await Promise.all([
     getLatestCommodityPrices(),
     getLatestFuelPrices(),
@@ -191,7 +194,13 @@ export default async function Home() {
       console.error("Media UE ponderata non disponibile:", err);
       return [];
     }),
+    // Svizzera (blocco D): stesso `.catch` e stessa ragione.
+    getLatestSwissFuelRows().catch((err) => {
+      console.error("Carburanti Svizzera non disponibili:", err);
+      return [];
+    }),
   ]);
+  const swissFuel = summarizeSwissFuel(swissFuelRows);
   const euWeighted = summarizeEuWeightedAverage(euWeightedRows);
   const commoditySeries = groupCommodityHistory(commodityHistory);
 
@@ -207,6 +216,7 @@ export default async function Home() {
   const euFuelRun = fetchRuns.find((r) => r.job === "fetch-eu-fuel-prices");
   const usFuelRun = fetchRuns.find((r) => r.job === "fetch-us-fuel-prices");
   const mimitRun = fetchRuns.find((r) => r.job === "fetch-mimit-prices");
+  const swissFuelRun = fetchRuns.find((r) => r.job === "fetch-ch-fuel-prices");
 
   // Timestamp unico per il calcolo di freschezza di tutte le righe (vedi
   // src/lib/freshness/compute.ts). Server Component force-dynamic,
@@ -852,17 +862,23 @@ export default async function Home() {
               <NeighbourTiles
                 italy={neighbourComparison.italy}
                 neighbours={neighbourComparison.neighbours}
+                swiss={swissFuel}
               />
             )}
             <SourceNote
-              sources={["eu-commission"]}
+              sources={swissFuel ? ["eu-commission", "bfs", "ecb"] : ["eu-commission"]}
               checks={[
                 { label: "UE", cadence: "ogni giovedì", checkedAt: euFuelRun?.startedAt ?? null },
+                ...(swissFuel
+                  ? [{ label: "Svizzera", cadence: "ogni mese", checkedAt: swissFuelRun?.startedAt ?? null }]
+                  : []),
               ]}
             >
               Fonte: Bollettino Petrolifero Settimanale, Commissione Europea ·
               Aggiornamento: ogni giovedì · Confini amministrativi: Natural
               Earth (dominio pubblico)
+              {swissFuel &&
+                " · Svizzera: Ufficio federale di statistica (media mensile, licenza OPEN-BY), cambio di riferimento BCE"}
             </SourceNote>
           </section>
         )}

@@ -3,6 +3,8 @@
  *
  *   npx tsx scripts/backfill.ts commodities [--from AAAA-MM-GG] [--only SIMBOLI] [--dry-run]
  *   npx tsx scripts/backfill.ts us-fuel     [--from AAAA-MM-GG] [--dry-run]
+ *   npx tsx scripts/backfill.ts eu-fuel     [--from AAAA-MM-GG] [--dry-run]
+ *   npx tsx scripts/backfill.ts ch-fuel     [--from AAAA-MM-GG] [--dry-run]
  *
  * Perché uno script e non una rotta di cron: è un'operazione una tantum, che
  * dura minuti e scrive migliaia di righe. Una funzione serverless di Vercel
@@ -49,13 +51,15 @@ async function main() {
     await backfillUsFuel({ fromDate, dryRun });
   } else if (target === "eu-fuel") {
     await backfillEuFuel({ fromDate, dryRun });
+  } else if (target === "ch-fuel") {
+    await backfillSwissFuel({ fromDate, dryRun });
   } else {
     console.error(USAGE);
     process.exit(1);
   }
 }
 
-const USAGE = `Uso: npx tsx scripts/backfill.ts <commodities|us-fuel|eu-fuel> [opzioni]
+const USAGE = `Uso: npx tsx scripts/backfill.ts <commodities|us-fuel|eu-fuel|ch-fuel> [opzioni]
 
   --from AAAA-MM-GG   data di partenza dello storico (default: 10 anni fa)
   --only SIMBOLI      solo queste materie prime, separate da virgola
@@ -327,6 +331,46 @@ async function backfillEuFuel(opts: { fromDate?: string; dryRun: boolean }) {
     (w, t) => process.stdout.write(`\r  scrittura ${w}/${t}`)
   );
   console.log(`\nScritte ${written} righe in retail_fuel_prices.`);
+}
+
+/**
+ * Carburanti in Svizzera (blocco D): BFS mensile + cambio BCE mensile.
+ * Pochi punti (2 carburanti × 12 mesi × 10 anni ≈ 240): un solo INSERT.
+ * Con --dry-run stampa gli ultimi mesi, utile per confrontarli con il
+ * sito del BFS prima di scrivere.
+ */
+async function backfillSwissFuel(opts: { fromDate?: string; dryRun: boolean }) {
+  const { fetchSwissFuelPrices } = await import(
+    "../src/lib/fetchers/swissFuelPrices"
+  );
+  // Il BFS ragiona per mesi: la data di partenza si porta al primo del mese.
+  const fromMonth = `${(opts.fromDate ?? tenYearsAgo()).slice(0, 7)}-01`;
+  console.log(`Backfill carburanti Svizzera da ${fromMonth}`);
+
+  const points = await fetchSwissFuelPrices({ fromMonth });
+  const months = [...new Set(points.map((p) => p.month))].sort();
+  const senzaCambio = points.filter((p) => p.chfPerEur === null).length;
+  console.log(
+    `  ${points.length} rilevazioni  ${months[0]} → ${months.at(-1)}  (${months.length} mesi)` +
+      ` · senza cambio BCE: ${senzaCambio}`
+  );
+  for (const p of points.slice(-4)) {
+    const eur = p.chfPerEur ? (p.priceChf / p.chfPerEur).toFixed(3) : "—";
+    console.log(
+      `  ${p.month} ${p.fuelType.padEnd(6)} ${p.priceChf.toFixed(2)} CHF/L · cambio ${p.chfPerEur ?? "—"} · ${eur} €/L`
+    );
+  }
+
+  if (opts.dryRun) {
+    console.log("--dry-run: niente è stato scritto.");
+    return;
+  }
+
+  const { saveSwissFuelPrices } = await import(
+    "../src/lib/fetchers/saveSwissFuelPrices"
+  );
+  const { saved } = await saveSwissFuelPrices(points, "bfs_lik");
+  console.log(`Scritte ${saved} righe in swiss_fuel_prices.`);
 }
 
 function tenYearsAgo(): string {
