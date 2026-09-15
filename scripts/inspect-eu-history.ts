@@ -49,6 +49,22 @@ async function main() {
     console.log(`  "${ws.name}"  righe: ${ws.rowCount}  colonne: ${ws.columnCount}`);
   }
 
+  // `--keys` (15 set 2026): stampa solo le chiavi della riga 1 che NON
+  // sono di un singolo paese — gli aggregati come la media UE. È il modo
+  // rapido di verificare il nome della colonna letta da
+  // parseEuWeightedAverages senza scorrere 226 colonne.
+  if (process.argv.includes("--keys")) {
+    for (const sheet of workbook.worksheets.slice(0, 2)) {
+      const keys: string[] = [];
+      sheet.getRow(1).eachCell((cell) => {
+        const key = String(cell.value ?? "").trim();
+        if (key && !/^[A-Z]{2}_/.test(key)) keys.push(key);
+      });
+      console.log(`\n"${sheet.name}" — chiavi non di paese:\n  ${keys.join("\n  ")}`);
+    }
+    return;
+  }
+
   for (const sheet of workbook.worksheets.slice(0, 3)) {
     console.log(`\n${"=".repeat(70)}\nFOGLIO "${sheet.name}" — prime 12 righe\n`);
     let printed = 0;

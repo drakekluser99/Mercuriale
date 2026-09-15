@@ -11,6 +11,7 @@ import Link from "next/link";
 import { localizedCountryName } from "@/lib/countryNames";
 import { formatFuelPrice } from "@/lib/format";
 import { routeForCountry } from "@/lib/countries";
+import { taxSharePercent, type EuWeightedAverage } from "@/lib/euWeightedAverage";
 import {
   divergingColor,
   INK_HEX,
@@ -60,6 +61,12 @@ interface Props {
     petrolNet: number | null;
     dieselNet: number | null;
   };
+  /**
+   * Media UE PONDERATA sui consumi, come la pubblica la Commissione
+   * (blocco C, 15 set 2026). `null` finché la tabella è vuota: in quel
+   * caso la riga semplicemente non compare.
+   */
+  euWeighted: EuWeightedAverage | null;
 }
 
 // Colori e scala divergente: in src/lib/divergingColor.ts dal 15 set 2026,
@@ -177,7 +184,7 @@ function metricValue(
  * verde e ruggine legge i tre riquadri nominati e lo scostamento numerico
  * nel tooltip.
  */
-export default function EuropeFuelMap({ prices, euAverage }: Props) {
+export default function EuropeFuelMap({ prices, euAverage, euWeighted }: Props) {
   const [hovered, setHovered] = useState<CountryFuelData | null>(null);
   const [fuel, setFuel] = useState<FuelKey>("petrol");
   const [measure, setMeasure] = useState<MeasureKey>("price");
@@ -247,6 +254,20 @@ export default function EuropeFuelMap({ prices, euAverage }: Props) {
     if (gross === null || net === null || gross <= 0) return null;
     return ((gross - net) / gross) * 100;
   }, [euAverage, fuel, measure, stats]);
+
+  // Il valore corrispondente nella media PONDERATA della Commissione. Per
+  // l'accisa non c'è: il file pubblica prezzi lordi e netti per l'UE, non
+  // un'accisa media — e inventarla non si fa.
+  const weightedValue = (() => {
+    if (!euWeighted) return null;
+    if (measure === "price") return euWeighted[fuel];
+    if (measure === "taxShare") {
+      return fuel === "petrol"
+        ? taxSharePercent(euWeighted.petrol, euWeighted.petrolNet)
+        : taxSharePercent(euWeighted.diesel, euWeighted.dieselNet);
+    }
+    return null;
+  })();
 
   const dataByCountry = useMemo(
     () => new Map(prices.map((p) => [p.countryName, p])),
@@ -496,7 +517,7 @@ export default function EuropeFuelMap({ prices, euAverage }: Props) {
             </span>
             {/* "media dei 27" e non "media UE" e basta: è una media
                 semplice dei paesi, e la Commissione ne pubblica una
-                ponderata sui consumi che vale 11 centesimi in più. Dire
+                ponderata sui consumi (mostrata subito sotto). Dire
                 quale si sta guardando è lo stesso principio delle note
                 "Fonte:" sotto ogni sezione. */}
             <span className="uppercase tracking-wider">
@@ -509,6 +530,26 @@ export default function EuropeFuelMap({ prices, euAverage }: Props) {
               {activeMeasure.format(stats.max)} {activeMeasure.unit}
             </span>
           </div>
+          {/* La seconda media, quella ufficiale. Sotto la barra e non sulla
+              barra: il colore della mappa resta centrato sulla media dei
+              27, e un secondo segno sulla scala farebbe chiedere "quale
+              dei due è il centro?". */}
+          {euWeighted && weightedValue !== null && (
+            <p className="mt-1 text-right font-mono text-[11px] text-system-ink-muted">
+              <span className="uppercase tracking-wider">
+                media UE ponderata sui consumi
+              </span>{" "}
+              <span className="tabular-nums text-system-ink">
+                {activeMeasure.format(weightedValue)} {activeMeasure.unit}
+              </span>{" "}
+              · Commissione, settimana del{" "}
+              {new Date(euWeighted.date).toLocaleDateString("it-IT", {
+                day: "2-digit",
+                month: "2-digit",
+                timeZone: "UTC",
+              })}
+            </p>
+          )}
         </div>
       )}
 

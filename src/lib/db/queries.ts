@@ -10,7 +10,9 @@ import {
   retailFuelPricesIt,
   fetchRuns,
   dataCorrections,
+  euWeightedAverages,
 } from "./schema";
+import type { EuWeightedAverageRow } from "@/lib/euWeightedAverage";
 
 export interface LatestCommodityPrice {
   symbol: string;
@@ -441,4 +443,29 @@ export async function getRecentCorrections(
     .from(dataCorrections)
     .orderBy(desc(dataCorrections.detectedAt))
     .limit(limit);
+}
+
+/**
+ * Le righe della media UE ponderata (Commissione) per la settimana più
+ * recente presente in tabella — blocco C, 15 set 2026. Una settimana sola,
+ * non "l'ultimo valore di ciascun carburante": benzina e diesel devono
+ * venire dallo STESSO bollettino, altrimenti si confrontano settimane
+ * diverse senza dirlo. La forma finale la dà `summarizeEuWeightedAverage`.
+ */
+export async function getLatestEuWeightedAverageRows(): Promise<
+  EuWeightedAverageRow[]
+> {
+  const latest = db
+    .select({ value: sql`max(${euWeightedAverages.recordedAt})` })
+    .from(euWeightedAverages);
+
+  return db
+    .select({
+      fuelType: euWeightedAverages.fuelType,
+      price: euWeightedAverages.price,
+      priceNet: euWeightedAverages.priceNet,
+      recordedAt: euWeightedAverages.recordedAt,
+    })
+    .from(euWeightedAverages)
+    .where(sql`${euWeightedAverages.recordedAt} = (${latest})`);
 }

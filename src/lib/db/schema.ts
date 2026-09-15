@@ -364,3 +364,46 @@ export const retailFuelPricesIt = pgTable(
     ).on(table.provinceId, table.fuelType, table.recordedAt),
   })
 );
+
+/**
+ * EU_WEIGHTED_AVERAGES
+ * Blocco C (15 set 2026). La media UE PONDERATA pubblicata dalla
+ * Commissione nel file storico del bollettino (colonne `EU_*`), una riga
+ * per settimana e carburante.
+ *
+ * Perché serve accanto alla nostra "media dei 27": la nostra è una media
+ * SEMPLICE — Malta pesa quanto la Germania. Quella della Commissione pesa
+ * ogni paese per i suoi consumi, quindi è più vicina a "quanto paga in
+ * media un litro un automobilista europeo". Mostrarle entrambe, con il
+ * nome giusto, è più onesto che sceglierne una.
+ *
+ * Perché una tabella a parte e non una riga "EU" in `regions`: tutte le
+ * query su `retail_fuel_prices` leggono `regions` come elenco di PAESI
+ * (mappa, media dei 27, classifiche). Un finto paese "EU" entrerebbe in
+ * ognuna e andrebbe escluso a mano ovunque; basta dimenticarlo una volta
+ * per avere una media calcolata anche sulla media. Qui non può succedere.
+ */
+export const euWeightedAverages = pgTable(
+  "eu_weighted_averages",
+  {
+    id: serial("id").primaryKey(),
+    fuelType: varchar("fuel_type", { length: 32 }).notNull(), // "petrol" | "diesel"
+    // €/litro, imposte incluse — stessa unità di retail_fuel_prices.price.
+    price: numeric("price", { precision: 10, scale: 4 }).notNull(),
+    // €/litro al netto delle imposte. Nullable per la stessa ragione di
+    // retail_fuel_prices.price_net: se la Commissione non lo pubblica, il
+    // carico fiscale medio non si calcola.
+    priceNet: numeric("price_net", { precision: 10, scale: 4 }),
+    recordedAt: timestamp("recorded_at").notNull(), // settimana del bollettino
+    retrievedAt: timestamp("retrieved_at"),
+    source: varchar("source", { length: 64 })
+      .notNull()
+      .default("eu_weekly_oil_bulletin"),
+  },
+  (table) => ({
+    fuelRecordedUnique: uniqueIndex("eu_weighted_avg_fuel_recorded_at_unique").on(
+      table.fuelType,
+      table.recordedAt
+    ),
+  })
+);

@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchEuFuelHistory } from "@/lib/fetchers/euOilBulletinHistory";
+import {
+  downloadEuHistoryWorkbook,
+  parseEuWeightedAverages,
+  parseWorkbook,
+} from "@/lib/fetchers/euOilBulletinHistory";
+import { saveEuWeightedAverages } from "@/lib/fetchers/saveEuWeightedAverages";
 import { saveEuFuelPrices } from "@/lib/fetchers/saveEuFuelPrices";
 import { saveWeeklyNarrative } from "@/lib/fetchers/saveWeeklyNarrative";
 import { getLastTwoEuropeFuelWeeks } from "@/lib/db/queries";
@@ -39,12 +44,25 @@ export async function GET(request: NextRequest) {
     // serve solo l'ultima. Senza questo ogni giovedì riscriverebbe ~56.000
     // righe per aggiornarne 54 — inutile, e su `neon-http` lentissimo. Lo
     // storico completo lo carica una tantum scripts/backfill.ts.
-    const points = await fetchEuFuelHistory({ latestOnly: true });
+    const workbook = await downloadEuHistoryWorkbook();
+    const points = parseWorkbook(workbook, { latestOnly: true });
     const { saved, latestRecordedAt } = await saveEuFuelPrices(
       points,
       SOURCE,
       runId
     );
+
+    // Media UE ponderata della Commissione (blocco C, 15 set 2026). Try/catch
+    // separato per la stessa ragione della narrazione qui sotto: è un dato
+    // in più, e se un giorno la colonna cambia nome i 27 paesi — già
+    // salvati — non devono risultare falliti. L'errore resta nei log di
+    // Vercel con l'elenco delle chiavi trovate (vedi parseEuWeightedAverages).
+    try {
+      const averages = parseEuWeightedAverages(workbook, { latestOnly: true });
+      await saveEuWeightedAverages(averages, SOURCE);
+    } catch (err) {
+      console.error("Errore nel salvataggio della media UE ponderata:", err);
+    }
 
     // "Cosa è cambiato questa settimana": generata DOPO il salvataggio,
     // confrontando le due settimane più recenti ora in tabella (quella

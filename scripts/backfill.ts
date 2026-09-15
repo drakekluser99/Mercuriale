@@ -255,15 +255,18 @@ function selectCommodities<T extends { readonly symbol: string }>(
  * triplicherebbe il numero per finestre che nessuna schermata mostra.
  */
 async function backfillEuFuel(opts: { fromDate?: string; dryRun: boolean }) {
-  const { fetchEuFuelHistory } = await import(
-    "../src/lib/fetchers/euOilBulletinHistory"
-  );
+  const { downloadEuHistoryWorkbook, parseWorkbook, parseEuWeightedAverages } =
+    await import("../src/lib/fetchers/euOilBulletinHistory");
 
   const fromDate = opts.fromDate ?? tenYearsAgo();
   console.log(`Backfill carburanti UE da ${fromDate}`);
   console.log("  scaricamento del file storico (~4,3 MB)...");
 
-  const points = await fetchEuFuelHistory({ fromDate });
+  const workbook = await downloadEuHistoryWorkbook();
+  const points = parseWorkbook(workbook, { fromDate });
+  // Media UE ponderata: letta qui, PRIMA di scrivere qualsiasi cosa, così
+  // se la colonna non si trova lo si scopre anche con --dry-run.
+  const averages = parseEuWeightedAverages(workbook, { fromDate });
   const dates = [...new Set(points.map((p) => p.date))].sort();
   const conNetto = points.filter((p) => p.priceNetPerLiter !== null).length;
   const conAccisa = points.filter((p) => p.exciseEurPerLiter !== null).length;
@@ -279,10 +282,26 @@ async function backfillEuFuel(opts: { fromDate?: string; dryRun: boolean }) {
     `  con accisa: ${conAccisa} su ${points.length} · con aliquota IVA: ${conIva} su ${points.length}`
   );
 
+  console.log(
+    `  media UE ponderata: ${averages.length} rilevazioni` +
+      (averages.length > 0
+        ? ` (ultima benzina: ${averages.filter((a) => a.fuelType === "petrol").at(-1)?.pricePerLiter.toFixed(3)} €/L)`
+        : "")
+  );
+
   if (opts.dryRun) {
     console.log("--dry-run: niente è stato scritto.");
     return;
   }
+
+  const { saveEuWeightedAverages } = await import(
+    "../src/lib/fetchers/saveEuWeightedAverages"
+  );
+  const writtenAverages = await saveEuWeightedAverages(
+    averages,
+    "eu_weekly_oil_bulletin"
+  );
+  console.log(`  scritte ${writtenAverages} righe in eu_weighted_averages.`);
 
   const { saveRetailFuelPricesBulk } = await import(
     "../src/lib/fetchers/saveRetailFuelBulk"

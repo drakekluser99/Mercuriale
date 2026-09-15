@@ -7,7 +7,9 @@ import {
   getLatestItalianFuelPrices,
   getLatestFetchRuns,
   getFuelAverageHistory,
+  getLatestEuWeightedAverageRows,
 } from "@/lib/db/queries";
+import { summarizeEuWeightedAverage } from "@/lib/euWeightedAverage";
 import { groupCommodityHistory, groupFuelHistory, priceMovers } from "@/lib/priceHistory";
 import { displayCommodityPrice } from "@/lib/commodityDisplay";
 import {
@@ -169,6 +171,7 @@ export default async function Home() {
     italianFuelPrices,
     fetchRuns,
     fuelYearHistory,
+    euWeightedRows,
   ] = await Promise.all([
     getLatestCommodityPrices(),
     getLatestFuelPrices(),
@@ -178,7 +181,16 @@ export default async function Home() {
     getLatestItalianFuelPrices(),
     getLatestFetchRuns(),
     getFuelAverageHistory(fuelYearSince),
+    // Media UE ponderata (blocco C). Unica query con un `.catch`: è un dato
+    // accessorio, e se la tabella non esiste ancora (deploy arrivato prima
+    // di `npm run db:migrate`) la home deve funzionare lo stesso, senza
+    // quella riga, invece di andare in errore per intero.
+    getLatestEuWeightedAverageRows().catch((err) => {
+      console.error("Media UE ponderata non disponibile:", err);
+      return [];
+    }),
   ]);
+  const euWeighted = summarizeEuWeightedAverage(euWeightedRows);
   const commoditySeries = groupCommodityHistory(commodityHistory);
 
   // Ultima esecuzione registrata per i due cron a cadenza singola e
@@ -596,8 +608,18 @@ export default async function Home() {
             solo l'ultima, non è ricalcolata a ogni visita. Senza numero di
             sezione, come "Maggiori variazioni": è una sintesi, non una
             quinta voce dell'indice 01–04. */}
+        {/* Fascia di sintesi a RIQUADRI (blocco C, 15 set 2026, dal
+            feedback "più sezioni nella stessa schermata"). Su schermi larghi
+            le tre sintesi stanno insieme: a sinistra, su due colonne, cosa è
+            cambiato e le maggiori variazioni; a destra, alto quanto le due,
+            il numero del giorno. Su mobile tornano una sotto l'altra, come
+            prima: la griglia ha una colonna sola finché non arriva `lg:`.
+
+            `gap-y-12` sostituisce il `mb-12` che ogni sezione aveva: lo
+            spazio fra i riquadri lo decide la griglia, non i figli. */}
+        <div className="mb-12 grid gap-x-8 gap-y-12 lg:grid-cols-3">
         {weeklyNarrative.length > 0 && (
-          <section className="mb-12">
+          <section className="lg:col-span-2">
             <div className="flex items-baseline gap-3">
               <span className="font-mono text-xs text-system-ink-muted">✎</span>
               <h2 className="text-lg font-semibold text-system-ink">
@@ -608,7 +630,7 @@ export default async function Home() {
               Settimana del {formatDate(weeklyNarrative[0].weekOf)}, rispetto
               alla precedente.
             </p>
-            <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {weeklyNarrative.map((n) => (
                 <li
                   key={n.kind}
@@ -634,7 +656,7 @@ export default async function Home() {
             sezione — è una sintesi dei dati che seguono, non una quinta
             sezione dell'indice 01–04. */}
         {topMovers.length > 0 && (
-          <section className="mb-12">
+          <section className="lg:col-span-2">
             <div className="flex items-baseline gap-3">
               <span className="font-mono text-xs text-system-ink-muted">◆</span>
               <h2 className="text-lg font-semibold text-system-ink">
@@ -646,7 +668,7 @@ export default async function Home() {
               finestra dei grafici qui sotto — materie prime 90 giorni,
               carburanti 30 giorni.
             </p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {topMovers.map((m) => {
                 // In salita = ruggine, in discesa = verde: stessa lettura
                 // del colore usata nella mappa ("più caro" ruggine) e
@@ -708,15 +730,25 @@ export default async function Home() {
             far sembrare il numero più fresco di quanto sia — l'errore
             isolato nell'analisi competitor (un numero statico spacciato
             per vivo). */}
-        <section className="mb-12">
+        {/* Riquadro a destra. `row-start-1` lo tiene in alto anche se nel
+            codice viene dopo; `row-span-2` solo quando a sinistra ci sono
+            DAVVERO due sintesi — con una sola, la seconda riga sarebbe
+            vuota e aggiungerebbe comunque uno spazio. */}
+        <section
+          className={`flex flex-col lg:col-start-3 lg:row-start-1 ${
+            weeklyNarrative.length > 0 && topMovers.length > 0 ? "lg:row-span-2" : ""
+          }`}
+        >
           <div className="flex items-baseline gap-3">
             <span className="font-mono text-xs text-system-ink-muted">§</span>
             <h2 className="text-lg font-semibold text-system-ink">
               Il numero del giorno
             </h2>
           </div>
-          <div className="mt-4 rounded-lg border border-system-border bg-system-surface p-6">
-            <p className="font-mono text-3xl font-semibold tabular-nums text-system-ink sm:text-4xl">
+          {/* `flex-1` + `justify-center`: nel riquadro alto il numero sta a
+              metà altezza invece che schiacciato in cima. */}
+          <div className="mt-4 flex flex-1 flex-col justify-center rounded-lg border-t-4 border-x border-b border-system-border border-t-system-mark bg-system-surface p-6">
+            <p className="font-mono text-3xl font-semibold tabular-nums text-system-ink sm:text-4xl lg:text-5xl">
               {formatBillionsEur(ANNUAL_FIGURE.valueEur)}
             </p>
             <p className="mt-2 text-sm leading-relaxed text-system-ink-secondary">
@@ -729,6 +761,7 @@ export default async function Home() {
             dal cron settimanale dei carburanti
           </SourceNote>
         </section>
+        </div>
 
         {europeanFuelData.length > 0 && (
           <section id="mappa" className="scroll-mt-16">
@@ -747,8 +780,11 @@ export default async function Home() {
               >
                 La benzina in Italia ({formatFuelPrice(italyGap.italy)} €/L)
                 rispetto alla media dei 27 paesi UE
-                ({formatFuelPrice(italyGap.average)} €/L). Passa sulla mappa
-                per vedere quanto di ogni prezzo è imposta.
+                ({formatFuelPrice(italyGap.average)} €/L
+                {euWeighted?.petrol != null &&
+                  `; ${formatFuelPrice(euWeighted.petrol)} €/L la media ponderata sui consumi della Commissione`}
+                ). Passa sulla mappa per vedere quanto di ogni prezzo è
+                imposta.
               </KeyFigure>
             )}
             <div className="mt-4 rounded-lg border border-system-border bg-system-surface p-4">
@@ -767,6 +803,7 @@ export default async function Home() {
                   petrolNet: europeAverage.petrolNet,
                   dieselNet: europeAverage.dieselNet,
                 }}
+                euWeighted={euWeighted}
               />
             </div>
             <SourceNote
@@ -807,7 +844,18 @@ export default async function Home() {
           </section>
         )}
 
-        <section id="materie-prime" className="mt-12 scroll-mt-16">
+        {/* Materie prime e carburanti AFFIANCATI sugli schermi molto larghi
+            (xl, da 1280 px): stessa struttura — cifra chiave, tabella,
+            grafico — e quindi confrontabili a colpo d'occhio. Sotto xl
+            restano in colonna: a metà larghezza su un portatile piccolo le
+            tabelle andrebbero a scorrimento orizzontale.
+
+            `min-w-0` sui figli: un elemento di griglia per default non si
+            stringe sotto la larghezza del suo contenuto (la tabella ha
+            `min-w-[480px]`), e senza questa classe allargherebbe la pagina
+            invece di far scorrere la sola tabella. */}
+        <div className="mt-12 grid gap-12 xl:grid-cols-2 xl:gap-8">
+        <section id="materie-prime" className="min-w-0 scroll-mt-16">
           <SectionHeading number="03" title="Materie prime globali">
             {commodityRows.length > 0 && (
               <DownloadDataButtons
@@ -898,7 +946,7 @@ export default async function Home() {
           </SourceNote>
         </section>
 
-        <section id="carburanti" className="mt-12 scroll-mt-16">
+        <section id="carburanti" className="min-w-0 scroll-mt-16">
           <SectionHeading number="04" title="Carburanti al consumo" />
           {countrySpread && (
             <KeyFigure value={`${formatFuelPrice(countrySpread.gap)} €/L`}>
@@ -965,6 +1013,7 @@ export default async function Home() {
             specifici
           </SourceNote>
         </section>
+        </div>
 
         {/* Fase 4 (MIMIT): fino a questa sezione le 107 pagine
             /provincia/[slug] esistevano già ma erano raggiungibili solo

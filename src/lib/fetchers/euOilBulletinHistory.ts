@@ -169,9 +169,17 @@ export interface EuFuelHistoryPoint {
   date: string; // YYYY-MM-DD
 }
 
-export async function fetchEuFuelHistory(
-  options: { fromDate?: string; latestOnly?: boolean } = {}
-): Promise<EuFuelHistoryPoint[]> {
+export interface EuFuelHistoryOptions {
+  fromDate?: string;
+  latestOnly?: boolean;
+}
+
+/**
+ * Scarica e apre il file storico. Separata dai parser (15 set 2026) perché
+ * il cron ora legge DUE cose dallo stesso file — i 27 paesi e la media UE
+ * ponderata — e scaricare 4,3 MB due volte sarebbe solo spreco.
+ */
+export async function downloadEuHistoryWorkbook(): Promise<ExcelJS.Workbook> {
   const res = await fetch(EU_HISTORY_URL);
   if (!res.ok) {
     throw new Error(`Download del file storico UE fallito: HTTP ${res.status}`);
@@ -180,8 +188,134 @@ export async function fetchEuFuelHistory(
   const buffer = await res.arrayBuffer();
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer);
+  return workbook;
+}
 
-  return parseWorkbook(workbook, options);
+export async function fetchEuFuelHistory(
+  options: EuFuelHistoryOptions = {}
+): Promise<EuFuelHistoryPoint[]> {
+  return parseWorkbook(await downloadEuHistoryWorkbook(), options);
+}
+
+/** Un punto della media UE ponderata pubblicata dalla Commissione. */
+export interface EuWeightedAveragePoint {
+  fuelType: "petrol" | "diesel";
+  pricePerLiter: number;
+  priceNetPerLiter: number | null;
+  date: string; // YYYY-MM-DD
+}
+
+/**
+ * Prefissi possibili della colonna aggregata UE nella riga delle chiavi.
+ *
+ * Perché una lista e non un nome solo: la forma dei paesi
+ * (`IT_price_with_tax_euro95`) l'abbiamo osservata sul file vero, quella
+ * dell'aggregato no — il file non si scarica dall'ambiente in cui è stato
+ * scritto questo codice. `EU` è la forma attesa (stesso schema dei codici
+ * paese), `EU27` quella che la Commissione usa altrove per l'Unione a 27.
+ *
+ * `EUR` NON c'è di proposito: nei dati della Commissione indica di solito
+ * l'AREA EURO (20 paesi), un aggregato diverso. Confonderlo con la media UE
+ * darebbe un numero plausibile e sbagliato — il peggior tipo di errore.
+ */
+const EU_AGGREGATE_PREFIXES = ["EU", "EU27"] as const;
+
+/**
+ * Legge la media UE ponderata dagli stessi due fogli dei paesi.
+ *
+ * Se nessuna delle chiavi attese esiste, si ferma con un errore che ELENCA
+ * le chiavi della riga 1 che iniziano con "EU": è esattamente
+ * l'informazione che serve per correggere `EU_AGGREGATE_PREFIXES`, senza
+ * dover riaprire il file a mano.
+ */
+export function parseEuWeightedAverages(
+  workbook: ExcelJS.Workbook,
+  options: EuFuelHistoryOptions = {}
+): EuWeightedAveragePoint[] {
+  const grossSheet = workbook.getWorksheet(SHEET_WITH_TAX);
+  const netSheet = workbook.getWorksheet(SHEET_WITHOUT_TAX);
+  if (!grossSheet || !netSheet) {
+    throw new Error("Fogli dei prezzi non trovati nel file storico UE.");
+  }
+
+  const grossKeys = headerKeys(grossSheet);
+  const prefix = EU_AGGREGATE_PREFIXES.find((p) =>
+    grossKeys.has(`${p}_price_with_tax_${PRODUCT_BY_FUEL.petrol}`)
+  );
+  if (!prefix) {
+    const candidates = [...grossKeys.keys()].filter((k) => /^EU/i.test(k));
+    throw new Error(
+      `Media UE ponderata non trovata nel foglio "${SHEET_WITH_TAX}". ` +
+        `Chiavi che iniziano con "EU": ${candidates.join(", ") || "nessuna"}.`
+    );
+  }
+  const netKeys = headerKeys(netSheet);
+
+  // Per ogni carburante: colonna del lordo (obbligatoria) e del netto
+  // (facoltativa — se manca, il netto resta null e basta).
+  const columns = (["petrol", "diesel"] as const).map((fuelType) => {
+    const product = PRODUCT_BY_FUEL[fuelType];
+    const grossCol = grossKeys.get(`${prefix}_price_with_tax_${product}`);
+    if (grossCol === undefined) {
+      throw new Error(
+        `Colonna ${prefix}_price_with_tax_${product} assente nel file storico UE.`
+      );
+    }
+    return {
+      fuelType,
+      grossCol,
+      netCol: netKeys.get(`${prefix}_price_wo_tax_${product}`),
+    };
+  });
+
+  const grossRows = rowsByDate(grossSheet);
+  const netRows = rowsByDate(netSheet);
+
+  let dates = [...grossRows.keys()].sort();
+  if (options.fromDate) dates = dates.filter((d) => d >= options.fromDate!);
+  if (options.latestOnly) dates = dates.slice(-1);
+
+  const points: EuWeightedAveragePoint[] = [];
+  for (const date of dates) {
+    const grossRow = grossRows.get(date)!;
+    const netRow = netRows.get(date);
+    for (const { fuelType, grossCol, netCol } of columns) {
+      const gross = asNumber(grossRow.getCell(grossCol).value);
+      if (gross === null) continue; // settimana senza media pubblicata
+      const net =
+        netRow && netCol !== undefined
+          ? asNumber(netRow.getCell(netCol).value)
+          : null;
+      points.push({
+        fuelType,
+        pricePerLiter: gross / LITERS_PER_UNIT,
+        priceNetPerLiter: net === null ? null : net / LITERS_PER_UNIT,
+        date,
+      });
+    }
+  }
+  return points;
+}
+
+/** Riga 1 di un foglio: chiave macchina → numero di colonna. */
+function headerKeys(sheet: ExcelJS.Worksheet): Map<string, number> {
+  const keys = new Map<string, number>();
+  sheet.getRow(1).eachCell((cell, colNumber) => {
+    const raw = String(cell.value ?? "").trim();
+    if (raw) keys.set(raw, colNumber);
+  });
+  return keys;
+}
+
+/** Le righe di dati di un foglio, indicizzate per data (vedi readSheet). */
+function rowsByDate(sheet: ExcelJS.Worksheet): Map<string, ExcelJS.Row> {
+  const rows = new Map<string, ExcelJS.Row>();
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber <= 3) return;
+    const date = asIsoDate(row.getCell(1).value);
+    if (date) rows.set(date, row);
+  });
+  return rows;
 }
 
 /**
@@ -191,7 +325,7 @@ export async function fetchEuFuelHistory(
  */
 export function parseWorkbook(
   workbook: ExcelJS.Workbook,
-  options: { fromDate?: string; latestOnly?: boolean } = {}
+  options: EuFuelHistoryOptions = {}
 ): EuFuelHistoryPoint[] {
   const gross = readSheet(workbook, SHEET_WITH_TAX, "price_with_tax");
   const net = readSheet(workbook, SHEET_WITHOUT_TAX, "price_wo_tax");
