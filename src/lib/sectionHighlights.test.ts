@@ -4,6 +4,7 @@ import {
   euPetrolSpread,
   euPetrolTaxShare,
   italyVsEuAverage,
+  italyVsNeighbours,
   priceSpread,
   provincePetrolSelfSpread,
 } from "./sectionHighlights";
@@ -115,5 +116,28 @@ describe("priceSpread", () => {
     const r = provincePetrolSelfSpread([province("Bolzano", 2.2), province("Napoli", 2.05)]);
     expect(r?.highest.provinceName).toBe("Bolzano");
     expect(r?.gap).toBeCloseTo(0.15, 10);
+  });
+});
+
+describe("italyVsNeighbours", () => {
+  const point = (countryName: string, petrol: number | null) =>
+    ({ countryName, petrol }) as unknown as CountryFuelPoint;
+
+  it("confronta i confinanti con l'Italia, nell'ordine ovest → est", () => {
+    const out = italyVsNeighbours([
+      point("Slovenia", 1.5),
+      point("Italy", 1.9),
+      point("France", 1.95),
+      point("Germany", 1.8),
+    ]);
+    expect(out?.italy).toBe(1.9);
+    expect(out?.neighbours.map((n) => n.countryName)).toEqual(["France", "Slovenia"]);
+    expect(out?.neighbours[0].diffVsItaly).toBeCloseTo(0.05);
+    expect(out?.neighbours[1].diffVsItaly).toBeCloseTo(-0.4);
+  });
+
+  it("null senza Italia o senza nessun confinante", () => {
+    expect(italyVsNeighbours([point("France", 1.9)])).toBeNull();
+    expect(italyVsNeighbours([point("Italy", 1.9), point("Austria", null)])).toBeNull();
   });
 });

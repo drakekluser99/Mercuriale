@@ -56,14 +56,10 @@ export function summarizeEuWeightedAverage(
 }
 
 /**
- * Quota di imposte sul prezzo, in percentuale: (lordo − netto) / lordo.
- * Stessa formula usata per la "media dei 27" nella mappa, così i due
- * numeri affiancati sono confrontabili.
+ * Quota di imposte sul prezzo: la STESSA funzione usata per la "media dei
+ * 27" (europeFuelStats.ts), riesportata da qui invece che riscritta —
+ * così i due numeri affiancati nella mappa non possono divergere per una
+ * formula copiata male. europeFuelStats importa solo tipi dal database,
+ * quindi è sicuro anche dentro un Client Component.
  */
-export function taxSharePercent(
-  gross: number | null,
-  net: number | null
-): number | null {
-  if (gross === null || net === null || gross <= 0) return null;
-  return ((gross - net) / gross) * 100;
-}
+export { taxSharePercent } from "./europeFuelStats";

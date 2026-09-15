@@ -32,9 +32,11 @@ import MobileNav from "@/components/MobileNav";
 import { SectionNav } from "@/components/SectionNav";
 import { SectionHeading } from "@/components/SectionHeading";
 import { KeyFigure } from "@/components/KeyFigure";
+import { NeighbourTiles } from "@/components/NeighbourTiles";
 import { CiteBox } from "@/components/CiteBox";
 import {
   italyVsEuAverage,
+  italyVsNeighbours,
   euPetrolTaxShare,
   biggestMover,
   euPetrolSpread,
@@ -310,6 +312,7 @@ export default async function Home() {
   // qui sopra; ognuna può essere `null`, e allora la sezione non la mostra.
   // Logica e motivazioni in src/lib/sectionHighlights.ts.
   const italyGap = italyVsEuAverage(europeanFuelData, europeAverage);
+  const neighbourComparison = italyVsNeighbours(europeanFuelData);
   const euTaxShare = euPetrolTaxShare(europeAverage);
   const topCommodityMover = biggestMover(priceMovers(commoditySeries));
   const countrySpread = euPetrolSpread(europeanFuelData);
@@ -806,6 +809,12 @@ export default async function Home() {
                 euWeighted={euWeighted}
               />
             </div>
+            {neighbourComparison && (
+              <NeighbourTiles
+                italy={neighbourComparison.italy}
+                neighbours={neighbourComparison.neighbours}
+              />
+            )}
             <SourceNote
               sources={["eu-commission"]}
               checks={[

@@ -98,3 +98,42 @@ export function euPetrolSpread(countries: CountryFuelPoint[]) {
 export function provincePetrolSelfSpread(provinces: ProvinceFuelPoint[]) {
   return priceSpread(provinces, (p) => p.petrolSelf);
 }
+
+/**
+ * Paesi UE che confinano con l'Italia (blocco D, 15 set 2026), nell'ordine
+ * in cui si incontrano lungo l'arco alpino da ovest a est. La Svizzera
+ * confina ma non è nell'UE, quindi non è nel bollettino della Commissione:
+ * mescolarla qui vorrebbe dire un'altra fonte, un'altra valuta (CHF) e
+ * un'altra cadenza (mensile), e un confronto che sembra omogeneo ma non lo
+ * è. San Marino e Vaticano non hanno dati propri.
+ */
+export const ITALY_EU_NEIGHBOURS = ["France", "Austria", "Slovenia"] as const;
+
+export interface NeighbourComparison {
+  countryName: string;
+  petrol: number;
+  /** Paese meno Italia: negativo = lì la benzina costa meno. */
+  diffVsItaly: number;
+}
+
+/**
+ * 01 — La benzina in Italia contro i paesi confinanti: la domanda di chi
+ * vive vicino a un confine ("conviene fare il pieno di là?"). Restituisce
+ * `null` se manca l'Italia; i confinanti senza dato vengono saltati, non
+ * mostrati a zero.
+ */
+export function italyVsNeighbours(
+  countries: CountryFuelPoint[],
+): { italy: number; neighbours: NeighbourComparison[] } | null {
+  const byName = new Map(countries.map((c) => [c.countryName, c]));
+  const italy = byName.get(ITALY_KEY)?.petrol ?? null;
+  if (italy === null) return null;
+
+  const neighbours: NeighbourComparison[] = [];
+  for (const name of ITALY_EU_NEIGHBOURS) {
+    const petrol = byName.get(name)?.petrol ?? null;
+    if (petrol === null) continue;
+    neighbours.push({ countryName: name, petrol, diffVsItaly: petrol - italy });
+  }
+  return neighbours.length > 0 ? { italy, neighbours } : null;
+}

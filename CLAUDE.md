@@ -1176,9 +1176,11 @@ ponderata, import massivo storico, estrapolazioni causali.
   `EU_`, e lì c'è un problema di modello: finirebbe in `regions` come se
   fosse un paese, comparirebbe nella tabella carburanti e verrebbe
   conteggiata dentro la nostra stessa media. Serve una colonna
-  `regions.kind` ('country' | 'aggregate') e quindi un'altra migrazione. È
-  il passo giusto ma è un passo suo — NON aggiungere `EU_` a `regions`
-  senza quella colonna.
+  `regions.kind` ('country' | 'aggregate') e quindi un'altra migrazione.
+  **RISOLTO il 15 set 2026 in altro modo (Blocco C)**: la media ponderata
+  vive in una tabella SEPARATA, `eu_weighted_averages`, e non in
+  `regions` — vedi la voce "Blocco C" più sotto. Resta valido il divieto:
+  NON aggiungere `EU_` a `regions`.
 - **Fogli fiscali (VAT/Excise) — FATTO** (Fase 3, 4 set 2026): `VAT` ed
   `Excise duties` sono ora letti (`euOilBulletinHistory.ts`), la
   scomposizione accisa/IVA è in produzione su `/paese/[slug]` e come
@@ -1559,6 +1561,41 @@ ponderata, import massivo storico, estrapolazioni causali.
     applicati a tabella e grafico (quindi anche alle cifre chiave e a
     "Maggiori variazioni"). Database, export CSV/JSON e `/api/data`
     restano con i nomi inglesi della fonte.
+
+- **Blocco C — FATTO (Cowork, 15 set 2026, commit c4473e8).**
+  - **Media UE ponderata**: tabella `eu_weighted_averages` (migrazione
+    `0011`), unique su (fuel_type, recorded_at). La scrive
+    `saveEuWeightedAverages` (INSERT a blocchi da 500 con upsert), dal
+    cron del giovedì e da `backfill:eu-fuel`. Il parser è
+    `parseEuWeightedAverages` in `euOilBulletinHistory.ts`: cerca
+    `EU_price_with_tax_*` / `EU_price_wo_tax_*` (accetta anche `EU27_`).
+    **`EUR_` è escluso apposta** (area euro, aggregato diverso). Se la
+    colonna manca l'errore elenca le chiavi "EU*" trovate;
+    `npm run inspect:eu-history -- --keys` stampa le chiavi non di paese.
+  - Il cron scarica il file UNA volta (`downloadEuHistoryWorkbook`) e lo
+    passa a entrambi i parser; la media ponderata ha un try/catch suo, i
+    27 paesi non falliscono per lei. In home la query ha un `.catch` → [].
+  - UI: riga "media UE ponderata sui consumi" sotto la barra della mappa
+    (prezzo e quota fiscale; per l'accisa non c'è un dato UE), citata
+    nella cifra chiave 01 e in metodologia. La scala dei colori resta
+    centrata sulla "media dei 27".
+  - **Layout a riquadri**: in cima, griglia `lg:grid-cols-3` (cosa è
+    cambiato + maggiori variazioni a sinistra, numero del giorno alto a
+    destra); sezioni 03 e 04 affiancate da `xl` (figli con `min-w-0` per
+    non allargare la pagina con le tabelle). Effetto noto: con 03 e 04
+    affiancate l'indice evidenzia 03 (vince la prima sezione visibile).
+  - `taxSharePercent` esiste UNA volta sola (`europeFuelStats.ts`);
+    `euWeightedAverage.ts` la riesporta.
+
+- **Blocco D, parte 1 — confinanti (Cowork, 15 set 2026).** Riquadri
+  "Italia e paesi UE confinanti" nella sezione 01 (`NeighbourTiles.tsx`,
+  Server Component; logica in `italyVsNeighbours`,
+  `ITALY_EU_NEIGHBOURS` = Francia, Austria, Slovenia). **Svizzera
+  esclusa**: non è nel bollettino UE. Fonte candidata: BFS, tabella "LIK,
+  Durchschnittspreise für Energie und Treibstoffe" (mensile, CHF/L, xlsx;
+  l'URL `bfs.admin.ch/asset/de/<id>` cambia a ogni rilascio). NON
+  verificata: il sito BFS è bloccato dall'ambiente cloud. Aggiungerla
+  richiede anche un tasso CHF→EUR dichiarato e l'etichetta "mensile".
 
 ## Skill: vercel-react-best-practices
 
