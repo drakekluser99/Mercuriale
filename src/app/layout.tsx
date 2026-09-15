@@ -57,6 +57,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="it"
+      // globals.css attiva lo scorrimento morbido per l'indice delle
+      // sezioni. Questo attributo dice a Next.js 16 di SOSPENDERLO quando
+      // si cambia pagina: senza, ogni passaggio (es. da /metodologia alla
+      // home) "scivolerebbe" lentamente verso l'alto invece di aprirsi
+      // subito in cima.
+      data-scroll-behavior="smooth"
       className={`${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

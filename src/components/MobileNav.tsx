@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Globe2, Calculator, BarChart3, Fuel } from "lucide-react";
+import { Menu, X, Globe2, Calculator, BarChart3, Fuel, MapPin } from "lucide-react";
 
 interface NavItem {
   href: string;
@@ -22,6 +22,8 @@ const ICONS: Record<string, typeof Globe2> = {
   "#calcolatore": Calculator,
   "#materie-prime": BarChart3,
   "#carburanti": Fuel,
+  // Mancava: la sezione 05 ricadeva sull'icona di default (Globe2).
+  "#province": MapPin,
 };
 
 export default function MobileNav({ items, pageLinks, githubUrl }: Props) {

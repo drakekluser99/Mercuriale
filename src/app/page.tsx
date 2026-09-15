@@ -26,6 +26,7 @@ import { provinceForCode } from "@/lib/provinces";
 import EuropeFuelMap from "@/components/EuropeFuelMap";
 import FuelImpactCalculator from "@/components/FuelImpactCalculator";
 import MobileNav from "@/components/MobileNav";
+import { SectionNav } from "@/components/SectionNav";
 import { FuelPriceTable } from "@/components/FuelPriceTable";
 import { ItalyProvinceFuelTable } from "@/components/ItalyProvinceFuelTable";
 import { DownloadDataButtons } from "@/components/DownloadDataButtons";
@@ -38,10 +39,6 @@ import Link from "next/link";
 import {
   Code2,
   Bug,
-  Fuel,
-  Globe2,
-  Calculator,
-  BarChart3,
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
@@ -104,12 +101,22 @@ const COMMODITY_EXPORT_COLUMNS = [
   { key: "data", label: "Data" },
 ];
 
+// `number` ripete il numero che la sezione ha nel suo titolo ("01 /"):
+// nell'indice fisso fa da segnalibro, "sono alla 03 di 05".
 const NAV_ITEMS = [
-  { href: "#mappa", label: "Mappa", icon: Globe2 },
-  { href: "#calcolatore", label: "Cosa significa", icon: Calculator },
-  { href: "#materie-prime", label: "Materie prime", icon: BarChart3 },
-  { href: "#carburanti", label: "Carburanti", icon: Fuel },
-  { href: "#province", label: "Province italiane", icon: Fuel },
+  { href: "#mappa", label: "Mappa", number: "01" },
+  { href: "#calcolatore", label: "Cosa significa", number: "02" },
+  { href: "#materie-prime", label: "Materie prime", number: "03" },
+  { href: "#carburanti", label: "Carburanti", number: "04" },
+  { href: "#province", label: "Province italiane", number: "05" },
+];
+
+// Pagine secondarie: una sola lista per indice fisso e menu mobile,
+// prima erano scritte due volte a mano.
+const PAGE_LINKS = [
+  { href: "/metodologia", label: "Metodologia" },
+  { href: "/glossario", label: "Glossario" },
+  { href: "/stato-dati", label: "Stato dei dati" },
 ];
 
 export default async function Home() {
@@ -507,11 +514,7 @@ export default async function Home() {
               </a>
               <MobileNav
                 items={NAV_ITEMS.map(({ href, label }) => ({ href, label }))}
-                pageLinks={[
-                  { href: "/metodologia", label: "Metodologia" },
-                  { href: "/glossario", label: "Glossario" },
-                  { href: "/stato-dati", label: "Stato dei dati" },
-                ]}
+                pageLinks={PAGE_LINKS}
                 githubUrl={GITHUB_URL}
               />
             </div>
@@ -523,42 +526,18 @@ export default async function Home() {
             variazioni". Vedi src/components/TickerBand.tsx. */}
         {lastUpdated && <TickerBand stats={headerStats} />}
 
-        {/* Barra di navigazione a piena larghezza sul chrome: divisori
-            verticali fra le voci e sottolineatura in ambra sull'hover,
-            invece di pillole separate da spazio vuoto. */}
-        <nav className="relative hidden border-b border-system-chrome-border sm:block">
-          <div className="mx-auto flex max-w-7xl">
-            {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
-              <a
-                key={href}
-                href={href}
-                className="flex items-center gap-1.5 border-b-2 border-l border-transparent border-l-system-chrome-border px-5 py-3 font-mono text-[11px] uppercase tracking-[0.1em] text-system-chrome-ink-muted transition-colors first:border-l-0 hover:border-b-system-chrome-accent hover:bg-white/[0.03] hover:text-system-chrome-accent"
-              >
-                <Icon size={13} />
-                {label}
-              </a>
-            ))}
-            <Link
-              href="/metodologia"
-              className="ml-auto flex items-center border-l border-system-chrome-border px-5 py-3 font-mono text-[11px] uppercase tracking-[0.1em] text-system-chrome-ink-muted transition-colors hover:text-system-chrome-accent"
-            >
-              Metodologia
-            </Link>
-            <Link
-              href="/glossario"
-              className="flex items-center border-l border-system-chrome-border px-5 py-3 font-mono text-[11px] uppercase tracking-[0.1em] text-system-chrome-ink-muted transition-colors hover:text-system-chrome-accent"
-            >
-              Glossario
-            </Link>
-            <Link
-              href="/stato-dati"
-              className="flex items-center border-l border-system-chrome-border px-5 py-3 font-mono text-[11px] uppercase tracking-[0.1em] text-system-chrome-ink-muted transition-colors hover:text-system-chrome-accent"
-            >
-              Stato dei dati
-            </Link>
-          </div>
-        </nav>
       </header>
+
+      {/* Indice delle sezioni FUORI dall'header (15 set 2026): dentro,
+          l'`overflow-hidden` dell'header impediva a `sticky` di funzionare
+          e la barra spariva col primo scroll. Qui resta visibile per tutta
+          la pagina ed evidenzia la sezione in lettura — risposta al
+          feedback "calo di attenzione dopo il primo scroll". Vedi
+          src/components/SectionNav.tsx. */}
+      <SectionNav
+        items={NAV_ITEMS.map(({ href, label, number }) => ({ href, label, number }))}
+        pageLinks={PAGE_LINKS}
+      />
 
       <main className="mx-auto max-w-7xl px-6 py-10">
         {/* "Cosa è cambiato questa settimana": non un elenco di
@@ -706,7 +685,7 @@ export default async function Home() {
         </section>
 
         {europeanFuelData.length > 0 && (
-          <section id="mappa" className="scroll-mt-8">
+          <section id="mappa" className="scroll-mt-16">
             <div className="flex items-baseline gap-3">
               <span className="font-mono text-xs text-system-ink-muted">01 /</span>
               {/* "Carburanti" e non "benzina": da quando la mappa ha il
@@ -757,7 +736,7 @@ export default async function Home() {
         )}
 
         {(europeAverage.petrol !== null || usAverage.petrol !== null) && (
-          <section id="calcolatore" className="mt-12 scroll-mt-8">
+          <section id="calcolatore" className="mt-12 scroll-mt-16">
             <div className="flex items-baseline gap-3">
               <span className="font-mono text-xs text-system-ink-muted">02 /</span>
               <h2 className="text-lg font-semibold text-system-ink">Cosa significa in pratica</h2>
@@ -773,7 +752,7 @@ export default async function Home() {
           </section>
         )}
 
-        <section id="materie-prime" className="mt-12 scroll-mt-8">
+        <section id="materie-prime" className="mt-12 scroll-mt-16">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-baseline gap-3">
               <span className="font-mono text-xs text-system-ink-muted">03 /</span>
@@ -858,7 +837,7 @@ export default async function Home() {
           </SourceNote>
         </section>
 
-        <section id="carburanti" className="mt-12 scroll-mt-8">
+        <section id="carburanti" className="mt-12 scroll-mt-16">
           <div className="flex items-baseline gap-3">
             <span className="font-mono text-xs text-system-ink-muted">04 /</span>
             <h2 className="text-lg font-semibold text-system-ink">Carburanti al consumo</h2>
@@ -913,7 +892,7 @@ export default async function Home() {
             decorativa, mostra dati reali (media nazionale pesata + tabella
             ricercabile) che portano ciascuno alla propria pagina provincia. */}
         {italyProvinceRows.length > 0 && (
-          <section id="province" className="mt-12 scroll-mt-8">
+          <section id="province" className="mt-12 scroll-mt-16">
             <div className="flex items-baseline gap-3">
               <span className="font-mono text-xs text-system-ink-muted">05 /</span>
               <h2 className="text-lg font-semibold text-system-ink">

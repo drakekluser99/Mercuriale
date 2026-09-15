@@ -222,12 +222,26 @@ body {
 }
 
 /*
+ * Scorrimento morbido quando si clicca una voce dell'indice fisso
+ * (SectionNav, 15 set 2026): la pagina "scivola" fino alla sezione invece
+ * di saltarci, così si capisce che si è rimasti sulla stessa pagina e in
+ * che direzione ci si è mossi. Tolto più sotto per chi chiede meno
+ * movimento, come le altre animazioni.
+ */
+html {
+  scroll-behavior: smooth;
+}
+
+/*
  * Rispetto delle preferenze di sistema. Non "riduciamo" le animazioni:
  * le togliamo del tutto e portiamo ogni elemento al suo stato finale.
  * Chi imposta questa preferenza spesso lo fa per disturbi vestibolari o
  * per emicrania: una versione "più lenta" non risolve il problema.
  */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   .animate-scan-in,
   .animate-caret,
   .animate-draw {
