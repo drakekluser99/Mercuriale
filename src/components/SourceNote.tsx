@@ -58,7 +58,11 @@ export function SourceNote({ sources, checks, children }: SourceNoteProps) {
 
   return (
     <div className="mt-2 flex flex-col gap-1.5">
-      <p className="flex items-start gap-1.5 font-mono text-xs uppercase tracking-wider text-system-ink-muted">
+      {/* Testo normale, non maiuscolo monospace (16 set 2026): le note
+          "Fonte" sono frasi lunghe, e il MAIUSCOLO spaziato in monospace
+          rallenta la lettura proprio dove serve precisione. Lo stile
+          "terminale" resta per le etichette corte (badge, intestazioni). */}
+      <p className="flex items-start gap-1.5 text-xs leading-relaxed text-system-ink-muted">
         <ProvenanceStamp
           size={14}
           className="mt-0.5 shrink-0 text-system-accent"
@@ -80,7 +84,7 @@ export function SourceNote({ sources, checks, children }: SourceNoteProps) {
         ))}
       </div>
       {checks && checks.length > 0 && (
-        <p className="ml-[22px] font-mono text-[11px] leading-relaxed text-system-ink-muted">
+        <p className="ml-[22px] text-xs leading-relaxed text-system-ink-muted">
           {checks.map((c, i) => (
             <span key={c.label}>
               {i > 0 && " · "}

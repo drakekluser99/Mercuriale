@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { EU_COUNTRY_SLUGS } from "@/lib/countries";
 import { ALL_PROVINCES } from "@/lib/provinces";
+import { SECTION_PAGES } from "@/lib/siteNav";
 
 // L'indirizzo del sito vive in src/lib/site.ts (15 set 2026): prima era
 // ripetuto qui, in robots.ts e in layout.tsx, con l'obbligo di tenerli
@@ -31,6 +32,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "daily",
       priority: 1,
     },
+    // Pagine di sezione (16 set 2026): contenuto aggiornato dai cron,
+    // quindi `lastModified: now` è onesto come per la home.
+    ...SECTION_PAGES.map((p) => ({
+      url: `${BASE_URL}${p.href}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+    })),
     {
       url: `${BASE_URL}/stato-dati`,
       lastModified: now,

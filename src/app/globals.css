@@ -83,7 +83,13 @@
    *   `ink-muted`     — dettagli marginali: text-xs, unità, celle
    *                     secondarie. Deve restare in secondo piano. */
   --color-system-ink-secondary: #57503f;
-  --color-system-ink-muted: #8b8371;
+  --color-system-ink-muted: #6f6857;
+  /*   Era #8b8371 fino al 16 set 2026: contrasto 3,5:1 sullo sfondo e
+   *   3,2:1 sui pannelli, sotto il minimo WCAG AA di 4,5:1 per il testo
+   *   normale (segnalato da un visitatore: "poco contrasto"). #6f6857 fa
+   *   5,1 sullo sfondo, 5,5 sulle superfici e 4,7 sui pannelli: passa
+   *   ovunque e resta distinguibile da `ink-secondary`. Chi cambia questo
+   *   valore ricontrolli il rapporto su `panel`, il fondo più scuro. */
 
   /* --- bordi (idem, due livelli) --- */
   --color-system-border: #e4dccb;
@@ -123,7 +129,9 @@
    * due ma tono neutro, non un allarme — comunica "in attesa del prossimo
    * dato", non un problema.
    */
-  --color-system-signal-wait: #8a6f28;
+  --color-system-signal-wait: #7a6122;
+  /* Era #8a6f28 (4,0:1 sui pannelli): scurito il 16 set 2026 per
+   * superare 4,5:1 su tutti i fondi chiari (ora 5,0 sui pannelli). */
 
   /* --- segno di struttura (15 set 2026) --- */
   /*

@@ -120,7 +120,7 @@ export default function Metodologia() {
               Europea pubblica anche una propria media, ponderata sui
               consumi reali di ciascun paese, e le due non coincidono.
               Dal 15 settembre 2026 il sito mostra anche quella, sotto la
-              mappa e nella cifra chiave della sezione 01, con
+              mappa e nella cifra chiave della pagina «Carburanti in Europa», con
               l&apos;etichetta &quot;media UE ponderata sui consumi&quot;.
               Non sono in contraddizione: rispondono a domande diverse
               (&quot;qual è il prezzo tipico di un paese UE&quot; contro

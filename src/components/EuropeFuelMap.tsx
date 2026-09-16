@@ -407,7 +407,11 @@ export default function EuropeFuelMap({ prices, euAverage, euWeighted }: Props) 
         <div
           role="status"
           aria-live="polite"
-          className="pointer-events-none absolute left-4 top-16 rounded-md border border-system-border bg-system-surface px-3 py-2 text-sm shadow-md"
+          // Larghezza FISSA (`w-60`): il riquadro è sovrapposto alla mappa
+          // e non sposta il layout, ma con la larghezza "a misura di
+          // contenuto" cambiava dimensione a ogni paese (nomi lunghi,
+          // quote con o senza decimali) e il bordo sembrava tremare.
+          className="pointer-events-none absolute left-4 top-16 w-60 rounded-md border border-system-border bg-system-surface px-3 py-2 text-sm shadow-md"
         >
           <div className="font-medium">
             {localizedCountryName(hovered.countryName)}

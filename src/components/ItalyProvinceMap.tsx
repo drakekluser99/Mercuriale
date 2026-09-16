@@ -113,26 +113,40 @@ export function ItalyProvinceMap({ rows, average }: Props) {
           mouse: su mobile non c'è un mouse da seguire, e un riquadro fisso
           non copre mai la provincia che si sta guardando. `aria-live`
           annuncia il cambio a chi usa uno screen reader. */}
+      {/* ALTEZZA FISSA (`h-14`) e sempre DUE righe, ognuna tagliata con
+          `truncate` se non ci sta (16 set 2026). Prima c'era solo
+          un'altezza minima: a riposo il riquadro aveva una riga, al
+          passaggio del mouse due, quindi cresceva e spingeva giù la mappa
+          di qualche pixel a ogni provincia — il "flicker" segnalato da un
+          visitatore. Con altezza e numero di righe costanti, cambiare
+          provincia cambia solo il testo, mai la posizione di nulla. */}
       <div
         aria-live="polite"
-        className="mb-2 min-h-[3rem] rounded-md bg-system-bg px-3 py-2 text-sm"
+        className="mb-2 flex h-14 flex-col justify-center rounded-md bg-system-bg px-3 text-sm"
       >
         {hovered ? (
           <>
-            <span className="font-semibold text-system-ink">{hovered.provinceName}</span>{" "}
-            <span className="font-mono tabular-nums text-system-ink">
-              {hoveredValue !== null ? `${formatFuelPrice(hoveredValue)} €/L` : "dato non disponibile"}
-            </span>
-            {hoveredValue !== null && (
-              <span className="block text-xs text-system-ink-muted">
-                {diffLabel(hoveredValue)} · clic per il dettaglio
+            <span className="block truncate">
+              <span className="font-semibold text-system-ink">{hovered.provinceName}</span>{" "}
+              <span className="font-mono tabular-nums text-system-ink">
+                {hoveredValue !== null ? `${formatFuelPrice(hoveredValue)} €/L` : "dato non disponibile"}
               </span>
-            )}
+            </span>
+            <span className="block truncate text-xs text-system-ink-muted">
+              {hoveredValue !== null
+                ? `${diffLabel(hoveredValue)} · clic per il dettaglio`
+                : "clic per il dettaglio"}
+            </span>
           </>
         ) : (
-          <span className="text-system-ink-muted">
-            Passa sopra una provincia (o usa Tab) per vedere il prezzo; clicca per il dettaglio.
-          </span>
+          <>
+            <span className="block truncate text-system-ink-secondary">
+              Passa sopra una provincia (o usa Tab)
+            </span>
+            <span className="block truncate text-xs text-system-ink-muted">
+              per vedere il prezzo · clic per il dettaglio
+            </span>
+          </>
         )}
       </div>
 

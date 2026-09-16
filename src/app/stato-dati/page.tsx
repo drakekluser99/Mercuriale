@@ -207,7 +207,7 @@ export default async function StatoDati() {
               cadenza diversa (giornaliera e mensile), quindi un giudizio
               unico &quot;fresco/fermo&quot; per l&apos;intero job
               nasconderebbe l&apos;altra serie. La freschezza per singola
-              materia prima resta quella già mostrata in homepage.
+              materia prima resta quella già mostrata nella pagina «Materie prime».
             </li>
             <li>
               Per i prezzi provinciali italiani (MIMIT) la data del dato è

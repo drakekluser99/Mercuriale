@@ -87,7 +87,7 @@ export default async function CountryPage({ params }: PageProps) {
         <header className="border-b border-system-border bg-system-surface">
           <div className="mx-auto max-w-3xl px-6 py-8">
             <Link
-              href="/#mappa"
+              href="/europa"
               className="text-xs font-semibold uppercase tracking-[0.14em] text-system-accent hover:underline"
             >
               ← Torna alla mappa
@@ -159,7 +159,7 @@ export default async function CountryPage({ params }: PageProps) {
       <header className="border-b border-system-border bg-system-surface">
         <div className="mx-auto max-w-3xl px-6 py-8">
           <Link
-            href="/#mappa"
+            href="/europa"
             className="text-xs font-semibold uppercase tracking-[0.14em] text-system-accent hover:underline"
           >
             ← Torna alla mappa

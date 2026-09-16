@@ -80,10 +80,10 @@ export default async function ProvincePage({ params }: PageProps) {
         <header className="border-b border-system-border bg-system-surface">
           <div className="mx-auto max-w-3xl px-6 py-8">
             <Link
-              href="/"
+              href="/italia"
               className="text-xs font-semibold uppercase tracking-[0.14em] text-system-accent hover:underline"
             >
-              ← Torna alla home
+              ← Tutte le province
             </Link>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">
               Benzina a {provinceRoute.name}
@@ -119,10 +119,10 @@ export default async function ProvincePage({ params }: PageProps) {
       <header className="border-b border-system-border bg-system-surface">
         <div className="mx-auto max-w-3xl px-6 py-8">
           <Link
-            href="/"
+            href="/italia"
             className="text-xs font-semibold uppercase tracking-[0.14em] text-system-accent hover:underline"
           >
-            ← Torna alla home
+            ← Tutte le province
           </Link>
           <h1 className="mt-2 flex items-center gap-2 text-3xl font-semibold tracking-tight">
             <ProvenanceStamp size={20} className="text-system-accent" />

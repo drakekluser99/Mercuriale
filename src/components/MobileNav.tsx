@@ -2,31 +2,28 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Globe2, Calculator, BarChart3, Fuel, MapPin } from "lucide-react";
+import { Menu, X, Globe2, Calculator, BarChart3, MapPin, LayoutGrid } from "lucide-react";
+import { GITHUB_URL, PAGE_LINKS, SECTION_PAGES } from "@/lib/siteNav";
 
-interface NavItem {
-  href: string;
-  label: string;
-}
-
-interface Props {
-  /** Ancore alla stessa pagina (sezioni della dashboard) */
-  items: NavItem[];
-  /** Link ad altre pagine del sito (Metodologia, Glossario) */
-  pageLinks: NavItem[];
-  githubUrl: string;
-}
-
+// Dal 16 set 2026 le voci sono PAGINE (vedi src/lib/siteNav.ts), non più
+// ancore dentro la home: il componente le legge da lì invece di
+// riceverle come prop, così header di pagine diverse non devono passarle.
 const ICONS: Record<string, typeof Globe2> = {
-  "#mappa": Globe2,
-  "#calcolatore": Calculator,
-  "#materie-prime": BarChart3,
-  "#carburanti": Fuel,
-  // Mancava: la sezione 05 ricadeva sull'icona di default (Globe2).
-  "#province": MapPin,
+  "/": LayoutGrid,
+  "/europa": Globe2,
+  "/calcolatore": Calculator,
+  "/materie-prime": BarChart3,
+  "/italia": MapPin,
 };
 
-export default function MobileNav({ items, pageLinks, githubUrl }: Props) {
+const items = [
+  { href: "/", label: "Panoramica" },
+  ...SECTION_PAGES.map(({ href, label }) => ({ href, label })),
+];
+const pageLinks = PAGE_LINKS;
+const githubUrl = GITHUB_URL;
+
+export default function MobileNav() {
   const [open, setOpen] = useState(false);
 
   return (
@@ -56,7 +53,7 @@ export default function MobileNav({ items, pageLinks, githubUrl }: Props) {
           {items.map(({ href, label }) => {
             const Icon = ICONS[href] ?? Globe2;
             return (
-              <a
+              <Link
                 key={href}
                 href={href}
                 onClick={() => setOpen(false)}
@@ -64,7 +61,7 @@ export default function MobileNav({ items, pageLinks, githubUrl }: Props) {
               >
                 <Icon size={15} />
                 {label}
-              </a>
+              </Link>
             );
           })}
           {pageLinks.map(({ href, label }) => (

@@ -254,7 +254,10 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
   esplicito per il preflight (Next ne genera uno automatico ma senza gli
   header CORS). Valori GREZZI, nessuna conversione di visualizzazione
   (cotone in cents/pound). `force-dynamic`, nessuna cache
-- `src/app/page.tsx` — homepage: dashboard con sezione "Maggiori
+- `src/app/page.tsx` — homepage. **Dal 16 set 2026 è una panoramica e il
+  dettaglio sta in pagine dedicate (vedi la voce "Recensione del 16 set
+  2026" in fondo): la descrizione qui sotto è storica.** Era una
+  dashboard con sezione "Maggiori
   variazioni" (in cima, senza numero d'indice: top 5 scostamenti da
   `priceMovers`, materie prime 90gg + carburanti 30gg con la finestra
   dichiarata per riga; ruggine = in salita, verde = in discesa) — copre
@@ -635,14 +638,14 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
     puro prima e dopo)
   - `system-ink` (#191509) — testo principale
   - `system-ink-secondary` (#57503f) — testo secondario (paragrafi, nav)
-  - `system-ink-muted` (#8b8371) — dettagli minori (text-xs, celle tabella)
+  - `system-ink-muted` (#6f6857, era #8b8371 fino al 16 set 2026) — dettagli minori (text-xs, celle tabella)
   - `system-border` (#e4dccb) — bordi standard
   - `system-border-subtle` (#f0ebe0) — divisori più leggeri
   - `system-accent` (#8a5a10) — ambra scura: SOLO marca (link, hover,
     wordmark, timbro), mai significato
   - `system-signal-up` (#b0461f) — ruggine: valore in salita / sopra media
   - `system-signal-down` (#3f6f4a) — verde bosco: in discesa / sotto media
-  - `system-signal-wait` (#8a6f28) — ocra spento, stato "in_attesa" del
+  - `system-signal-wait` (#7a6122, era #8a6f28 fino al 16 set 2026) — ocra spento, stato "in_attesa" del
     modello di freshness a 3 stati (`src/lib/freshness/`). Tono neutro e
     non un ambra "warning" acceso: comunica "in attesa del prossimo dato",
     non un problema
@@ -1714,6 +1717,45 @@ sezione). Resta aperto:
   "controllato ogni giorno" in home, `/paese/[slug]` e metodologia. Le note
   più vecchie in questo file che parlano del "cron del giovedì" sono
   storiche.
+- **Recensione del 16 set 2026 → contrasto, mappe, home divisa in pagine
+  (Cowork).** Un visitatore ha segnalato: poco contrasto fra testo e
+  sfondo, font faticosi, mappe che "saltano" al passaggio del mouse,
+  troppo testo in una pagina sola (suggerendo più route).
+  - **Contrasto (WCAG AA verificato con la formula)**: `ink-muted` da
+    #8b8371 (3,5:1 su sfondo, 3,2 sui pannelli, usato in 66 punti) a
+    **#6f6857** (5,1 / 5,5 / 4,7); `signal-wait` da #8a6f28 a **#7a6122**.
+    Chi tocca questi token ricontrolli il rapporto su `panel`, il fondo
+    più scuro. `SourceNote` in testo normale, non più maiuscolo monospace
+    (frasi lunghe); il monospace maiuscolo resta per etichette corte.
+  - **Mappe**: il riquadro sopra la mappa delle province aveva solo
+    un'altezza minima e passava da una a due righe al passaggio del mouse,
+    spingendo giù la mappa. Ora `h-14` fisso e sempre due righe
+    `truncate`. Il tooltip della mappa europea (sovrapposto, non sposta il
+    layout) ha larghezza fissa `w-60`.
+  - **Home divisa in pagine** (`src/lib/siteNav.ts` = elenco unico):
+    `/europa` (ex 01 mappa + ex 04 tabelle/grafico, numerate 01·A/01·B),
+    `/calcolatore` (02), `/materie-prime` (03), `/italia` (04, ex 05).
+    La home (`/`) è una **panoramica**: fascia valori, sintesi
+    (`components/sections/SummaryBand.tsx`) e quattro
+    `components/site/SectionPreview.tsx` con una cifra e il link.
+  - **Dati**: `src/lib/dashboard.ts` con porzioni per pagina
+    (`loadFuel`, `loadCommodities`, `loadItaly`, `loadCalculator`,
+    `loadSummary`), avvolte in `cache()` di React così che la home, che ne
+    usa diverse, non ripeta le query nella stessa richiesta. Le finestre
+    temporali si calcolano DENTRO le funzioni in cache (due `new Date()`
+    come argomenti non sarebbero mai uguali). `getNow()` = un solo
+    "adesso" per richiesta.
+  - **Cornice comune**: `components/site/PageShell.tsx` (header + barra +
+    contenuto + "Come citare" + footer), `SiteHeader.tsx`, `SiteFooter.tsx`.
+    `SectionNav` non fa più scrollspy: evidenzia la PAGINA con
+    `usePathname` (`aria-current="page"`). `MobileNav` non ha più props,
+    legge `siteNav.ts`.
+  - Link di ritorno: `/paese/[slug]` → `/europa`, `/provincia/[slug]` →
+    `/italia`. Le nuove pagine sono in sitemap. Le vecchie ancore
+    (`/#mappa`, `/#province`...) ora portano alla panoramica, senza errore.
+  - Verifica visiva fatta su una pagina di prova con dati finti (le pagine
+    vere richiedono il database): desktop 1400 px e mobile 400 px.
+
 - **Quando cambiano le date in home** (risposta data a Yuri il 15/9):
   petrolio e gas dopo ogni release settimanale EIA (di solito mercoledì);
   materie prime mensili quando l'FMI pubblica il mese successivo (la data
