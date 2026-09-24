@@ -1888,14 +1888,16 @@ sezione). Resta aperto:
     giornalieri pubblicati il martedì fino alla domenica prima: subito
     prima dell'uscita successiva il dato ha ~9 giorni); `/stato-dati` ha
     etichetta e badge per `fetch-chokepoint-transits`.
-  - **PUNTO DI RIPRESA (aggiornato 24 set 2026, pomeriggio)**.
+  - **PUNTO DI RIPRESA (aggiornato 24 set 2026, sera)**.
     - **In `main`**: tabella, cron giornaliero, storico dal 2019,
       `CHOKEPOINT_BASELINES` (PR drakekluser99/Mercuriale#11 e #12),
       registri fonte/freschezza/`/stato-dati`, soglie e `transitState`
-      (PR drakekluser99/Mercuriale#13, fusa il 24/9).
-    - **Passo 1 FATTO sul branch `claude/youthful-knuth-dixxvo`, in attesa
-      della verifica di Yuri sulla Preview (dati veri)** — vedi la voce
-      "Pagina /traffico-marittimo" qui sotto. Poi PR e merge, poi passo 2.
+      (drakekluser99/Mercuriale#13), pagina `/traffico-marittimo` con le
+      schede, passo 1 (drakekluser99/Mercuriale#14).
+    - **Passo 2 (grafico) FATTO sul branch `claude/youthful-knuth-dixxvo`,
+      in attesa della verifica di Yuri sulla Preview (dati veri)** — vedi
+      la voce "Grafico transiti + Brent" qui sotto. Poi PR e merge, poi
+      passo 3 (mappa).
     - **Decisioni già prese da Yuri, da NON ridiscutere**: baseline
       (Hormuz stagionale variante B, Bab el-Mandeb piatta), tre stati con
       nome e colori neutro / ocra / ruggine, soglie p5 per passaggio e
@@ -1959,6 +1961,35 @@ sezione). Resta aperto:
       - `CiteBox`: la citazione nomina anche IMF PortWatch.
       - Sitemap, footer, barra e menu mobile prendono la pagina da
         `SECTION_PAGES` da soli.
+    - **Grafico transiti + Brent (passo 2, 24 set 2026)**:
+      - `src/lib/shippingChart.ts` (puro, testato): `buildShippingChart`
+        produce UN elenco di punti per giorno con transiti, normale e
+        Brent insieme. I due grafici leggono lo stesso elenco, quindi
+        l'asse del tempo coincide per costruzione e il tooltip
+        sincronizzato (`syncId`, per posizione) indica lo stesso giorno.
+        Transiti = media mobile a 7 giorni (null se manca un giorno: la
+        linea si interrompe, `connectNulls={false}`); normale =
+        `baselineFor`; Brent = valore del giorno (null nei fine
+        settimana, qui sì `connectNulls`). Sopra 260 giorni blocchi con
+        la media dei valori presenti. Se lo storico dei transiti comincia
+        dopo il periodo chiesto (10 anni, PortWatch dal 2019) il grafico
+        parte dal primo transito (`startsLate`), invece di mostrare anni
+        di Brent e di "normale" senza traffico sotto.
+      - Due grafici impilati e non due assi Y: con due scale sovrapposte
+        la posizione relativa delle linee la deciderebbero i limiti degli
+        assi. Sotto il grafico: "mostra i due andamenti, non dice che uno
+        dipenda dall'altro".
+      - `src/lib/shippingChartData.ts` (`loadShippingChart`): unica
+        funzione per pagina (periodo iniziale `1a`, costante
+        `SHIPPING_CHART_INITIAL_WINDOW` in `dashboard.ts`) e
+        `/api/history?kind=chokepoints` (risposta `{ window,
+        chokepoints }`). Legge i transiti da 6 giorni prima dell'inizio
+        del periodo, per la media del primo giorno. Nuova query
+        `getCommoditySymbolHistory(symbol, since)`.
+      - `components/ShippingHistoryChart.tsx` (client) e
+        `components/HistoryWindowSelector.tsx`, estratto da
+        `PriceHistoryChart` e ora condiviso dai due grafici.
+      - Nota "Fonte" della sezione: aggiunto Alpha Vantage per il Brent.
     - **Verifica visiva**: dal cloud il database non si raggiunge, quindi
       pagina di prova con dati finti a 1.400 e 400 px, screenshot a Yuri
       prima del push; verifica sui dati veri sulla Preview.

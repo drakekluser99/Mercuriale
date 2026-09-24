@@ -13,6 +13,7 @@ import {
   getRecentChokepointTransits,
 } from "@/lib/db/queries";
 import { furthestFromNormal, summarizeChokepoints } from "@/lib/chokepointStatus";
+import { loadShippingChart } from "@/lib/shippingChartData";
 import { summarizeSwissFuel } from "@/lib/swissFuel";
 import { summarizeEuWeightedAverage } from "@/lib/euWeightedAverage";
 import { groupCommodityHistory, groupFuelHistory, priceMovers } from "@/lib/priceHistory";
@@ -287,8 +288,22 @@ export const loadItaly = cache(async () => {
 
 // ─── Traffico marittimo ─────────────────────────────────────────────────
 
+/**
+ * Periodo iniziale del grafico transiti + Brent: un anno, abbastanza per
+ * vedere la rottura di Hormuz (marzo 2026) e il traffico prima. Per Bab
+ * el-Mandeb (rottura a dicembre 2023) serve "5 anni", a un clic.
+ */
+export const SHIPPING_CHART_INITIAL_WINDOW = "1a" as const;
+
+const shippingChartQ = cache(() =>
+  loadShippingChart(SHIPPING_CHART_INITIAL_WINDOW, getNow()).catch((err) => {
+    console.error("Grafico traffico marittimo non disponibile:", err);
+    return [];
+  })
+);
+
 export const loadShipping = cache(async () => {
-  const [rows, runs] = await Promise.all([chokepointQ(), fetchRunsQ()]);
+  const [rows, runs, chart] = await Promise.all([chokepointQ(), fetchRunsQ(), shippingChartQ()]);
   const now = getNow();
   const freshnessConfig = getFreshnessConfig("imf_portwatch");
   const chokepoints = summarizeChokepoints(rows).map((s) => {
@@ -303,6 +318,7 @@ export const loadShipping = cache(async () => {
     chokepoints,
     headline: furthestFromNormal(chokepoints),
     run: findRun(runs, "fetch-chokepoint-transits"),
+    chart,
   };
 });
 

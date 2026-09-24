@@ -5,9 +5,10 @@ import {
 } from "@/lib/db/queries";
 import { groupCommodityHistory, groupFuelHistory } from "@/lib/priceHistory";
 import { downsampleSeries, findHistoryWindow } from "@/lib/historyWindows";
+import { loadShippingChart } from "@/lib/shippingChartData";
 
 /**
- * GET /api/history?kind=commodities|fuel&window=1m|3m|1a|5a|10a
+ * GET /api/history?kind=commodities|fuel|chokepoints&window=1m|3m|1a|5a|10a
  *
  * Serie storiche per i grafici della home, quando si sceglie una finestra
  * diversa da quella caricata con la pagina (15 set 2026). La home continua
@@ -18,6 +19,10 @@ import { downsampleSeries, findHistoryWindow } from "@/lib/historyWindows";
  * Risponde con le stesse `PriceSeries` che il grafico riceve dalla pagina,
  * già sfoltite (vedi historyWindows.ts). Non è un'API "pubblica" come
  * /api/data: nessun CORS aperto, forma pensata per il grafico.
+ *
+ * `kind=chokepoints` (24 set 2026) risponde con `{ window, chokepoints }`:
+ * le serie del grafico transiti + Brent (vedi src/lib/shippingChart.ts),
+ * già raggruppate a blocchi sui periodi lunghi.
  *
  * CACHE: lo storico cambia al massimo qualche volta al giorno (i cron),
  * quindi la CDN di Vercel può tenere la risposta per un'ora
@@ -37,16 +42,28 @@ export async function GET(request: NextRequest) {
 
   // Parametri validati contro elenchi chiusi: un valore sconosciuto è un
   // errore esplicito (400), non un ripiego silenzioso su un default.
-  if ((kind !== "commodities" && kind !== "fuel") || !range) {
+  if ((kind !== "commodities" && kind !== "fuel" && kind !== "chokepoints") || !range) {
     return NextResponse.json(
-      { error: "Parametri non validi: kind=commodities|fuel, window=1m|3m|1a|5a|10a" },
+      {
+        error:
+          "Parametri non validi: kind=commodities|fuel|chokepoints, window=1m|3m|1a|5a|10a",
+      },
       { status: 400 },
     );
   }
 
   const since = new Date(Date.now() - range.days * 24 * 60 * 60 * 1000);
 
+  const headers = {
+    "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+  };
+
   try {
+    if (kind === "chokepoints") {
+      const chokepoints = await loadShippingChart(range.key, new Date());
+      return NextResponse.json({ window: range.key, chokepoints }, { headers });
+    }
+
     const series =
       kind === "commodities"
         ? groupCommodityHistory(await getCommodityPriceHistory(since))
@@ -54,11 +71,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       { window: range.key, series: downsampleSeries(series) },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
-        },
-      },
+      { headers },
     );
   } catch (err) {
     console.error("Errore in /api/history:", err);
