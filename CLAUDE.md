@@ -942,6 +942,8 @@ ISTAT".
 | #24 | CLAUDE.md: CI rifatta in `.github/workflows/` (la vecchia era nella radice e non era mai partita) |
 | #25 | CLAUDE.md: ruleset "Proteggi main" e ricognizione ISTAT sul NIC |
 | #26 | CLAUDE.md: storico NIC dal 1996 e questo punto di ripresa |
+| #27 | Inflazione: schema, fetcher ISTAT, raccordo, cron, backfill, pagina `/inflazione` (06), pagine secondarie nell'header |
+| #28 | Inflazione: grafico dal 2016, anteprima in home, metodologia |
 
 - **Stato**: tutto in `main` e in produzione. Il traffico marittimo è
   COMPLETO, nessun punto aperto.
@@ -955,7 +957,7 @@ ISTAT".
   06, grafico, anteprima in home, metodologia. Dettaglio sotto e nella
   voce "Ricognizione ISTAT". In produzione fino al passo 1 (PR
   drakekluser99/Mercuriale#27, cron attivo); grafico, home e metodologia
-  in attesa di una PR nuova. Tutto quello che serve sapere è nella voce "Ricognizione
+  nella PR drakekluser99/Mercuriale#28. Tutto quello che serve sapere è nella voce "Ricognizione
   ISTAT" in fondo. Due vincoli da non dimenticare:
   - **limite ISTAT: 5 query al minuto per IP, blocco di 1-2 giorni** se
     superato. Dal cloud ISTAT non si raggiunge e Yuri ha deciso di NON
@@ -1181,8 +1183,7 @@ ISTAT".
   drakekluser99/Mercuriale#27, fusa da Yuri: **il cron
   `fetch-istat-nic` gira da quel merge**, ogni giorno alle 11 UTC. I
   passi 2-4 (grafico, home, metodologia) sono stati riportati sopra
-  `main` con un rebase e aspettano una PR nuova, dopo la verifica di
-  Yuri sulla Preview.
+  `main` con un rebase e sono nella PR drakekluser99/Mercuriale#28.
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
