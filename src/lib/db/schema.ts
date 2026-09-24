@@ -452,8 +452,9 @@ export const swissFuelPrices = pgTable(
  * CHOKEPOINT_TRANSITS
  * Traffico marittimo nei passaggi obbligati (23 set 2026): transiti
  * giornalieri di navi da IMF PortWatch, dataset "Daily Chokepoint Transit
- * Calls and Trade Volume Estimates". Per ora solo Hormuz e Bab el-Mandeb
- * (vedi CHOKEPOINTS in src/lib/fetchers/portwatch.ts), non tutti e 28.
+ * Calls and Trade Volume Estimates". Solo i passaggi in CHOKEPOINTS
+ * (src/lib/fetchers/portwatch.ts: Hormuz, Bab el-Mandeb, Suez), non tutti
+ * e 28.
  *
  * Tabella a sé e non un'altra riga in `price_history`: non è un prezzo,
  * non ha valuta né unità di prezzo, e mescolarla con le materie prime la

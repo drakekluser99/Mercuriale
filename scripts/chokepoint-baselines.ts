@@ -21,6 +21,20 @@
  * serve da VERIFICA: ricalcola dai dati e dice se coincidono ancora con la
  * costante. Se no, la fonte ha rivisto lo storico: si decide a mano se
  * aggiornare la costante (e la metodologia).
+ *
+ * MODALITÀ CANDIDATO (24 set 2026, per aggiungere Suez): prova un periodo
+ * e un metodo per un passaggio che non ha ancora una baseline, senza
+ * toccare il codice.
+ *
+ *   npm run chokepoint:baselines -- --candidate suez --method stagionale \
+ *     --from 2022-11-01 --to 2023-10-31 --break 2023-12-16
+ *
+ * Stampa il normale (per mese o unico), la soglia di "ridotto" proposta
+ * (5° percentile dello scostamento della media a 7 giorni nel periodo,
+ * lo stesso criterio degli altri due passaggi), quante settimane cadono in
+ * ogni stato nel periodo e dopo `--break` (facoltativo), e lo stato della
+ * settimana più recente. Sono NUMERI DA DISCUTERE, non una decisione: il
+ * periodo si sceglie guardando le medie mensili del backfill.
  */
 import "dotenv/config";
 import { config } from "dotenv";
@@ -35,7 +49,39 @@ function pct(value: number, base: number): string {
   return `${d >= 0 ? "+" : ""}${d.toFixed(1)}%`;
 }
 
+/** Una data "AAAA-MM-GG" che esiste davvero (niente 2023-13-01 o 31/02). */
+function isDay(d: string | undefined): d is string {
+  if (!d || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
+  const t = Date.parse(`${d}T00:00:00Z`);
+  return !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === d;
+}
+
+function readFlag(args: string[], name: string): string | undefined {
+  const i = args.indexOf(name);
+  return i >= 0 ? args[i + 1] : undefined;
+}
+
 async function main(): Promise<number> {
+  const args = process.argv.slice(2);
+  const candidate = readFlag(args, "--candidate");
+  const method = readFlag(args, "--method");
+  const from = readFlag(args, "--from");
+  const to = readFlag(args, "--to");
+  const breakDate = readFlag(args, "--break");
+  // Argomenti controllati PRIMA di aprire il database: un comando scritto
+  // male deve dire come si usa, non dare un errore di connessione.
+  if (candidate) {
+    if ((method !== "stagionale" && method !== "piatta") || !isDay(from) || !isDay(to)) {
+      console.error(
+        "Uso: --candidate <chiave> --method stagionale|piatta --from AAAA-MM-GG --to AAAA-MM-GG [--break AAAA-MM-GG]"
+      );
+      return 1;
+    }
+    if (breakDate !== undefined && !isDay(breakDate)) {
+      console.error(`--break vuole una data AAAA-MM-GG esistente, ricevuto "${breakDate}"`);
+      return 1;
+    }
+  }
   const { db } = await import("../src/lib/db/client");
   const { chokepointTransits } = await import("../src/lib/db/schema");
   const { asc, eq } = await import("drizzle-orm");
@@ -72,6 +118,78 @@ async function main(): Promise<number> {
     const last = points.slice(-7);
     const mean = last.reduce((s, p) => s + p.transitCalls, 0) / last.length;
     return { mean, from: last[0].date, to: last[last.length - 1].date };
+  }
+
+  if (candidate) {
+    const points = await load(candidate);
+    if (points.length === 0) {
+      // Mai un calcolo a vuoto: chiave sbagliata o backfill non ancora fatto.
+      console.error(`Nessuna riga per "${candidate}" in chokepoint_transits: prima il backfill con --save.`);
+      return 1;
+    }
+    const period = { from: from as string, to: to as string };
+    console.log(`\n=== ${candidate} — CANDIDATO ${(method as string).toUpperCase()}, dal ${period.from} al ${period.to}`);
+    console.log(`(righe in tabella: ${points.length}, dal ${points[0].date} al ${points.at(-1)!.date})`);
+
+    // Stesso tipo delle baseline fissate, così rollingDeviations e
+    // transitState fanno esattamente il calcolo che farà il sito.
+    let baseline: import("../src/lib/chokepointHistory").BaselineValues;
+    if (method === "stagionale") {
+      const seasonalC = seasonalBaseline(points, period);
+      console.log("mese · giorni ·  media · min · max");
+      for (const m of seasonalC) {
+        console.log(
+          `  ${MONTHS[m.month - 1]} ·  ${String(m.days).padStart(3)} · ${m.mean.toFixed(2).padStart(6)} · ${String(m.min).padStart(3)} · ${String(m.max).padStart(3)}`
+        );
+      }
+      baseline = {
+        method: "stagionale",
+        period,
+        breakDate: breakDate ?? "",
+        monthly: seasonalC.map((m) => Number(m.mean.toFixed(2))),
+      };
+    } else {
+      const flatC = flatBaseline(points, period);
+      console.log(`  giorni ${flatC.days} · media ${flatC.mean.toFixed(2)} · min ${flatC.min} · max ${flatC.max}`);
+      baseline = { method: "piatta", period, breakDate: breakDate ?? "", value: Number(flatC.mean.toFixed(2)) };
+    }
+
+    const inPeriod = rollingDeviations(points, baseline, period).map((r) => r.deviationPct);
+    const p5 = Number(percentile(inPeriod, 5).toFixed(1));
+    console.log(`\nSoglia di "ridotto" proposta (p5 nel periodo): ${p5}%`);
+    const PCTS_C = [1, 5, 10, 50, 90, 95, 99];
+    const counts = (values: number[]) => {
+      const c = { normale: 0, ridotto: 0, fortemente_ridotto: 0 };
+      for (const v of values) c[transitState(v, p5)]++;
+      return (Object.keys(c) as (keyof typeof c)[])
+        .map((k) => `${TRANSIT_STATE_LABELS[k]} ${c[k]} (${((c[k] / values.length) * 100).toFixed(1)}%)`)
+        .join(" · ");
+    };
+    console.log(
+      `  periodo (${inPeriod.length} finestre): min ${Math.min(...inPeriod).toFixed(1)}% · ` +
+        PCTS_C.map((p) => `p${p} ${percentile(inPeriod, p).toFixed(1)}%`).join(" · ") +
+        ` · max ${Math.max(...inPeriod).toFixed(1)}%`
+    );
+    console.log(`    stati: ${counts(inPeriod)}`);
+    if (breakDate) {
+      const after = rollingDeviations(points, baseline, { from: breakDate, to: points.at(-1)!.date }).map(
+        (r) => r.deviationPct
+      );
+      console.log(`  dopo la rottura (${breakDate} → ${points.at(-1)!.date}, ${after.length} finestre):`);
+      console.log(
+        `    ` + PCTS_C.map((p) => `p${p} ${percentile(after, p).toFixed(1)}%`).join(" · ")
+      );
+      console.log(`    stati: ${counts(after)}`);
+    }
+    const w = lastWeek(points);
+    const base = baseline.method === "stagionale" ? baseline.monthly[Number(w.to.slice(5, 7)) - 1] : baseline.value;
+    const dev = (w.mean / base - 1) * 100;
+    console.log(
+      `\nUltima settimana: media ${w.mean.toFixed(2)} (${w.from} → ${w.to}), normale ${base.toFixed(2)} → ` +
+        `${pct(w.mean, base)} · stato: ${TRANSIT_STATE_LABELS[transitState(dev, p5)]}`
+    );
+    console.log("(sola lettura: nessuna scrittura sul database)");
+    return 0;
   }
 
   // Hormuz

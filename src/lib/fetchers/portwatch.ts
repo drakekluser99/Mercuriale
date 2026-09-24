@@ -33,12 +33,17 @@ const QUERY_URL =
  * controllo incrociato: se la fonte rinomina o rinumera un passaggio, il
  * parser se ne accorge invece di salvare il dato sotto la chiave sbagliata.
  *
- * Suez ("Suez Canal", chokepoint1) esiste nella fonte ma per ora non si
- * salva: aggiungerlo è una riga qui.
+ * Suez aggiunto il 24 set 2026 (stesso controllo sui valori distinti del
+ * 23/9). Un passaggio in questo elenco si SCARICA e si SALVA (cron e
+ * backfill); compare nel sito solo quando ha anche il suo "normale" in
+ * CHOKEPOINT_BASELINES (src/lib/chokepointHistory.ts): la UI parte da
+ * quell'elenco, e senza un riferimento fissato sui dati non c'è niente
+ * di onesto da mostrare come stato.
  */
 export const CHOKEPOINTS = [
   { key: "hormuz", portid: "chokepoint6", portname: "Strait of Hormuz" },
   { key: "bab_el_mandeb", portid: "chokepoint4", portname: "Bab el-Mandeb Strait" },
+  { key: "suez", portid: "chokepoint1", portname: "Suez Canal" },
 ] as const;
 
 export type Chokepoint = (typeof CHOKEPOINTS)[number];

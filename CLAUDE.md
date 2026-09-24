@@ -1900,9 +1900,35 @@ sezione). Resta aperto:
       PortWatch "Data & Methodology" dal browser; dal cloud il sito è
       bloccato). Confermata quella, si mostra la capacità nelle schede
       (`capacityReading` è pronto) e si aggiorna il paragrafo "La capacità
-      stimata" in `ShippingMethodology.tsx`. Aggiungere Suez è una riga in
-      `CHOKEPOINTS` più baseline, coordinate, nomi brevi e posizione
-      dell'etichetta sulla mappa.
+      stimata" in `ShippingMethodology.tsx`.
+    - **Suez — FASE 1 FATTA (24 set 2026, sera), FASE 2 in attesa dei
+      dati.** Fase 1: `suez` in `CHOKEPOINTS` (`portid` `chokepoint1`,
+      `portname` "Suez Canal"), quindi il cron lo salva ogni giorno e il
+      backfill lo scarica; nel sito NON compare ancora, perché la UI parte
+      dalle chiavi di `CHOKEPOINT_BASELINES` e Suez non ha un normale
+      fissato (le sue righe in tabella vengono ignorate da schede, mappa e
+      grafico). `npm run chokepoint:baselines` ha una modalità
+      `--candidate <chiave> --method stagionale|piatta --from --to
+      [--break]` che prova un periodo senza toccare il codice: normale,
+      soglia p5 proposta, stati nel periodo e dopo la rottura, ultima
+      settimana. Argomenti controllati prima di aprire il database.
+      **Passi di Yuri dal PC** (dopo il merge, su `main` aggiornato):
+      1. `npm run backfill:chokepoints -- --only suez` (sola lettura:
+         buchi nel calendario, medie mensili dal 2019);
+      2. se serve, `-- --only suez --around AAAA-MM-GG` sui punti dove la
+         serie cambia livello;
+      3. `npm run backfill:chokepoints -- --only suez --save`;
+      4. `npm run chokepoint:baselines -- --candidate suez ...` sui
+         periodi candidati.
+      **Fase 2** (con quei numeri, decisione di Yuri su metodo, periodo
+      e rottura): voce `suez` in `CHOKEPOINT_BASELINES` (commento con le
+      motivazioni come per gli altri due), `CHOKEPOINT_NAMES` e
+      `CHOKEPOINT_SHORT_NAMES`, `COORDINATES` e `LABEL_POSITION` in
+      `ChokepointMap.tsx` (Suez sta dentro l'inquadratura attuale, vicino
+      alla costa del Sinai: l'etichetta va provata a video), testi con
+      "Hormuz e Bab el-Mandeb" (descrizioni di pagina, intro, anteprima in
+      home, metodologia), verifica dello script senza `--candidate`
+      (oggi controlla solo Hormuz e Bab el-Mandeb).
     - **Decisioni già prese da Yuri, da NON ridiscutere**: baseline
       (Hormuz stagionale variante B, Bab el-Mandeb piatta), tre stati con
       nome e colori neutro / ocra / ruggine, soglie p5 per passaggio e
