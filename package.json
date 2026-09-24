@@ -24,6 +24,7 @@
     "inspect:eu-history": "tsx scripts/inspect-eu-history.ts",
     "inspect:alphavantage": "tsx scripts/inspect-alphavantage.ts",
     "inspect:mimit": "tsx scripts/inspect-mimit.ts",
+    "inspect:portwatch": "tsx scripts/inspect-portwatch.ts",
     "backfill:commodities": "tsx scripts/backfill.ts commodities",
     "backfill:us-fuel": "tsx scripts/backfill.ts us-fuel",
     "backfill:eu-fuel": "tsx scripts/backfill.ts eu-fuel",

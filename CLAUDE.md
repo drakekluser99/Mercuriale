@@ -202,7 +202,9 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
   (prima `Bearer ${undefined}` diventava la stringa "Bearer undefined" e
   chiunque la inviasse passava — vedi "Errori noti") e confronta gli
   SHA-256 con `timingSafeEqual`. Non reintrodurre il confronto in linea
-- `src/app/api/cron/*/route.ts` — 8 route protette da `CRON_SECRET`
+- `src/app/api/cron/*/route.ts` — 10 route (erano 8: dal 15 set anche
+  `fetch-ch-fuel-prices`, dal 24 set `fetch-chokepoint-transits` — vedi la
+  voce "Traffico marittimo" in fondo a "Cosa manca") protette da `CRON_SECRET`
   (header `Authorization: Bearer`, via `isAuthorizedCronRequest`),
   schedulate in `vercel.json`:
   `fetch-market-prices-1`…`-5` (materie prime, ogni batch a un'ora
@@ -1762,6 +1764,65 @@ sezione). Resta aperto:
   mostrata è il primo del mese = media di quel mese); carburanti UE di
   norma il giovedì; USA a inizio settimana; MIMIT ogni giorno; Svizzera
   nei primi giorni del mese.
+
+- **Traffico marittimo nei passaggi obbligati — BACKEND FATTO (24 set
+  2026), UI ancora da fare.** Punto 3 della roadmap del 23/9 (`docs/`
+  non contiene la roadmap: è stata passata come allegato in chat).
+  - **Fonte**: IMF PortWatch, "Daily Chokepoint Transit Calls and Trade
+    Volume Estimates", servizio ArcGIS REST in JSON
+    (`services9.arcgis.com/weJ1QsnbMYJlCHdG/.../Daily_Chokepoints_Data/FeatureServer/0/query`),
+    max 1000 righe per chiamata. Pubblica una volta a settimana (di norma
+    il martedì, può slittare) righe GIORNALIERE. Il 24/9 il dato più
+    recente era del 20/9. **Dal cloud di Claude `services9.arcgis.com` è
+    bloccato**: la verifica si fa dal PC con lo script sotto.
+  - **Passaggi seguiti** (`CHOKEPOINTS` in `src/lib/fetchers/portwatch.ts`):
+    `hormuz` = portid `chokepoint6` / portname "Strait of Hormuz";
+    `bab_el_mandeb` = `chokepoint4` / "Bab el-Mandeb Strait". Suez
+    (`chokepoint1`, "Suez Canal") esiste nella fonte ma non si salva:
+    aggiungerlo è una riga in `CHOKEPOINTS`. Filtro con `=` sul nome esatto
+    (non `LIKE`) e controllo incrociato del `portid`.
+  - **Tabella `chokepoint_transits`** (migrazione `0013`): `chokepoint`,
+    `recorded_at` (timestamp a mezzanotte UTC, non `date`: coerenza con le
+    altre tabelle e con chi le legge), `transit_calls` (= `n_total`),
+    `trade_volume_est` (= `capacity`, nullable), `retrieved_at`,
+    `fetch_run_id` (nullable, FK verso `fetch_runs` — prima tabella dati ad
+    averla), `source` = "imf_portwatch". Unique su
+    `(chokepoint, recorded_at)`. Non scrive in `data_corrections`.
+  - **Cron `fetch-chokepoint-transits`**, ogni giorno alle 15 UTC (stesso
+    motivo del cron UE: con un tentativo settimanale uno slittamento
+    costerebbe una settimana), `maxDuration` 10. Chiede le 60 righe più
+    recenti per passaggio e fa upsert. La logica sta in
+    `runChokepointTransitsJob.ts`, condivisa con
+    `npm run inspect:portwatch` (senza argomenti: stampa una riga grezza e
+    il risultato del parser, niente DB; `-- --save`: esegue il cron vero,
+    riga in `fetch_runs` compresa). Nessun ripiego: risposta vuota, errore
+    ArcGIS a HTTP 200, campo mancante, passaggio diverso, giorno ripetuto,
+    `n_total` non intero, data non "AAAA-MM-GG" o incoerente con
+    `year`/`month`/`day` → il run si ferma senza scrivere. Test in
+    `portwatch.test.ts`.
+  - **Verifica del 24/9 (Yuri, dal PC)**: campo `date` confermato stringa
+    "AAAA-MM-GG" (`esriFieldTypeDateOnly`). `--save`: `fetch_runs` id 170,
+    `ok: true`, `points_saved: 120` (2 × 60), `latest_recorded_at`
+    2026-09-20, durata 1,5 s; in tabella 60 righe per passaggio dal
+    2026-07-23 al 2026-09-20. Totali coerenti nelle righe grezze
+    (`n_cargo + n_tanker = n_total`).
+  - **Hormuz a 1–7 transiti al giorno è REALE, non un guasto della fonte.**
+    Lo Stretto è di fatto chiuso al traffico commerciale dal 28/02/2026 per
+    il conflitto in corso; Yuri l'ha verificato su fonti esterne che
+    riportano gli stessi dati PortWatch (8 transiti il 13/9, 1 il 20/9).
+    Non indagare di nuovo.
+  - **`capacity = 0` con `transit_calls > 0`** (es. Hormuz 14/9: 2 navi,
+    capacità 0) = stima NON disponibile, non capacità nulla. Nel database
+    resta il dato grezzo della fonte; **in UI va mostrato come "stima non
+    disponibile"**, non come zero.
+  - **Da fare**: backfill dello storico (priorità successiva), baseline
+    "traffico normale" calcolata da noi sui dati (periodo pre-crisi scelto
+    dove inizia davvero la deviazione, da dichiarare in metodologia), poi
+    la UI (cella nella fascia, mappa a punti, pagina dedicata con il Brent
+    affiancato). Con la UI vanno aggiunti anche `imf_portwatch` a
+    `sources.ts` e a `freshness/config.ts` e l'etichetta del job in
+    `/stato-dati`: fino ad allora la card lì mostra il nome grezzo
+    `fetch-chokepoint-transits` (scelta accettata).
 
 ## Skill: vercel-react-best-practices
 
