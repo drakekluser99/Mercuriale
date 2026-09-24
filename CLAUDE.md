@@ -2201,6 +2201,80 @@ sezione). Resta aperto:
   il job in `ci.yml`, va aggiornato anche il nome del check nel ruleset,
   altrimenti ogni PR resta in attesa di un controllo che non arriva più.
 
+- **Ricognizione ISTAT, prezzi al consumo NIC (24 set 2026) — SOLO
+  ricognizione: nessuno schema, nessun cron, nessun codice.** Base per una
+  futura sezione sull'inflazione e per il paniere alimentare.
+  - **Limite di velocità ISTAT: 5 query al minuto per IP, superarlo
+    blocca l'IP per 1-2 GIORNI.** Regole seguite e da seguire: una query
+    per volta, lette prima di scrivere la successiva, mai tentativi in
+    serie per "provare", preferire i metadati alle query sui dati, e al
+    primo segnale di blocco (429, "Too many requests") fermarsi senza
+    riprovare.
+  - **Dal cloud ISTAT non si raggiunge**: `esploradati.istat.it` e
+    `sdmx.istat.it` danno 403 dal proxy del container. Scelta di Yuri: NON
+    aprire i domini nell'ambiente cloud, perché l'IP di uscita è forse
+    condiviso e non sappiamo quante query stia già facendo. Le query le
+    lancia Yuri dal PC (`curl.exe -sS -o file.xml "…"` in PowerShell,
+    poi `Get-Content file.xml -TotalCount 5` per controllare che sia XML e
+    non un errore) e carica il file in chat. Il cron su Vercel esce da
+    altri IP: non è toccato da nessuna delle due scelte.
+  - **Host**: `https://esploradati.istat.it/SDMXWS/rest/`, NSI Web Service
+    v9.11, SDMX 2.1. `sdmx.istat.it` non interrogato.
+  - **Dataflow** (agenzia `IT1`, versione `1.0`, stessa struttura
+    `DCSP_NIC1B2025`; da gennaio 2026 base **2025=100** ed **ECOICOP v2**,
+    13 divisioni, note ISTAT del 4 e 23 feb 2026):
+    - `167_745_DF_DCSP_NIC1B2025_1` "Principali dati": indice generale e
+      divisioni ECOICOP;
+    - `167_745_DF_DCSP_NIC1B2025_2` "Tipologie di prodotto": aggregati
+      speciali (`ENRGY`, `FOODHPC`, …). Gli aggregati chiesti a `_1` non
+      restituiscono niente, senza errore;
+    - fratelli non ancora interrogati: `_3` (Ecoicop 3 cifre, "prov."),
+      `_4` (5 cifre), `_5` (NIC 1996–2025, basi 1995/2010/2015, già in
+      Ecoicop 2), `_6` (tutte le basi), `167_746` (pesi), `167_747` (medie
+      annue), `DF_BULK_DCSP_NIC1B2025_TB1…TB3` (coefficienti di raccordo
+      fra basi). La guida non ufficiale citava `167_744` con chiave
+      `M.01.IT.4.39`: è la vecchia serie in base 2015 (tipo dato `39`),
+      NON usarla per il 2026.
+  - **Chiave**: `FREQ.REF_AREA.DATA_TYPE.MEASURE.ECOICOP_2`. Per noi
+    `M` · `IT` · `85` (NIC base 2025, mensile) · misura · categoria.
+    Misure popolate: `4` numero indice, `6` variazione % congiunturale,
+    `7` variazione % tendenziale. `+` chiede più valori in una query.
+    Esempio verificato:
+    `/rest/data/IT1,167_745_DF_DCSP_NIC1B2025_1,1.0/M.IT.85.4+6+7.00+01+04+07?startPeriod=2026-06`.
+  - **Codici**: `00` generale, `01` alimentari e bevande analcoliche, `04`
+    abitazione/acqua/elettricità/gas, `07` trasporti (le divisioni vanno
+    da `01` a `13`); in `_2` `ENRGY` beni energetici e `FOODHPC` "beni
+    alimentari, per la cura della casa e della persona", il "carrello
+    della spesa" dei comunicati (che coincidano lo sappiamo dalla prassi
+    dei comunicati, non dai dati). "Energia" NON è una divisione: attraversa
+    la 04 e la 07. L'elenco `CL_ECOICOP_2` (905 codici) è condiviso e ha
+    doppioni in stile Eurostat senza padre (`NRG`, `FOODNP`…): quali abbiano
+    dati NIC si scopre solo interrogando.
+  - **Risposta**: `GenericData` XML, una `<generic:Series>` per chiave con
+    le `<generic:Obs>`. **`TIME_PERIOD` = stringa `AAAA-MM`** (`2026-08`):
+    per `recorded_at` va convertita esplicitamente al primo del mese UTC,
+    come per la Svizzera. Valori col punto e senza decimali fissi (`"3"`,
+    `"101.6"`): leggerli come numeri. Nessun attributo nelle osservazioni
+    (niente `OBS_STATUS`, quindi non sappiamo se l'ultimo mese sia
+    provvisorio). Le variazioni tornano con gli indici (es. generale
+    103,4 → 103,9 = +0,48%, misura `6` = 0,5). Le risposte di dati hanno
+    `<message:Test>true</message:Test>` (quelle di struttura `false`):
+    probabilmente un'impostazione del server (mittente `SOME_NSI`), da
+    tenere d'occhio.
+  - **Dati di agosto 2026** (ultimo mese, aggiornamento ISTAT del
+    16/9/2026): generale +3,3% tendenziale / +0,5% congiunturale;
+    alimentari +1,2%; abitazione +9,1%; trasporti +6,1%; beni energetici
+    +17,1%; carrello +0,9%.
+  - **Aperto**: storico prima del 2026 (`_5`/`_6`: non sappiamo se in base
+    2025 o nelle basi originali, né se usino la stessa chiave; serve una
+    query di struttura prima); significato di `Test=true`; revisioni del
+    dato (coperte comunque da `data_corrections` se la fonte ripubblica).
+  - **Query fatte: 4**, tutte dal PC di Yuri e a minuti di distanza, senza
+    segnali di blocco: struttura di `_1` (10,2 MB con
+    `references=Descendants`), dati di `_1` (12 serie su 18), elenco dei
+    dataflow (`/rest/dataflow/IT1?detail=allstubs`, 4.910 dataflow, 2,3
+    MB), dati di `_2` (6 serie su 6).
+
 ## Skill: vercel-react-best-practices
 
 Skill installata in .claude/skills/vercel-react-best-practices/.
