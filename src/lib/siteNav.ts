@@ -50,6 +50,12 @@ export const SECTION_PAGES: readonly SectionPage[] = [
     title: "Carburanti in Italia, provincia per provincia",
     number: "04",
   },
+  {
+    href: "/traffico-marittimo",
+    label: "Traffico marittimo",
+    title: "Traffico marittimo nei passaggi obbligati",
+    number: "05",
+  },
 ];
 
 /** Pagine secondarie (metodo, glossario...). */

@@ -1888,16 +1888,14 @@ sezione). Resta aperto:
     giornalieri pubblicati il martedì fino alla domenica prima: subito
     prima dell'uscita successiva il dato ha ~9 giorni); `/stato-dati` ha
     etichetta e badge per `fetch-chokepoint-transits`.
-  - **PUNTO DI RIPRESA (fine sessione 24 set 2026)**.
-    - **In `main` / produzione**: tabella, cron giornaliero, storico dal
-      2019, `CHOKEPOINT_BASELINES` (PR drakekluser99/Mercuriale#11 e #12).
-    - **Solo sul branch `claude/adoring-hopper-2u4ssw`, NON ancora in
-      `main`**: commit `585d806` (registri fonte/freschezza/`/stato-dati`,
-      `rollingDeviations`, `percentile`) e `7a9bd04` (soglie e
-      `transitState`), più l'aggiornamento di questo file. Build e test
-      verdi. Prima di tutto: PR e merge (o continuare sullo stesso
-      branch). Finché non sono in `main`, in `/stato-dati` di produzione
-      la card del job mostra ancora il nome grezzo.
+  - **PUNTO DI RIPRESA (aggiornato 24 set 2026, pomeriggio)**.
+    - **In `main`**: tabella, cron giornaliero, storico dal 2019,
+      `CHOKEPOINT_BASELINES` (PR drakekluser99/Mercuriale#11 e #12),
+      registri fonte/freschezza/`/stato-dati`, soglie e `transitState`
+      (PR drakekluser99/Mercuriale#13, fusa il 24/9).
+    - **Passo 1 FATTO sul branch `claude/youthful-knuth-dixxvo`, in attesa
+      della verifica di Yuri sulla Preview (dati veri)** — vedi la voce
+      "Pagina /traffico-marittimo" qui sotto. Poi PR e merge, poi passo 2.
     - **Decisioni già prese da Yuri, da NON ridiscutere**: baseline
       (Hormuz stagionale variante B, Bab el-Mandeb piatta), tre stati con
       nome e colori neutro / ocra / ruggine, soglie p5 per passaggio e
@@ -1931,6 +1929,36 @@ sezione). Resta aperto:
       5. **Metodologia**: fonte (stima da segnali AIS, non un registro),
          metodi e periodi delle baseline, date di rottura, soglie,
          trattamento di `capacity = 0`.
+    - **Pagina `/traffico-marittimo` (passo 1, 24 set 2026)**:
+      - `src/lib/chokepointStatus.ts` (puro, testato): `summarizeChokepoint`
+        = media degli ultimi 7 giorni fino all'ultimo dato pubblicato,
+        contro `baselineFor` del giorno finale, e stato. Se manca anche un
+        giorno della finestra la media NON si calcola (la scheda lo dice).
+        `capacityReading` distingue valore / "stima non disponibile"
+        (0 con navi transitate) / campo vuoto. `furthestFromNormal`
+        sceglie il passaggio della cifra chiave.
+      - `getRecentChokepointTransits(since)` in `queries.ts` (date già
+        "AAAA-MM-GG", capacità già numero); `loadShipping` in
+        `dashboard.ts` (30 giorni, `.catch → []`, freschezza
+        `imf_portwatch`, run `fetch-chokepoint-transits`).
+      - `components/ChokepointCard.tsx` (scheda) e
+        `components/sections/ShippingSection.tsx` (cifra chiave, testo,
+        schede, `SourceNote` con le soglie lette dalle costanti — non
+        scritte a mano). La sezione è separata dalla pagina apposta: si
+        rende con dati finti per la verifica visiva.
+      - Cifra chiave in tono NEUTRO (il verde "in discesa" direbbe una
+        buona notizia); scostamento in inchiostro, colore solo
+        sull'etichetta di stato.
+      - **Capacità NON mostrata**: l'unità di `capacity` non è confermata
+        (`portwatch.imf.org` bloccato dal cloud; fonti secondarie dicono
+        "deadweight tonnage" aggregata, non basta). Da confermare sulla
+        pagina "Data & Methodology" di PortWatch dal browser, poi
+        aggiungerla alla scheda (la logica `capacityReading` è pronta).
+      - Nuovi formatter in `format.ts`: `formatDecimal`, `formatIsoDay`
+        (giorno ISO → gg/mm/aaaa senza passare da `Date`, niente fuso).
+      - `CiteBox`: la citazione nomina anche IMF PortWatch.
+      - Sitemap, footer, barra e menu mobile prendono la pagina da
+        `SECTION_PAGES` da soli.
     - **Verifica visiva**: dal cloud il database non si raggiunge, quindi
       pagina di prova con dati finti a 1.400 e 400 px, screenshot a Yuri
       prima del push; verifica sui dati veri sulla Preview.

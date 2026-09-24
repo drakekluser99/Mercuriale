@@ -40,6 +40,15 @@ export function formatFuelPrice(value: number): string {
 }
 
 /**
+ * Numero generico con `digits` decimali (es. medie di navi al giorno:
+ * 3.142857 -> "3,1"). Per prezzi e percentuali ci sono le funzioni
+ * dedicate qui sopra e sotto.
+ */
+export function formatDecimal(value: number, digits = 1): string {
+  return nf(digits).format(value);
+}
+
+/**
  * Percentuale con segno esplicito e minus tipografico
  * (es. "+6,2%", "−1,4%"). Il segno "−" (U+2212) non "-": si allinea
  * meglio in `tabular-nums` ed è quello corretto per un numero negativo.
@@ -123,4 +132,14 @@ export function formatDateTime(date: Date): string {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
+}
+
+/**
+ * Un giorno "AAAA-MM-GG" in formato it-IT ("20/09/2026"), senza passare
+ * da `Date`: così non c'è nessun fuso orario che possa spostarlo al
+ * giorno prima (i giorni PortWatch sono date pure, senza ora).
+ */
+export function formatIsoDay(day: string): string {
+  const [y, m, d] = day.split("-");
+  return `${d}/${m}/${y}`;
 }
