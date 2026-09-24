@@ -228,6 +228,121 @@ export function parseDateOnly(
   return date;
 }
 
+// ─── Storico completo (backfill) ──────────────────────────────────────────
+
+/** Righe per pagina nel backfill: il massimo per chiamata del servizio. */
+export const HISTORY_PAGE_SIZE = 1000;
+
+// Tetto di sicurezza sulle pagine. Con ~2.800 giorni per passaggio ne
+// bastano 3; se il servizio ignorasse `resultOffset` restituirebbe sempre
+// la stessa pagina, e il controllo sui giorni ripetuti fra una pagina e
+// l'altra lo fermerebbe — questo tetto è la seconda cintura.
+const MAX_HISTORY_PAGES = 20;
+
+/**
+ * URL di una pagina dello storico: dal giorno più VECCHIO in avanti, così
+ * `resultOffset` scorre su un ordine stabile. (Il cron invece chiede le
+ * righe più recenti, in ordine decrescente: vedi buildQueryUrl.)
+ */
+export function buildHistoryPageUrl(
+  chokepoint: Chokepoint,
+  offset: number,
+  pageSize = HISTORY_PAGE_SIZE
+): string {
+  const params = new URLSearchParams({
+    where: `portname = '${chokepoint.portname.replace(/'/g, "''")}'`,
+    outFields: "*",
+    outSR: "4326",
+    returnGeometry: "false",
+    orderByFields: "date ASC",
+    resultOffset: String(offset),
+    resultRecordCount: String(pageSize),
+    f: "json",
+  });
+  return `${QUERY_URL}?${params.toString()}`;
+}
+
+/** URL che chiede solo QUANTE righe ha la fonte per un passaggio. */
+export function buildCountUrl(chokepoint: Chokepoint): string {
+  const params = new URLSearchParams({
+    where: `portname = '${chokepoint.portname.replace(/'/g, "''")}'`,
+    returnCountOnly: "true",
+    f: "json",
+  });
+  return `${QUERY_URL}?${params.toString()}`;
+}
+
+/**
+ * Tutto lo storico di un passaggio, pagina per pagina, più il conteggio
+ * dichiarato dalla fonte. Ogni pagina passa dallo STESSO parser del cron.
+ *
+ * Non controlla i buchi nel calendario: quello lo fa `findDateGaps`
+ * (chokepointHistory.ts) a valle, perché un buco può essere un limite
+ * dichiarato dalla fonte e va valutato da una persona, non trasformato
+ * automaticamente in un errore o in un via libera.
+ */
+export async function fetchChokepointHistory(
+  chokepoint: Chokepoint,
+  pageSize = HISTORY_PAGE_SIZE
+): Promise<{ points: ChokepointTransitPoint[]; sourceCount: number; pages: number }> {
+  const where = `PortWatch (${chokepoint.portname})`;
+
+  // Quante righe dice di avere la fonte: alla fine dev'essere lo stesso
+  // numero di quelle ricevute, altrimenti la paginazione ha perso qualcosa.
+  const countRes = await fetch(buildCountUrl(chokepoint), { cache: "no-store" });
+  if (!countRes.ok) throw new Error(`${where}: conteggio, HTTP ${countRes.status}`);
+  const countJson = (await countRes.json()) as { count?: unknown; error?: unknown };
+  if (countJson.error || typeof countJson.count !== "number") {
+    throw new Error(`${where}: conteggio non leggibile: ${JSON.stringify(countJson)}`);
+  }
+  const sourceCount = countJson.count;
+
+  const points: ChokepointTransitPoint[] = [];
+  const seen = new Set<string>();
+  let offset = 0;
+  let pages = 0;
+
+  while (true) {
+    if (pages >= MAX_HISTORY_PAGES) {
+      throw new Error(`${where}: più di ${MAX_HISTORY_PAGES} pagine, paginazione fuori controllo`);
+    }
+    const res = await fetch(buildHistoryPageUrl(chokepoint, offset, pageSize), {
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`${where}: pagina ${pages + 1}, HTTP ${res.status}`);
+    const json = (await res.json()) as { features?: unknown[]; exceededTransferLimit?: unknown };
+    pages++;
+
+    // Pagina vuota dopo almeno una piena: lo storico è finito esattamente
+    // su un multiplo della pagina. Il parser tratterebbe il vuoto come
+    // errore (giusto per il cron), qui è la fine normale della lettura.
+    if (Array.isArray(json.features) && json.features.length === 0 && offset > 0) break;
+
+    const page = parsePortwatchResponse(json, chokepoint);
+    for (const p of page) {
+      // Il parser controlla i doppioni DENTRO una pagina; questo li
+      // controlla FRA le pagine (es. un offset ignorato dal servizio).
+      if (seen.has(p.date)) {
+        throw new Error(`${where}: il giorno ${p.date} compare in due pagine diverse`);
+      }
+      seen.add(p.date);
+      points.push(p);
+    }
+    offset += page.length;
+
+    // Si continua finché la fonte dice che ci sono altre righe
+    // (`exceededTransferLimit`) o finché le pagine arrivano piene.
+    if (json.exceededTransferLimit !== true && page.length < pageSize) break;
+  }
+
+  if (points.length !== sourceCount) {
+    throw new Error(
+      `${where}: ricevute ${points.length} righe ma la fonte ne dichiara ${sourceCount}`
+    );
+  }
+  return { points, sourceCount, pages };
+}
+
 /** Scarica e interpreta le righe recenti di UN passaggio. */
 export async function fetchChokepointTransits(
   chokepoint: Chokepoint,

@@ -53,7 +53,10 @@ export async function saveChokepointTransits(
           transitCalls: sql`excluded.transit_calls`,
           tradeVolumeEst: sql`excluded.trade_volume_est`,
           retrievedAt: sql`excluded.retrieved_at`,
-          fetchRunId: sql`excluded.fetch_run_id`,
+          // COALESCE: il backfill scrive senza un run (runId null) e non
+          // deve cancellare l'id del cron dalle righe che quel cron aveva
+          // già scritto. Un run vero, con un id, lo aggiorna sempre.
+          fetchRunId: sql`coalesce(excluded.fetch_run_id, ${chokepointTransits.fetchRunId})`,
         },
       });
     saved += chunk.length;
