@@ -1530,7 +1530,11 @@ sezione). Resta aperto:
     + `page.tsx`).
   - **CI minima**: `.github/workflows/ci.yml` (typecheck + lint su push/PR)
     — non scrivibile via bridge device (percorso protetto), caricato a
-    mano da Yuri via GitHub web.
+    mano da Yuri via GitHub web. **In realtà il file era finito nella
+    RADICE del repo (`ci.yml`), non in `.github/workflows/`: GitHub non
+    l'ha mai eseguito** (scoperto il 24/9: sulla PR #23 non girava nessun
+    controllo oltre a Vercel). Sostituito il 24/9, vedi la voce "CI
+    rifatta" in fondo a "Cosa manca".
   - **Suite di test Vitest** (vedi bullet Stack) — prima non esisteva
     nessun test nel repo.
   - **Cron MIMIT automatizzato** (vedi bullet cron sopra) — chiude
@@ -2170,6 +2174,22 @@ sezione). Resta aperto:
   Svizzera fra i controlli automatici. **Regola**: chi aggiunge una fonte
   a `src/lib/sources.ts` aggiunge anche la sua scheda qui (commento in
   testa all'elenco).
+
+- **CI rifatta (24 set 2026).** `.github/workflows/ci.yml`, caricato da
+  Yuri via GitHub web (dal cloud la cartella `.github/workflows` richiede
+  un permesso del token che la sessione non ha), e cancellato il vecchio
+  `ci.yml` nella radice, mai eseguito. Parte a ogni push su `main` e a ogni
+  PR verso `main`; `concurrency` annulla il run vecchio se arriva un push
+  nuovo sullo stesso ref. Passi: `npm ci` → **`npx next typegen`** →
+  `npx tsc --noEmit` → `npm run lint` → `npm test`, Node 22.
+  **`next typegen` non è opzionale**: su una copia pulita (CI, container
+  nuovo) `tsc` fallisce con "Cannot find name 'LayoutProps'" perché
+  quei tipi li genera solo Next (`next dev`/`build`/`typegen`); sul PC
+  non si vede perché `npm run dev` li ha già generati. La vecchia CI
+  (Node 20, senza typegen né test) sarebbe fallita lì. Nessun segreto
+  necessario: i test sono solo su funzioni pure. È una spia, non un
+  blocco: per impedire il merge di una PR rossa servirebbe una regola di
+  protezione di `main` (Settings → Branches), non attivata.
 
 ## Skill: vercel-react-best-practices
 
