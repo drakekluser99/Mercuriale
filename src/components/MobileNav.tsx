@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Globe2, Calculator, BarChart3, MapPin, LayoutGrid } from "lucide-react";
+import { Menu, X, Globe2, Calculator, BarChart3, MapPin, Ship, LayoutGrid } from "lucide-react";
 import { GITHUB_URL, PAGE_LINKS, SECTION_PAGES } from "@/lib/siteNav";
 
 // Dal 16 set 2026 le voci sono PAGINE (vedi src/lib/siteNav.ts), non più
@@ -14,6 +14,7 @@ const ICONS: Record<string, typeof Globe2> = {
   "/calcolatore": Calculator,
   "/materie-prime": BarChart3,
   "/italia": MapPin,
+  "/traffico-marittimo": Ship,
 };
 
 const items = [

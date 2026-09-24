@@ -10,7 +10,9 @@ import {
   getFuelAverageHistory,
   getLatestEuWeightedAverageRows,
   getLatestSwissFuelRows,
+  getRecentChokepointTransits,
 } from "@/lib/db/queries";
+import { furthestFromNormal, summarizeChokepoints } from "@/lib/chokepointStatus";
 import { summarizeSwissFuel } from "@/lib/swissFuel";
 import { summarizeEuWeightedAverage } from "@/lib/euWeightedAverage";
 import { groupCommodityHistory, groupFuelHistory, priceMovers } from "@/lib/priceHistory";
@@ -87,6 +89,14 @@ const fetchRunsQ = cache(() => getLatestFetchRuns());
 const euWeightedQ = cache(() =>
   getLatestEuWeightedAverageRows().catch((err) => {
     console.error("Media UE ponderata non disponibile:", err);
+    return [];
+  })
+);
+// Traffico marittimo: 30 giorni bastano per la media degli ultimi 7 anche
+// quando la fonte pubblica in ritardo (esce una volta a settimana).
+const chokepointQ = cache(() =>
+  getRecentChokepointTransits(new Date(getNow().getTime() - 30 * DAY_MS)).catch((err) => {
+    console.error("Traffico marittimo non disponibile:", err);
     return [];
   })
 );
@@ -272,6 +282,27 @@ export const loadItaly = cache(async () => {
     average,
     spread: provincePetrolSelfSpread(provinces),
     run: findRun(runs, "fetch-mimit-prices"),
+  };
+});
+
+// ─── Traffico marittimo ─────────────────────────────────────────────────
+
+export const loadShipping = cache(async () => {
+  const [rows, runs] = await Promise.all([chokepointQ(), fetchRunsQ()]);
+  const now = getNow();
+  const freshnessConfig = getFreshnessConfig("imf_portwatch");
+  const chokepoints = summarizeChokepoints(rows).map((s) => {
+    const latest = new Date(`${s.latestDate}T00:00:00Z`);
+    return {
+      ...s,
+      freshness: computeFreshness(latest, freshnessConfig, now),
+      ageDays: Math.floor((now.getTime() - latest.getTime()) / DAY_MS),
+    };
+  });
+  return {
+    chokepoints,
+    headline: furthestFromNormal(chokepoints),
+    run: findRun(runs, "fetch-chokepoint-transits"),
   };
 });
 

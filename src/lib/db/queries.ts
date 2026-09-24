@@ -12,9 +12,11 @@ import {
   dataCorrections,
   euWeightedAverages,
   swissFuelPrices,
+  chokepointTransits,
 } from "./schema";
 import type { SwissFuelRow } from "@/lib/swissFuel";
 import type { EuWeightedAverageRow } from "@/lib/euWeightedAverage";
+import type { ChokepointRow } from "@/lib/chokepointStatus";
 
 export interface LatestCommodityPrice {
   symbol: string;
@@ -491,4 +493,31 @@ export async function getLatestSwissFuelRows(): Promise<SwissFuelRow[]> {
     })
     .from(swissFuelPrices)
     .where(sql`${swissFuelPrices.recordedAt} = (${latest})`);
+}
+
+/**
+ * Transiti giornalieri nei passaggi marittimi a partire da `since`
+ * (24 set 2026, pagina /traffico-marittimo). Righe grezze: media a 7
+ * giorni e confronto col normale si fanno in src/lib/chokepointStatus.ts.
+ * La data esce già come "AAAA-MM-GG" (il giorno del dato è a mezzanotte
+ * UTC, vedi schema.ts) e la capacità come numero: `numeric` arriva dal
+ * driver come stringa.
+ */
+export async function getRecentChokepointTransits(since: Date): Promise<ChokepointRow[]> {
+  const rows = await db
+    .select({
+      chokepoint: chokepointTransits.chokepoint,
+      recordedAt: chokepointTransits.recordedAt,
+      transitCalls: chokepointTransits.transitCalls,
+      tradeVolumeEst: chokepointTransits.tradeVolumeEst,
+    })
+    .from(chokepointTransits)
+    .where(gte(chokepointTransits.recordedAt, since));
+
+  return rows.map((r) => ({
+    chokepoint: r.chokepoint,
+    date: r.recordedAt.toISOString().slice(0, 10),
+    transitCalls: r.transitCalls,
+    tradeVolumeEst: r.tradeVolumeEst === null ? null : Number(r.tradeVolumeEst),
+  }));
 }

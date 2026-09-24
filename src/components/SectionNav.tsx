@@ -23,6 +23,7 @@ import {
   Calculator,
   BarChart3,
   MapPin,
+  Ship,
   LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
@@ -34,6 +35,7 @@ const ICONS: Record<string, LucideIcon> = {
   "/calcolatore": Calculator,
   "/materie-prime": BarChart3,
   "/italia": MapPin,
+  "/traffico-marittimo": Ship,
 };
 
 const ITEMS = [

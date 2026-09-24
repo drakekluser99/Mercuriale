@@ -5,6 +5,8 @@ import {
   formatCommodityPrice,
   formatDate,
   formatDateTime,
+  formatDecimal,
+  formatIsoDay,
   formatFuelPrice,
   formatPercent,
   fuelUnitFromCurrency,
@@ -106,5 +108,15 @@ describe("formatDate", () => {
 describe("formatDateTime", () => {
   it("formatta in gg/mm/aaaa, hh:mm", () => {
     expect(formatDateTime(new Date(2026, 8, 4, 14, 32))).toBe("04/09/2026, 14:32");
+  });
+});
+
+describe("formatDecimal / formatIsoDay", () => {
+  it("un decimale con la virgola", () => {
+    expect(formatDecimal(22 / 7)).toBe("3,1");
+    expect(formatDecimal(1234.56)).toBe("1.234,6");
+  });
+  it("giorno ISO in formato italiano, senza fuso orario", () => {
+    expect(formatIsoDay("2026-09-20")).toBe("20/09/2026");
   });
 });
