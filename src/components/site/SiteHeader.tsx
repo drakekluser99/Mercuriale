@@ -19,6 +19,8 @@ import { GITHUB_URL } from "@/lib/siteNav";
  * Props:
  * - `title` / `intro`: l'h1 e la frase sotto, diversi per ogni pagina
  *   (l'h1 descrive il CONTENUTO, il nome del sito non è un heading);
+ * - `backLink`: link alla sezione madre sopra il titolo, per le pagine di
+ *   dettaglio (/paese, /provincia) che si raggiungono da una mappa;
  * - `backdropPoints`: la curva del Brent in filigrana (solo in home);
  * - `children`: cosa mettere in fondo all'header (la fascia di valori,
  *   solo in home).
@@ -26,11 +28,13 @@ import { GITHUB_URL } from "@/lib/siteNav";
 export function SiteHeader({
   title,
   intro,
+  backLink,
   backdropPoints,
   children,
 }: {
   title: string;
   intro: ReactNode;
+  backLink?: { href: string; label: string };
   backdropPoints?: { date: string; value: number }[];
   children?: ReactNode;
 }) {
@@ -70,7 +74,17 @@ export function SiteHeader({
                   _
                 </span>
               </p>
-              <h1 className="mt-5 text-lg font-medium text-system-chrome-ink sm:text-xl">
+              {backLink && (
+                <Link
+                  href={backLink.href}
+                  className="mt-5 inline-block font-mono text-[11px] uppercase tracking-[0.14em] text-system-chrome-accent hover:underline"
+                >
+                  ← {backLink.label}
+                </Link>
+              )}
+              <h1
+                className={`${backLink ? "mt-2" : "mt-5"} text-lg font-medium text-system-chrome-ink sm:text-xl`}
+              >
                 {title}
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-system-chrome-ink-muted">

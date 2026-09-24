@@ -79,3 +79,28 @@ export function sectionPage(href: string): SectionPage {
   if (!page) throw new Error(`Pagina di sezione sconosciuta: ${href}`);
   return page;
 }
+
+/**
+ * Pagine di dettaglio che appartengono a una sezione pur avendo un
+ * indirizzo diverso (25 set 2026): la pagina di un paese nasce dalla mappa
+ * d'Europa, quella di una provincia dalla mappa delle province. Senza
+ * questa tabella, su /paese/italia la barra non evidenziava nessuna voce.
+ */
+const DETAIL_PAGE_SECTIONS: readonly { prefix: string; section: string }[] = [
+  { prefix: "/paese/", section: "/europa" },
+  { prefix: "/provincia/", section: "/italia" },
+];
+
+/**
+ * La sezione a cui appartiene un indirizzo, o `null` (home, pagine
+ * secondarie). Una sezione vale per sé e per le sue sotto-pagine
+ * (`/italia/qualcosa`); le pagine di dettaglio passano da
+ * DETAIL_PAGE_SECTIONS.
+ */
+export function sectionForPath(pathname: string): string | null {
+  const own = SECTION_PAGES.find(
+    (p) => pathname === p.href || pathname.startsWith(`${p.href}/`),
+  );
+  if (own) return own.href;
+  return DETAIL_PAGE_SECTIONS.find((d) => pathname.startsWith(d.prefix))?.section ?? null;
+}

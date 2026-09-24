@@ -15,6 +15,7 @@ import { formatDate } from "@/lib/format";
 export function PageShell({
   title,
   intro,
+  backLink,
   consultedOn,
   backdropPoints,
   headerExtra,
@@ -22,6 +23,7 @@ export function PageShell({
 }: {
   title: string;
   intro: ReactNode;
+  backLink?: { href: string; label: string };
   consultedOn: Date;
   backdropPoints?: { date: string; value: number }[];
   headerExtra?: ReactNode;
@@ -29,7 +31,12 @@ export function PageShell({
 }) {
   return (
     <div className="min-h-screen bg-system-bg text-system-ink">
-      <SiteHeader title={title} intro={intro} backdropPoints={backdropPoints}>
+      <SiteHeader
+        title={title}
+        intro={intro}
+        backLink={backLink}
+        backdropPoints={backdropPoints}
+      >
         {headerExtra}
       </SiteHeader>
       <main className="mx-auto max-w-7xl px-6 py-10">

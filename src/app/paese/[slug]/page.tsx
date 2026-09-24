@@ -15,8 +15,12 @@ import { localizedCountryName } from "@/lib/countryNames";
 import { formatFuelPrice, formatDate, currencySymbol } from "@/lib/format";
 import { computeFreshness, getFreshnessConfig } from "@/lib/freshness/compute";
 import { SystemCard } from "@/components/SystemCard";
-import { ProvenanceStamp } from "@/components/ProvenanceStamp";
 import { SourceNote } from "@/components/SourceNote";
+import { KeyFigure } from "@/components/KeyFigure";
+import { SectionHeading } from "@/components/SectionHeading";
+import { PageShell } from "@/components/site/PageShell";
+import { getNow } from "@/lib/dashboard";
+import { sectionPage } from "@/lib/siteNav";
 
 // Come la home: i dati cambiano ogni settimana (bollettino UE il giovedì) e
 // arrivano da un cron, non da una build. `force-dynamic` legge il database
@@ -55,6 +59,12 @@ export async function generateMetadata({
   };
 }
 
+// La pagina di un paese è un dettaglio della sezione "Carburanti in
+// Europa" (25 set 2026): stessa cornice, stesso numero, link di ritorno
+// alla mappa da cui ci si arriva.
+const EUROPE = sectionPage("/europa");
+const BACK_LINK = { href: EUROPE.href, label: EUROPE.label };
+
 /** Ordinale italiano al femminile ("1ª", "8ª", "27ª") — concorda con "quota". */
 function ordinal(n: number): string {
   return `${n}ª`;
@@ -83,28 +93,21 @@ export default async function CountryPage({ params }: PageProps) {
   // solo il dato.
   if (!country) {
     return (
-      <div className="min-h-screen bg-system-bg text-system-ink">
-        <header className="border-b border-system-border bg-system-surface">
-          <div className="mx-auto max-w-3xl px-6 py-8">
-            <Link
-              href="/europa"
-              className="text-xs font-semibold uppercase tracking-[0.14em] text-system-accent hover:underline"
-            >
-              ← Torna alla mappa
-            </Link>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-              Benzina in {italianName}
-            </h1>
-          </div>
-        </header>
-        <main className="mx-auto max-w-3xl px-6 py-10">
-          <p className="text-sm leading-relaxed text-system-ink-secondary">
+      <PageShell
+        title={`Benzina e diesel in ${italianName}`}
+        intro="Il prezzo alla pompa scomposto in carburante e imposte, a confronto con la media dei 27 paesi dell'Unione Europea."
+        backLink={BACK_LINK}
+        consultedOn={getNow()}
+      >
+        <section>
+          <SectionHeading number={EUROPE.number} title={`Prezzi e imposte in ${italianName}`} />
+          <p className="mt-4 text-sm leading-relaxed text-system-ink-secondary">
             Non abbiamo ancora un prezzo registrato per {italianName}. Il
             bollettino settimanale della Commissione Europea potrebbe non
             averlo ancora pubblicato per questo paese.
           </p>
-        </main>
-      </div>
+        </section>
+      </PageShell>
     );
   }
 
@@ -155,51 +158,37 @@ export default async function CountryPage({ params }: PageProps) {
     : "non_aggiornato";
 
   return (
-    <div className="min-h-screen bg-system-bg text-system-ink">
-      <header className="border-b border-system-border bg-system-surface">
-        <div className="mx-auto max-w-3xl px-6 py-8">
-          <Link
-            href="/europa"
-            className="text-xs font-semibold uppercase tracking-[0.14em] text-system-accent hover:underline"
+    <PageShell
+      title={`Benzina e diesel in ${italianName}`}
+      intro="Il prezzo alla pompa scomposto in carburante e imposte, a confronto con la media dei 27 paesi dell'Unione Europea."
+      backLink={BACK_LINK}
+      consultedOn={getNow()}
+    >
+      <section>
+        <SectionHeading number={EUROPE.number} title={`Prezzi e imposte in ${italianName}`} />
+        {/* La frase che prima stava nell'header è la cifra chiave, come
+            nelle pagine di sezione: la quota di imposte è il numero che
+            questa pagina aggiunge alla mappa. */}
+        {country.petrol !== null && petrolTaxShare !== null ? (
+          <KeyFigure
+            value={`${petrolTaxShare.toLocaleString("it-IT", { maximumFractionDigits: 1 })}%`}
           >
-            ← Torna alla mappa
-          </Link>
-          <h1 className="mt-2 flex items-center gap-2 text-3xl font-semibold tracking-tight">
-            <ProvenanceStamp size={20} className="text-system-accent" />
-            Benzina in {italianName}
-          </h1>
-          <p className="mt-2 text-sm leading-relaxed text-system-ink-secondary">
-            {country.petrol !== null && petrolTaxShare !== null ? (
-              <>
-                Il prezzo alla pompa è{" "}
-                <strong className="text-system-ink">
-                  {formatFuelPrice(country.petrol)} €/L
-                </strong>
-                . Di questo,{" "}
-                <strong className="text-system-ink">
-                  {petrolTaxShare.toLocaleString("it-IT", {
-                    maximumFractionDigits: 1,
-                  })}
-                  %
-                </strong>{" "}
-                è tassa
-                {rank
-                  ? `, la ${ordinal(rank.rank)} quota fiscale più alta su ${
-                      rank.total
-                    } paesi UE`
-                  : ""}
-                .
-              </>
-            ) : (
-              "Non abbiamo ancora un prezzo al netto delle imposte per questo paese: la quota fiscale non è calcolabile questa settimana."
-            )}
+            del prezzo della benzina in {italianName} è imposta, su{" "}
+            {formatFuelPrice(country.petrol)} €/L alla pompa
+            {rank
+              ? `: la ${ordinal(rank.rank)} quota fiscale più alta su ${rank.total} paesi UE`
+              : ""}
+            .
+          </KeyFigure>
+        ) : (
+          <p className="mt-4 text-sm leading-relaxed text-system-ink-secondary">
+            Non abbiamo ancora un prezzo al netto delle imposte per questo
+            paese: la quota fiscale non è calcolabile questa settimana.
           </p>
-        </div>
-      </header>
+        )}
 
-      <main className="mx-auto max-w-3xl px-6 py-10 space-y-8">
         {freshnessState !== "aggiornato" && (
-          <p className="rounded-md border border-system-signal-wait/40 bg-system-surface px-4 py-3 text-xs text-system-signal-wait">
+          <p className="mt-4 rounded-md border border-system-signal-wait/40 bg-system-surface px-4 py-3 text-xs text-system-signal-wait">
             {freshnessState === "non_aggiornato"
               ? "Dato non aggiornato"
               : "In attesa dell'aggiornamento"}
@@ -208,7 +197,9 @@ export default async function CountryPage({ params }: PageProps) {
           </p>
         )}
 
-        <section className="grid gap-4 sm:grid-cols-2">
+        {/* Tre schede in una riga da `lg`, due da `md`, una sotto l'altra
+            sul telefono: benzina, diesel e il confronto con la media. */}
+        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FuelStatCard
             label="Benzina"
             gross={country.petrol}
@@ -233,46 +224,45 @@ export default async function CountryPage({ params }: PageProps) {
             avgGross={average.diesel}
             currency="EUR"
           />
-        </section>
-
-        <SystemCard
-          eyebrow="Confronto"
-          title={`${italianName} rispetto alla media dei 27`}
-        >
-          <p className="text-sm leading-relaxed text-system-ink-secondary">
-            {vsAveragePetrol !== null && average.petrol !== null ? (
-              <>
-                La benzina in {italianName} costa{" "}
-                <strong
-                  className={
-                    vsAveragePetrol >= 0
-                      ? "text-system-signal-up"
-                      : "text-system-signal-down"
-                  }
-                >
-                  {vsAveragePetrol >= 0 ? "+" : "−"}
-                  {formatFuelPrice(Math.abs(vsAveragePetrol))} €/L
-                </strong>{" "}
-                rispetto alla media semplice dei 27 paesi UE (
-                {formatFuelPrice(average.petrol)} €/L).
-              </>
-            ) : (
-              "Il confronto con la media dei 27 non è disponibile questa settimana."
-            )}
-          </p>
-          <p className="mt-2 text-xs leading-relaxed text-system-ink-muted">
-            &quot;Media dei 27&quot; e non &quot;media UE&quot;: è una media
-            semplice tra paesi, dove Malta pesa come la Germania — non una
-            media ponderata sui consumi, che la Commissione pubblica a parte
-            e che vale un numero diverso.{" "}
-            <Link
-              href="/metodologia"
-              className="underline hover:text-system-ink"
-            >
-              Metodologia
-            </Link>
-          </p>
-        </SystemCard>
+          <SystemCard
+            eyebrow="Confronto"
+            title={`${italianName} rispetto alla media dei 27`}
+          >
+            <p className="text-sm leading-relaxed text-system-ink-secondary">
+              {vsAveragePetrol !== null && average.petrol !== null ? (
+                <>
+                  La benzina in {italianName} costa{" "}
+                  <strong
+                    className={
+                      vsAveragePetrol >= 0
+                        ? "text-system-signal-up"
+                        : "text-system-signal-down"
+                    }
+                  >
+                    {vsAveragePetrol >= 0 ? "+" : "−"}
+                    {formatFuelPrice(Math.abs(vsAveragePetrol))} €/L
+                  </strong>{" "}
+                  rispetto alla media semplice dei 27 paesi UE (
+                  {formatFuelPrice(average.petrol)} €/L).
+                </>
+              ) : (
+                "Il confronto con la media dei 27 non è disponibile questa settimana."
+              )}
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-system-ink-muted">
+              &quot;Media dei 27&quot; e non &quot;media UE&quot;: è una media
+              semplice tra paesi, dove Malta pesa come la Germania — non una
+              media ponderata sui consumi, che la Commissione pubblica a parte
+              e che vale un numero diverso.{" "}
+              <Link
+                href="/metodologia"
+                className="underline hover:text-system-ink"
+              >
+                Metodologia
+              </Link>
+            </p>
+          </SystemCard>
+        </div>
 
         <SourceNote
           sources={["eu-commission"]}
@@ -284,8 +274,8 @@ export default async function CountryPage({ params }: PageProps) {
           Ultima rilevazione:{" "}
           {country.recordedAt ? formatDate(country.recordedAt) : "—"}
         </SourceNote>
-      </main>
-    </div>
+      </section>
+    </PageShell>
   );
 }
 
