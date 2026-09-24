@@ -2696,6 +2696,23 @@ sezione). Resta aperto:
   - Verificato a 1400 e 390 px con i dati finti: nessuno sbordo, barra
     con la voce giusta accesa.
 
+- **Bordo completo al passaggio del mouse sulle mappe (25 set 2026).**
+  In `ItalyProvinceMap` ed `EuropeFuelMap` il contorno scuro della forma
+  sotto il mouse era coperto in parte dai bordi bianchi delle forme
+  disegnate dopo (in SVG vince l'ultimo disegnato), e nella mappa d'Europa
+  il confine con l'Italia spariva sotto il suo contorno ambra. Stessa
+  causa della mappa dei passaggi marittimi (24/9), ma lì la forma era
+  fissa (l'Italia) e bastava disegnarla per ultima; qui cambia col mouse,
+  e spostarla nel DOM farebbe perdere il focus da tastiera.
+  Soluzione: dentro `Geographies` si disegna, DOPO tutte le forme, una
+  copia della sola forma evidenziata con `HOVER_OUTLINE` (niente
+  riempimento, bordo `INK_HEX`, `pointerEvents: "none"`, `tabIndex={-1}`,
+  `aria-hidden`). `pointerEvents: "none"` è necessario: se la copia
+  ricevesse il mouse, passarci sopra farebbe "uscire" il mouse dalla forma
+  originale e il bordo lampeggerebbe. Verificato con screenshot prima/dopo
+  (Firenze, Austria). Chi aggiunge un'altra mappa con evidenziazione al
+  passaggio del mouse usi lo stesso schema.
+
 ## Skill: vercel-react-best-practices
 
 Skill installata in .claude/skills/vercel-react-best-practices/.
