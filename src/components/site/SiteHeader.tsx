@@ -5,6 +5,7 @@ import MobileNav from "@/components/MobileNav";
 import { MercurialeMark } from "@/components/MercurialeMark";
 import { HeroBackdrop } from "@/components/HeroBackdrop";
 import { SectionNav } from "@/components/SectionNav";
+import { HeaderPageLinks } from "@/components/site/HeaderPageLinks";
 import { GITHUB_URL } from "@/lib/siteNav";
 
 /**
@@ -76,17 +77,23 @@ export function SiteHeader({
                 {intro}
               </p>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <a
-                href={GITHUB_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden items-center gap-2 rounded-md border border-system-chrome-border px-3 py-2 font-mono text-xs uppercase tracking-wider text-system-chrome-ink-muted transition-colors hover:border-system-chrome-accent hover:text-system-chrome-accent sm:flex"
-              >
-                <Code2 size={15} />
-                Codice sorgente
-              </a>
-              <MobileNav />
+            {/* Colonna destra: il pulsante in alto e, da `lg`, le pagine
+                secondarie in una riga sotto (vedi HeaderPageLinks). In una
+                riga sola col pulsante toglierebbero spazio al wordmark. */}
+            <div className="flex shrink-0 flex-col items-end gap-3">
+              <div className="flex items-center gap-2">
+                <a
+                  href={GITHUB_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden items-center gap-2 rounded-md border border-system-chrome-border px-3 py-2 font-mono text-xs uppercase tracking-wider text-system-chrome-ink-muted transition-colors hover:border-system-chrome-accent hover:text-system-chrome-accent sm:flex"
+                >
+                  <Code2 size={15} />
+                  Codice sorgente
+                </a>
+                <MobileNav />
+              </div>
+              <HeaderPageLinks />
             </div>
           </div>
         </div>

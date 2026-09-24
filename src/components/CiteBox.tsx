@@ -23,7 +23,7 @@ import { SITE_URL } from "@/lib/site";
 export function CiteBox({ consultedOn }: { consultedOn: string }) {
   const citation =
     `Mercuriale, osservatorio aperto dei prezzi — elaborazione su dati ` +
-    `Commissione Europea (Weekly Oil Bulletin), EIA, MIMIT, Alpha Vantage e IMF PortWatch. ` +
+    `Commissione Europea (Weekly Oil Bulletin), EIA, MIMIT, ISTAT, Alpha Vantage e IMF PortWatch. ` +
     `${SITE_URL} (consultato il ${consultedOn}).`;
 
   return (

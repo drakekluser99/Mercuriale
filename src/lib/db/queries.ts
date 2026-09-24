@@ -13,10 +13,12 @@ import {
   euWeightedAverages,
   swissFuelPrices,
   chokepointTransits,
+  consumerPriceIndex,
 } from "./schema";
 import type { SwissFuelRow } from "@/lib/swissFuel";
 import type { EuWeightedAverageRow } from "@/lib/euWeightedAverage";
 import type { ChokepointRow } from "@/lib/chokepointStatus";
+import type { NicRow } from "@/lib/inflation";
 
 export interface LatestCommodityPrice {
   symbol: string;
@@ -540,5 +542,31 @@ export async function getCommoditySymbolHistory(
   return rows.map((r) => ({
     date: r.recordedAt.toISOString().slice(0, 10),
     value: parseFloat(r.price),
+  }));
+}
+
+/**
+ * Tutto lo storico NIC (inflazione, 24 set 2026): 4 serie × circa 130
+ * mesi, poche centinaia di righe, quindi niente filtro per data. L'indice
+ * resta nella base in cui è salvato: il raccordo lo applica chi legge
+ * (src/lib/nicSplice.ts).
+ */
+export async function getConsumerPriceIndex(): Promise<NicRow[]> {
+  const rows = await db
+    .select({
+      category: consumerPriceIndex.category,
+      recordedAt: consumerPriceIndex.recordedAt,
+      baseYear: consumerPriceIndex.baseYear,
+      indexValue: consumerPriceIndex.indexValue,
+      yoyChangePct: consumerPriceIndex.yoyChangePct,
+    })
+    .from(consumerPriceIndex);
+
+  return rows.map((r) => ({
+    category: r.category,
+    month: r.recordedAt.toISOString().slice(0, 7),
+    baseYear: r.baseYear,
+    indexValue: Number(r.indexValue),
+    yoyChangePct: r.yoyChangePct === null ? null : Number(r.yoyChangePct),
   }));
 }

@@ -1095,9 +1095,36 @@ ISTAT".
   (`backfill.ts`, `backfill-chokepoints.ts`, `chokepoint-baselines.ts`)
   usano ancora `process.exit()`: se stampano lo stesso messaggio, stessa
   correzione.
-  Prossimo: UI (`/inflazione`, anteprima in home, metodologia con la
-  fonte ISTAT in `sources.ts` + la sua scheda). Il cron partirà solo
-  dopo il merge (in Preview i cron non girano).
+  Il cron partirà solo dopo il merge (in Preview i cron non girano).
+  **UI, passo 1 — pagina `/inflazione` (24/9, branch)**: sezione 06
+  (`SECTION_PAGES`, icona `Percent` in SectionNav e MobileNav).
+  `src/lib/inflation.ts` (puro, testato): `INFLATION_SERIES` = ordine e
+  nomi da lettore (generale, carrello, alimentari, energetici, con
+  `detail` che dice cosa contengono); `summarizeInflation` = per serie
+  ultimo mese, variazione annua ISTAT, indice in base 2025 e variazione
+  dal primo mese sulla serie RACCORDATA (null se manca un coefficiente).
+  `getConsumerPriceIndex` in queries.ts (tutto lo storico, poche
+  centinaia di righe), `loadInflation` in dashboard.ts (`.catch → []`,
+  freschezza `istat_nic` sul mese più recente, run `fetch-istat-nic`).
+  `InflationCard` (numero grande = variazione annua, ruggine/verde col
+  segno; sotto indice 2025=100 e "da gennaio 2016"; descrizione con due
+  righe riservate da `sm`, altrimenti il carrello andava più in basso),
+  `sections/InflationSection` (cifra chiave sul generale + la voce che
+  cresce di più, "ultimo mese pubblicato" con FreshnessBadge, SourceNote
+  con i coefficienti LETTI dalle costanti). Nuovi: `formatMonthYear` in
+  format.ts, fonte `istat` in sources.ts con la scheda in metodologia
+  (SENZA licenza: CC BY non verificata nella sessione), ISTAT nella
+  citazione di `CiteBox`.
+  **Barra di navigazione**: con la sezione 05 le voci erano già 1582 px
+  su 1280 (le pagine secondarie fuori schermo a 1400 px), con la 06 1740.
+  Decisione di Yuri: Metodologia/Glossario/Numeri/Stato dei dati salgono
+  nell'header da `lg` (`site/HeaderPageLinks.tsx`, riga sotto "Codice
+  sorgente"); nella barra restano fra `sm` e `lg` (lì scorre comunque);
+  voci delle sezioni `lg:px-4`. Misurato: a 1280 e 1400 px la barra sta
+  in 1280 px esatti. **Una settima sezione non ci starà più**: servirà
+  accorciare le etichette o togliere i numeri.
+  Prossimo: grafico (variazione annua dal 2016, indice raccordato),
+  anteprima in home, sezione di metodologia.
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.

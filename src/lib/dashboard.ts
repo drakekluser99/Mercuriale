@@ -11,7 +11,10 @@ import {
   getLatestEuWeightedAverageRows,
   getLatestSwissFuelRows,
   getRecentChokepointTransits,
+  getConsumerPriceIndex,
 } from "@/lib/db/queries";
+import { summarizeInflation } from "@/lib/inflation";
+import { monthToDate } from "@/lib/fetchers/istatNic";
 import {
   CHOKEPOINT_SHORT_NAMES,
   furthestFromNormal,
@@ -103,6 +106,13 @@ const euWeightedQ = cache(() =>
 const chokepointQ = cache(() =>
   getRecentChokepointTransits(new Date(getNow().getTime() - 30 * DAY_MS)).catch((err) => {
     console.error("Traffico marittimo non disponibile:", err);
+    return [];
+  })
+);
+// Inflazione (ISTAT, NIC): tutto lo storico, poche centinaia di righe.
+const inflationQ = cache(() =>
+  getConsumerPriceIndex().catch((err) => {
+    console.error("Inflazione non disponibile:", err);
     return [];
   })
 );
@@ -492,5 +502,28 @@ export const loadSummary = cache(async () => {
     // Curva in filigrana nell'header: il Brent, l'unica serie con abbastanza
     // punti da avere una forma.
     heroSeries: commodities.series.find((s) => s.key === "BRENT")?.points ?? [],
+  };
+});
+
+/**
+ * /inflazione (24 set 2026): una scheda per serie, con freschezza. La
+ * freschezza è di tutta la fonte (una cadenza sola, mensile): si calcola
+ * sul mese più recente fra le serie.
+ */
+export const loadInflation = cache(async () => {
+  const [rows, runs] = await Promise.all([inflationQ(), fetchRunsQ()]);
+  const now = getNow();
+  const series = summarizeInflation(rows);
+  const latestMonth = series.map((s) => s.month).sort().at(-1) ?? null;
+  const freshness = latestMonth
+    ? computeFreshness(monthToDate(latestMonth), getFreshnessConfig("istat_nic"), now)
+    : null;
+  return {
+    rows,
+    series,
+    headline: series.find((s) => s.code === "00") ?? null,
+    latestMonth,
+    freshness,
+    run: findRun(runs, "fetch-istat-nic"),
   };
 });

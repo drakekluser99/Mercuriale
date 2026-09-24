@@ -73,6 +73,11 @@ export default function Metodologia() {
             link="https://portwatch.imf.org"
           />
           <SourceItem
+            name="ISTAT — Istituto Nazionale di Statistica"
+            desc="Indice dei prezzi al consumo per l'intera collettività (NIC), mensile, dal 2016: indice generale, carrello della spesa, alimentari e bevande, beni energetici. Variazioni annue come pubblicate da ISTAT; l'indice fino al 2025 è riportato alla base 2025 con i coefficienti di raccordo (per carrello ed energetici calcolati da Mercuriale con il metodo ISTAT, che non li pubblica)."
+            link="https://esploradati.istat.it"
+          />
+          <SourceItem
             name="Eurostat"
             desc="Cifre annuali della raccolta «Numeri» (dipendenza energetica, importazioni di petrolio, imposte sull'energia, trasporto merci su strada), dai comunicati dell'ufficio statistico dell'UE. Aggiornate a mano a ogni nuova edizione, non da un cron."
             link="https://ec.europa.eu/eurostat"
