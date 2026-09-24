@@ -38,7 +38,11 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
   `src/lib/freshness/compute.ts`, le statistiche fiscali/di ranking in
   `src/lib/europeFuelStats.ts` e `src/lib/italianFuelStats.ts`). Niente
   test di componenti React o di route: richiederebbero fixture DB/API
-  molto più pesanti per un beneficio, al momento, minore. `vitest.config.ts`
+  molto più pesanti per un beneficio, al momento, minore. Dal 15 al 24
+  set la copertura si è allargata ai parser delle fonti (MIMIT,
+  PortWatch, ISTAT, con il file VERO in `src/lib/fetchers/fixtures/`),
+  al traffico marittimo, al raccordo NIC e ai dati dei grafici: 204 test
+  il 24/9. `vitest.config.ts`
   usa `vite-tsconfig-paths` per risolvere l'alias `@/*` leggendo lo stesso
   `tsconfig.json` di Next.js, invece di duplicare a mano il mapping.
 
@@ -202,9 +206,10 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
   (prima `Bearer ${undefined}` diventava la stringa "Bearer undefined" e
   chiunque la inviasse passava — vedi "Errori noti") e confronta gli
   SHA-256 con `timingSafeEqual`. Non reintrodurre il confronto in linea
-- `src/app/api/cron/*/route.ts` — 10 route (erano 8: dal 15 set anche
-  `fetch-ch-fuel-prices`, dal 24 set `fetch-chokepoint-transits` — vedi la
-  voce "Traffico marittimo" in fondo a "Cosa manca") protette da `CRON_SECRET`
+- `src/app/api/cron/*/route.ts` — 11 route (erano 8: dal 15 set anche
+  `fetch-ch-fuel-prices`, dal 24 set `fetch-chokepoint-transits` e
+  `fetch-istat-nic` — vedi le voci "Traffico marittimo" e "Sezione
+  inflazione" in fondo a "Cosa manca") protette da `CRON_SECRET`
   (header `Authorization: Bearer`, via `isAuthorizedCronRequest`),
   schedulate in `vercel.json`:
   `fetch-market-prices-1`…`-5` (materie prime, ogni batch a un'ora
@@ -651,6 +656,9 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
     modello di freshness a 3 stati (`src/lib/freshness/`). Tono neutro e
     non un ambra "warning" acceso: comunica "in attesa del prossimo dato",
     non un problema
+  - `system-series-1…3` (#7b4fb0 / #00959e / #a06a00, 24 set 2026) —
+    colori di IDENTITÀ per grafici con più serie (oggi: inflazione),
+    validati con lo script della skill dataviz; mai significato
   - `system-chrome` (#14110c) / `system-chrome-raised` (#1c1811) — fondo
     del chrome e strato sollevato sopra di esso (la fascia sintetica). La
     differenza è volutamente minima: deve leggersi come uno strato, non
@@ -919,10 +927,10 @@ decorative. Escluso per ora: redesign totale, Oceania/LatAm,
 estrapolazioni causali. (Media UE ponderata e storico lungo, esclusi in
 origine, sono stati fatti il 15 set 2026: vedi i blocchi A e C in fondo.)
 
-**PUNTO DI RIPRESA — fine sessione 24 set 2026, sera (Claude Code nel
+**PUNTO DI RIPRESA — fine sessione 24 set 2026, notte (Claude Code nel
 cloud).** Leggere questo blocco per primo. Il dettaglio è nelle voci in
-fondo a questa sezione: "Traffico marittimo", "CI rifatta" e "Ricognizione
-ISTAT".
+fondo a questa sezione: "Traffico marittimo", "CI rifatta", "Ricognizione
+ISTAT" e "Sezione inflazione".
 
 | PR | Cosa |
 |---|---|
@@ -939,195 +947,38 @@ ISTAT".
 | #24 | CLAUDE.md: CI rifatta in `.github/workflows/` (la vecchia era nella radice e non era mai partita) |
 | #25 | CLAUDE.md: ruleset "Proteggi main" e ricognizione ISTAT sul NIC |
 | #26 | CLAUDE.md: storico NIC dal 1996 e questo punto di ripresa |
+| #27 | Inflazione: schema, fetcher ISTAT, raccordo, cron, backfill, pagina `/inflazione` (06), pagine secondarie nell'header |
+| #28 | Inflazione: grafico dal 2016, anteprima in home, metodologia |
 
-- **Stato**: tutto in `main` e in produzione. Il traffico marittimo è
-  COMPLETO, nessun punto aperto.
-- **CI e protezione di `main` (24/9)**: `.github/workflows/ci.yml` gira a
-  ogni PR e push su `main` (typegen, tipi, lint, test). Il ruleset
-  "Proteggi main" blocca il merge finché il check `check` non è verde:
-  una PR appena aperta risulta "blocked" per ~40 secondi, è normale.
-- **Prossimo lavoro naturale: sezione inflazione (ISTAT, NIC)**. La
-  ricognizione è FINITA (8 query), manca tutto il resto: schema, fetcher,
-  cron, UI. Tutto quello che serve sapere è nella voce "Ricognizione
-  ISTAT" in fondo. Due vincoli da non dimenticare:
-  - **limite ISTAT: 5 query al minuto per IP, blocco di 1-2 giorni** se
-    superato. Dal cloud ISTAT non si raggiunge e Yuri ha deciso di NON
-    aprire i domini: le query di verifica le lancia lui dal PC;
-  - il cron su Vercel farà query vere a ISTAT: va progettato con UNA
-    richiesta per esecuzione (le categorie si chiedono insieme con `+`),
-    niente tentativi ripetuti.
-  **Decisioni prese con Yuri (24 set 2026), da NON ridiscutere**:
-  - numero principale = **variazione annua** (tendenziale, misura `7`);
-    l'**indice** (misura `4`) sotto, per i confronti nel tempo. La
-    congiunturale per ora no;
-  - **4 serie**: generale `00`, carrello `FOODHPC`, beni energetici
-    `ENRGY`, alimentari `01`. Le altre divisioni eventualmente dopo;
-  - storico **dal 2016**: un solo raccordo (base 2015 → 2025), con il
-    coefficiente ufficiale `DF_BULK_…`, non ricalcolato;
-  - pagina propria **`/inflazione`, sezione 06**, con anteprima in home;
-    NESSUNA cella in più nella fascia (ne ha già sei).
-  **Verificato con la query 9 (24/9)**: `_6` ha TUTTE e 4 le serie in
-  entrambe le basi (`39` fino a dic 2025, `85` da gen 2026), con indice
-  (`4`) e variazione annua (`7`) — un solo dataflow basta, niente `_2`.
-  Quindi la **variazione annua non richiede raccordi** (si prende già
-  fatta da ISTAT e si cuce al cambio di base); il coefficiente ufficiale
-  serve SOLO per il grafico dell'indice. Coefficienti: `TB1` = codici
-  ECOICOP (`00`, `01`), `TB2` = tipologie (`FOODHPC`, `ENRGY`), `TB3` =
-  per regione (non serve). **Le tabelle `DF_BULK_…` NON si leggono via
-  SDMX** (query 10: "doesn't contain a mapping set", sono
-  `isExternalReference`): vanno scaricate come file dal sito IstatData
-  (ricerca "coefficienti di raccordo" → pulsante `SCARICA_XLSX`).
-  **`TB1` scaricata il 24/9** (`DCSP_NIC_CR_Ecoicov2_rev.xlsx`, foglio
-  `IT`, intestazione alla riga 15: codice, livello, denominazione, poi i
-  tre coefficienti 1995→2010, 2010→2015, **2015→2025**): generale `00` =
-  **1,226**, alimentari `01` = **1,344**. Il coefficiente è vecchio ÷
-  nuovo: **indice base 2025 = indice base 2015 ÷ coefficiente** (torna con
-  la media 2025 in base 2015 già calcolata: 122,63 e 134,41). Tre
-  decimali; alcune celle sono testo con "(r)" = revisionato (es.
-  `'1,228 (r)'` sul generale senza tabacchi): chi le legge deve gestirle.
-  Il file FOI omonimo (`DCSP_FOI_CR_…`) è di un altro indice, NON usarlo.
-  **`FOODHPC`/`ENRGY`: coefficiente 2015→2025 NON pubblicato** su
-  IstatData (24/9, controllati tutti i download di "coefficienti di
-  raccordo": `TB2`, `TB2_1…_5`, `TB3.zip` e `TB3_1.zip`, più il file
-  regionale `NUTS2_b15_b25`. Gli aggregati speciali arrivano solo al
-  raccordo 2010→2015, e molti file sono copie identiche. NON
-  riscaricarli). **Decisione di Yuri (24/9)**: coefficiente CALCOLATO =
-  media dei 12 mesi 2025 in base 2015 ÷ 100, con controllo: il backfill
-  fa lo stesso calcolo su `00` e `01` e si FERMA se non dà 1,226 e 1,344
-  alla terza decimale. Dichiarato in metodologia ("calcolato da
-  Mercuriale con il metodo ISTAT, non pubblicato da ISTAT"). I due
-  ufficiali restano una COSTANTE nel codice con fonte e data (cambiano
-  solo al prossimo cambio di base), come `CHOKEPOINT_BASELINES`.
-  **Schema — FATTO (24/9, branch, migrazione `0014` NON ancora applicata
-  al DB)**: tabella `consumer_price_index` (`category` = codice ECOICOP
-  della fonte, `recorded_at` = primo del mese UTC, `base_year` 2015/2025,
-  `index_value` nella base ORIGINALE — il raccordo si applica in lettura,
-  come i franchi di `swiss_fuel_prices` —, `yoy_change_pct` nullable,
-  `retrieved_at`, `fetch_run_id`, `source` = "istat_nic"). Unica su
-  (`category`, `recorded_at`), SENZA la base: le basi non si
-  sovrappongono, e un mese in due basi deve far scattare il conflitto.
-  Revisioni ISTAT → `data_corrections` (tabella generica, non va toccata).
-  **Fetcher — FATTO (24/9, branch)**: `src/lib/fetchers/istatNic.ts`.
-  `buildNicUrl(dataTypes, startPeriod)` = UNA richiesta con le 4 serie e
-  le misure 4+7 unite da `+`, niente `endPeriod` (ignorato dal server).
-  `parseNicGenericData` (pura) legge il GenericData con espressioni
-  regolari e non con una libreria XML (forma fissa e piatta; ogni pezzo
-  inatteso deve comunque fermare il parser): ricompone indice e
-  variazione in UNA riga per (serie, mese); si ferma su testo non XML
-  (gli errori ISTAT sono testo semplice), base/categoria/misura/frequenza
-  sconosciute, mese non "AAAA-MM", valore vuoto o non numerico (mai zero),
-  stesso mese in due basi, misura ripetuta, variazione senza indice.
-  `assertAllCategories` (separata: regola di chi chiama) fa fermare il run
-  se manca una serie. `fetchNic`: timeout 8 s, NESSUN nuovo tentativo, su
-  429 lo dice ("NON riprovare"). `monthToDate` → primo del mese UTC. Test
-  in `istatNic.test.ts` sul file VERO della query 9, salvato in
-  `src/lib/fetchers/fixtures/istat-nic-2025-11.xml`.
-  **Salvataggio — FATTO (24/9, branch)**: `saveNicPoints.ts`. Legge
-  con UNA query le righe già salvate nel periodo, poi `compareWithSaved`
-  (pura, testata) si FERMA se un mese salvato arriva in un'altra base
-  (sempre, anche nel backfill, prima di scrivere) ed elenca le correzioni
-  candidate (`index_value`, `yoy_change_pct`, etichetta `NIC <codice>`).
-  Upsert a blocchi da 500 con `excluded.*`; `yoy_change_pct` e
-  `fetch_run_id` con `coalesce` (una risposta senza variazione non
-  cancella quella salvata; il backfill non cancella l'id del cron).
-  Correzioni scritte solo con `logCorrections: true` (cron, non
-  backfill), DOPO il salvataggio. La soglia di "cosa è una correzione"
-  ora è `isCorrection` in `correctionsLog.ts`, usata anche da
-  `logCorrectionIfChanged`: non ricopiare `0.00005` altrove.
-  **Raccordo — FATTO (24/9, branch)**: `src/lib/nicSplice.ts` (puro,
-  testato). `OFFICIAL_SPLICE_2015_TO_2025` = { `00`: 1,226, `01`: 1,344 }
-  con fonte e file nel commento; `CALCULATED_SPLICE_2015_TO_2025` =
-  { `FOODHPC`, `ENRGY` } a **`null` finché non si fissano DOPO il
-  backfill** (copiando il valore stampato dallo script), come
-  `CHOKEPOINT_BASELINES`. `toBase2025` divide l'indice in base 2015 per
-  il coefficiente e restituisce **null** se non è fissato (la UI mostra
-  solo la variazione, niente salto finto). `computeSpliceCoefficient` =
-  media dei 12 mesi 2025 in base 2015 ÷ 100, tre decimali, si ferma se
-  manca un mese. `checkSplice` si FERMA se il calcolo non dà esattamente
-  i due ufficiali; per gli aggregati restituisce il confronto. Arrotonda
-  con `Math.round(x*1000)/1000`: un "trucco" di arrotondamento provato
-  e tolto il 24/9, non cambiava niente (l'errore sui valori a metà nasce
-  nella media, non nell'arrotondamento).
-  **Cron e backfill — FATTI (24/9, branch)**:
-  - `runNicJob.ts` (job condiviso fra route e script, come
-    `runChokepointTransitsJob`): SOLO base 2025 (`85`), da
-    `cronStartPeriod(now)` = 12 mesi prima (copre le revisioni),
-    `logCorrections: true`. Route `fetch-istat-nic`, `maxDuration` 10,
-    **ogni giorno alle 11 UTC** (dopo i comunicati delle 10 di Roma, ora
-    libera). Una richiesta, nessun nuovo tentativo.
-  - Freschezza `istat_nic` **77 + 10 giorni** (dato del 1/8 uscito il
-    16/9; quello di settembre esce verso il 16/10, quindi fino ad allora
-    agosto ha fino a ~76 giorni). `/stato-dati`: etichetta del job, badge
-    di freschezza (`SOURCE_LEVEL_FRESHNESS`), e le correzioni NIC
-    formattate come indice (1 decimale) e variazione (col segno), NON
-    come prezzi.
-  - `npm run backfill:nic` (`scripts/backfill-nic.ts`): il primo lancio fa
-    UNA richiesta (4 serie × basi 2015+2025 × indice e variazione, dal
-    2016-01) e salva la risposta in `istat-nic-backfill.xml` (in
-    .gitignore); se il file esiste si RIFIUTA di riscaricare. Poi sempre
-    `--file istat-nic-backfill.xml` (zero richieste), anche con `--save`.
-    Stampa mesi per serie e base, mesi mancanti a intervalli, il
-    controllo del raccordo (si ferma se `00`/`01` non danno 1,226/1,344)
-    e i coefficienti di `FOODHPC`/`ENRGY` da fissare. `--save` rifiutato
-    con mesi mancanti; scrive senza run e senza correzioni. `--cron` =
-    esegue `runNicJob` (una richiesta, riga in `fetch_runs`).
-  - Provato nel cloud su due file (niente rete): la query 9 vera (mesi
-    mancanti e raccordo impossibile, esce con 1) e uno storico finto
-    2016-01 → 2026-08 (512 righe, coefficienti ufficiali riprodotti,
-    dicembre 2025 = 100,0); con 122,75 al posto di 122,63 si ferma.
-  **Primo backfill vero (24/9, Yuri dal PC)**: `db:migrate` lanciato (NON
-  ha stampato la conferma finale, solo l'avviso sul driver websocket: da
-  verificare col `--save`, che si ferma se la tabella non c'è);
-  `backfill:nic` = UNA richiesta, 122.605 caratteri, 512 righe, nessun
-  mese mancante, 120 mesi base 2015 + 8 base 2025 per serie. Raccordo:
-  `00` 1,226 e `01` 1,344 riprodotti ESATTAMENTE; calcolati **`FOODHPC`
-  1,301**, **`ENRGY` 1,501**, fissati in `CALCULATED_SPLICE_2015_TO_2025`.
-  Dicembre 2025 in base 2025: generale 100,0, alimentari 100,6, carrello
-  100,3, energetici 97,3 (energia in calo nel 2025, −4,5% a dicembre).
-  **Salvato (24/9)**: `--file istat-nic-backfill.xml` → i quattro
-  coefficienti "coincide"; `--save` → **512 righe in
-  `consumer_price_index`, ultimo mese 2026-08** (quindi anche la
-  migrazione 0014 è applicata). Dopo il messaggio finale Node su Windows
-  ha stampato "Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)":
-  innocuo (righe già scritte), causato da `process.exit()` con la
-  connessione al database ancora in chiusura. Corretto in
-  `backfill-nic.ts` con `process.exitCode`. Gli altri script
-  (`backfill.ts`, `backfill-chokepoints.ts`, `chokepoint-baselines.ts`)
-  usano ancora `process.exit()`: se stampano lo stesso messaggio, stessa
-  correzione.
-  Il cron partirà solo dopo il merge (in Preview i cron non girano).
-  **UI, passo 1 — pagina `/inflazione` (24/9, branch)**: sezione 06
-  (`SECTION_PAGES`, icona `Percent` in SectionNav e MobileNav).
-  `src/lib/inflation.ts` (puro, testato): `INFLATION_SERIES` = ordine e
-  nomi da lettore (generale, carrello, alimentari, energetici, con
-  `detail` che dice cosa contengono); `summarizeInflation` = per serie
-  ultimo mese, variazione annua ISTAT, indice in base 2025 e variazione
-  dal primo mese sulla serie RACCORDATA (null se manca un coefficiente).
-  `getConsumerPriceIndex` in queries.ts (tutto lo storico, poche
-  centinaia di righe), `loadInflation` in dashboard.ts (`.catch → []`,
-  freschezza `istat_nic` sul mese più recente, run `fetch-istat-nic`).
-  `InflationCard` (numero grande = variazione annua, ruggine/verde col
-  segno; sotto indice 2025=100 e "da gennaio 2016"; descrizione con due
-  righe riservate da `sm`, altrimenti il carrello andava più in basso),
-  `sections/InflationSection` (cifra chiave sul generale + la voce che
-  cresce di più, "ultimo mese pubblicato" con FreshnessBadge, SourceNote
-  con i coefficienti LETTI dalle costanti). Nuovi: `formatMonthYear` in
-  format.ts, fonte `istat` in sources.ts con la scheda in metodologia
-  (SENZA licenza: CC BY non verificata nella sessione), ISTAT nella
-  citazione di `CiteBox`.
-  **Barra di navigazione**: con la sezione 05 le voci erano già 1582 px
-  su 1280 (le pagine secondarie fuori schermo a 1400 px), con la 06 1740.
-  Decisione di Yuri: Metodologia/Glossario/Numeri/Stato dei dati salgono
-  nell'header da `lg` (`site/HeaderPageLinks.tsx`, riga sotto "Codice
-  sorgente"); nella barra restano fra `sm` e `lg` (lì scorre comunque);
-  voci delle sezioni `lg:px-4`. Misurato: a 1280 e 1400 px la barra sta
-  in 1280 px esatti. **Una settima sezione non ci starà più**: servirà
-  accorciare le etichette o togliere i numeri.
-  Prossimo: grafico (variazione annua dal 2016, indice raccordato),
-  anteprima in home, sezione di metodologia.
+- **Stato**: traffico marittimo e sezione inflazione COMPLETI, tutto in
+  `main` e in produzione: dati ISTAT (512 righe dal 2016), cron
+  `fetch-istat-nic` attivo ogni giorno alle 11 UTC, pagina `/inflazione`
+  (sezione 06) con schede e grafico, anteprima in home, metodologia,
+  pagine secondarie nell'header, README aggiornato (PR
+  drakekluser99/Mercuriale#27 e #28, fuse il 24/9). Nessuna PR aperta.
+  Da verificare nei prossimi giorni: la prima riga di `fetch-istat-nic`
+  in `/stato-dati` (`ok`, 4 serie × 8-12 mesi di punti salvati) e, verso
+  il 16 ottobre, che il dato di settembre arrivi da solo.
+- **CI e protezione di `main`**: `.github/workflows/ci.yml` gira a ogni
+  PR e push su `main` (typegen, tipi, lint, test). Il ruleset "Proteggi
+  main" blocca il merge finché il check `check` non è verde: una PR
+  appena aperta risulta "blocked" per ~40 secondi, è normale.
+- **Vincoli ISTAT da non dimenticare**: 5 richieste al minuto per IP,
+  blocco di 1-2 giorni se superato; dal cloud ISTAT non si raggiunge e
+  Yuri ha deciso di NON aprire i domini (le verifiche le lancia lui dal
+  PC); il cron fa UNA richiesta per esecuzione, nessun nuovo tentativo.
+- **Nessun lavoro nuovo concordato.** Idee emerse ma NON decise: altre
+  divisioni ECOICOP (es. `04` abitazione, `07` trasporti) nella pagina
+  inflazione; una settima sezione richiederebbe di rifare la barra (a
+  1280 px è piena); gli altri script con `process.exit()` (vedi la voce
+  "Sezione inflazione").
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
-  (`SITE_URL`); manutenzione annuale di `/numeri`.
+  (`SITE_URL`); manutenzione annuale di `/numeri`; **rifare gli
+  screenshot di `docs/readme/`** (mostrano la home di prima della
+  divisione in pagine: dal cloud non si possono fare con i dati veri);
+  verificare sul sito ISTAT la licenza dei dati (probabilmente CC BY
+  4.0, non ancora scritta in metodologia perché non verificata).
 - **Come si è lavorato**: sessione Claude Code nel cloud, con accesso
   diretto al repo e alle PR via GitHub. Un passo alla volta: codice e
   screenshot con dati finti (Playwright, pagina di prova temporanea mai
@@ -2504,6 +2355,240 @@ sezione). Resta aperto:
     MB), dati di `_2` (6 serie su 6), struttura di `_6` e di `_5`
     (`references=datastructure`), dati di `_6` con 5 basi da dic 2024 (4
     serie), primo mese di ogni base (`firstNObservations=1`, 4 serie).
+
+- **Sezione inflazione (ISTAT, NIC) — registro dei lavori del 24 set
+  2026.** In ordine cronologico: dove c'è scritto "(24/9, branch)" il
+  lavoro è poi finito in `main` con le PR drakekluser99/Mercuriale#27
+  (dati, cron, pagina) e #28 (grafico, home, metodologia). La
+  ricognizione che l'ha preceduta è la voce "Ricognizione ISTAT" qui
+  sopra.
+  Due vincoli da non dimenticare:
+  - **limite ISTAT: 5 query al minuto per IP, blocco di 1-2 giorni** se
+    superato. Dal cloud ISTAT non si raggiunge e Yuri ha deciso di NON
+    aprire i domini: le query di verifica le lancia lui dal PC;
+  - il cron su Vercel farà query vere a ISTAT: va progettato con UNA
+    richiesta per esecuzione (le categorie si chiedono insieme con `+`),
+    niente tentativi ripetuti.
+  **Decisioni prese con Yuri (24 set 2026), da NON ridiscutere**:
+  - numero principale = **variazione annua** (tendenziale, misura `7`);
+    l'**indice** (misura `4`) sotto, per i confronti nel tempo. La
+    congiunturale per ora no;
+  - **4 serie**: generale `00`, carrello `FOODHPC`, beni energetici
+    `ENRGY`, alimentari `01`. Le altre divisioni eventualmente dopo;
+  - storico **dal 2016**: un solo raccordo (base 2015 → 2025), con il
+    coefficiente ufficiale `DF_BULK_…`, non ricalcolato;
+  - pagina propria **`/inflazione`, sezione 06**, con anteprima in home;
+    NESSUNA cella in più nella fascia (ne ha già sei).
+  **Verificato con la query 9 (24/9)**: `_6` ha TUTTE e 4 le serie in
+  entrambe le basi (`39` fino a dic 2025, `85` da gen 2026), con indice
+  (`4`) e variazione annua (`7`) — un solo dataflow basta, niente `_2`.
+  Quindi la **variazione annua non richiede raccordi** (si prende già
+  fatta da ISTAT e si cuce al cambio di base); il coefficiente ufficiale
+  serve SOLO per il grafico dell'indice. Coefficienti: `TB1` = codici
+  ECOICOP (`00`, `01`), `TB2` = tipologie (`FOODHPC`, `ENRGY`), `TB3` =
+  per regione (non serve). **Le tabelle `DF_BULK_…` NON si leggono via
+  SDMX** (query 10: "doesn't contain a mapping set", sono
+  `isExternalReference`): vanno scaricate come file dal sito IstatData
+  (ricerca "coefficienti di raccordo" → pulsante `SCARICA_XLSX`).
+  **`TB1` scaricata il 24/9** (`DCSP_NIC_CR_Ecoicov2_rev.xlsx`, foglio
+  `IT`, intestazione alla riga 15: codice, livello, denominazione, poi i
+  tre coefficienti 1995→2010, 2010→2015, **2015→2025**): generale `00` =
+  **1,226**, alimentari `01` = **1,344**. Il coefficiente è vecchio ÷
+  nuovo: **indice base 2025 = indice base 2015 ÷ coefficiente** (torna con
+  la media 2025 in base 2015 già calcolata: 122,63 e 134,41). Tre
+  decimali; alcune celle sono testo con "(r)" = revisionato (es.
+  `'1,228 (r)'` sul generale senza tabacchi): chi le legge deve gestirle.
+  Il file FOI omonimo (`DCSP_FOI_CR_…`) è di un altro indice, NON usarlo.
+  **`FOODHPC`/`ENRGY`: coefficiente 2015→2025 NON pubblicato** su
+  IstatData (24/9, controllati tutti i download di "coefficienti di
+  raccordo": `TB2`, `TB2_1…_5`, `TB3.zip` e `TB3_1.zip`, più il file
+  regionale `NUTS2_b15_b25`. Gli aggregati speciali arrivano solo al
+  raccordo 2010→2015, e molti file sono copie identiche. NON
+  riscaricarli). **Decisione di Yuri (24/9)**: coefficiente CALCOLATO =
+  media dei 12 mesi 2025 in base 2015 ÷ 100, con controllo: il backfill
+  fa lo stesso calcolo su `00` e `01` e si FERMA se non dà 1,226 e 1,344
+  alla terza decimale. Dichiarato in metodologia ("calcolato da
+  Mercuriale con il metodo ISTAT, non pubblicato da ISTAT"). I due
+  ufficiali restano una COSTANTE nel codice con fonte e data (cambiano
+  solo al prossimo cambio di base), come `CHOKEPOINT_BASELINES`.
+  **Schema — FATTO (24/9; migrazione `0014` applicata da Yuri lo stesso
+  giorno)**: tabella `consumer_price_index` (`category` = codice ECOICOP
+  della fonte, `recorded_at` = primo del mese UTC, `base_year` 2015/2025,
+  `index_value` nella base ORIGINALE — il raccordo si applica in lettura,
+  come i franchi di `swiss_fuel_prices` —, `yoy_change_pct` nullable,
+  `retrieved_at`, `fetch_run_id`, `source` = "istat_nic"). Unica su
+  (`category`, `recorded_at`), SENZA la base: le basi non si
+  sovrappongono, e un mese in due basi deve far scattare il conflitto.
+  Revisioni ISTAT → `data_corrections` (tabella generica, non va toccata).
+  **Fetcher — FATTO (24/9, branch)**: `src/lib/fetchers/istatNic.ts`.
+  `buildNicUrl(dataTypes, startPeriod)` = UNA richiesta con le 4 serie e
+  le misure 4+7 unite da `+`, niente `endPeriod` (ignorato dal server).
+  `parseNicGenericData` (pura) legge il GenericData con espressioni
+  regolari e non con una libreria XML (forma fissa e piatta; ogni pezzo
+  inatteso deve comunque fermare il parser): ricompone indice e
+  variazione in UNA riga per (serie, mese); si ferma su testo non XML
+  (gli errori ISTAT sono testo semplice), base/categoria/misura/frequenza
+  sconosciute, mese non "AAAA-MM", valore vuoto o non numerico (mai zero),
+  stesso mese in due basi, misura ripetuta, variazione senza indice.
+  `assertAllCategories` (separata: regola di chi chiama) fa fermare il run
+  se manca una serie. `fetchNic`: timeout 8 s, NESSUN nuovo tentativo, su
+  429 lo dice ("NON riprovare"). `monthToDate` → primo del mese UTC. Test
+  in `istatNic.test.ts` sul file VERO della query 9, salvato in
+  `src/lib/fetchers/fixtures/istat-nic-2025-11.xml`.
+  **Salvataggio — FATTO (24/9, branch)**: `saveNicPoints.ts`. Legge
+  con UNA query le righe già salvate nel periodo, poi `compareWithSaved`
+  (pura, testata) si FERMA se un mese salvato arriva in un'altra base
+  (sempre, anche nel backfill, prima di scrivere) ed elenca le correzioni
+  candidate (`index_value`, `yoy_change_pct`, etichetta `NIC <codice>`).
+  Upsert a blocchi da 500 con `excluded.*`; `yoy_change_pct` e
+  `fetch_run_id` con `coalesce` (una risposta senza variazione non
+  cancella quella salvata; il backfill non cancella l'id del cron).
+  Correzioni scritte solo con `logCorrections: true` (cron, non
+  backfill), DOPO il salvataggio. La soglia di "cosa è una correzione"
+  ora è `isCorrection` in `correctionsLog.ts`, usata anche da
+  `logCorrectionIfChanged`: non ricopiare `0.00005` altrove.
+  **Raccordo — FATTO (24/9, branch)**: `src/lib/nicSplice.ts` (puro,
+  testato). `OFFICIAL_SPLICE_2015_TO_2025` = { `00`: 1,226, `01`: 1,344 }
+  con fonte e file nel commento; `CALCULATED_SPLICE_2015_TO_2025` =
+  { `FOODHPC`, `ENRGY` } a **`null` finché non si fissano DOPO il
+  backfill** (copiando il valore stampato dallo script), come
+  `CHOKEPOINT_BASELINES`. `toBase2025` divide l'indice in base 2015 per
+  il coefficiente e restituisce **null** se non è fissato (la UI mostra
+  solo la variazione, niente salto finto). `computeSpliceCoefficient` =
+  media dei 12 mesi 2025 in base 2015 ÷ 100, tre decimali, si ferma se
+  manca un mese. `checkSplice` si FERMA se il calcolo non dà esattamente
+  i due ufficiali; per gli aggregati restituisce il confronto. Arrotonda
+  con `Math.round(x*1000)/1000`: un "trucco" di arrotondamento provato
+  e tolto il 24/9, non cambiava niente (l'errore sui valori a metà nasce
+  nella media, non nell'arrotondamento).
+  **Cron e backfill — FATTI (24/9, branch)**:
+  - `runNicJob.ts` (job condiviso fra route e script, come
+    `runChokepointTransitsJob`): SOLO base 2025 (`85`), da
+    `cronStartPeriod(now)` = 12 mesi prima (copre le revisioni),
+    `logCorrections: true`. Route `fetch-istat-nic`, `maxDuration` 10,
+    **ogni giorno alle 11 UTC** (dopo i comunicati delle 10 di Roma, ora
+    libera). Una richiesta, nessun nuovo tentativo.
+  - Freschezza `istat_nic` **77 + 10 giorni** (dato del 1/8 uscito il
+    16/9; quello di settembre esce verso il 16/10, quindi fino ad allora
+    agosto ha fino a ~76 giorni). `/stato-dati`: etichetta del job, badge
+    di freschezza (`SOURCE_LEVEL_FRESHNESS`), e le correzioni NIC
+    formattate come indice (1 decimale) e variazione (col segno), NON
+    come prezzi.
+  - `npm run backfill:nic` (`scripts/backfill-nic.ts`): il primo lancio fa
+    UNA richiesta (4 serie × basi 2015+2025 × indice e variazione, dal
+    2016-01) e salva la risposta in `istat-nic-backfill.xml` (in
+    .gitignore); se il file esiste si RIFIUTA di riscaricare. Poi sempre
+    `--file istat-nic-backfill.xml` (zero richieste), anche con `--save`.
+    Stampa mesi per serie e base, mesi mancanti a intervalli, il
+    controllo del raccordo (si ferma se `00`/`01` non danno 1,226/1,344)
+    e i coefficienti di `FOODHPC`/`ENRGY` da fissare. `--save` rifiutato
+    con mesi mancanti; scrive senza run e senza correzioni. `--cron` =
+    esegue `runNicJob` (una richiesta, riga in `fetch_runs`).
+  - Provato nel cloud su due file (niente rete): la query 9 vera (mesi
+    mancanti e raccordo impossibile, esce con 1) e uno storico finto
+    2016-01 → 2026-08 (512 righe, coefficienti ufficiali riprodotti,
+    dicembre 2025 = 100,0); con 122,75 al posto di 122,63 si ferma.
+  **Primo backfill vero (24/9, Yuri dal PC)**: `db:migrate` lanciato (NON
+  ha stampato la conferma finale, solo l'avviso sul driver websocket: da
+  verificare col `--save`, che si ferma se la tabella non c'è);
+  `backfill:nic` = UNA richiesta, 122.605 caratteri, 512 righe, nessun
+  mese mancante, 120 mesi base 2015 + 8 base 2025 per serie. Raccordo:
+  `00` 1,226 e `01` 1,344 riprodotti ESATTAMENTE; calcolati **`FOODHPC`
+  1,301**, **`ENRGY` 1,501**, fissati in `CALCULATED_SPLICE_2015_TO_2025`.
+  Dicembre 2025 in base 2025: generale 100,0, alimentari 100,6, carrello
+  100,3, energetici 97,3 (energia in calo nel 2025, −4,5% a dicembre).
+  **Salvato (24/9)**: `--file istat-nic-backfill.xml` → i quattro
+  coefficienti "coincide"; `--save` → **512 righe in
+  `consumer_price_index`, ultimo mese 2026-08** (quindi anche la
+  migrazione 0014 è applicata). Dopo il messaggio finale Node su Windows
+  ha stampato "Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)":
+  innocuo (righe già scritte), causato da `process.exit()` con la
+  connessione al database ancora in chiusura. Corretto in
+  `backfill-nic.ts` con `process.exitCode`. Gli altri script
+  (`backfill.ts`, `backfill-chokepoints.ts`, `chokepoint-baselines.ts`)
+  usano ancora `process.exit()`: se stampano lo stesso messaggio, stessa
+  correzione.
+  Il cron gira dal merge della PR drakekluser99/Mercuriale#27 (in Preview
+  i cron non girano).
+  **UI, passo 1 — pagina `/inflazione` (24/9, branch)**: sezione 06
+  (`SECTION_PAGES`, icona `Percent` in SectionNav e MobileNav).
+  `src/lib/inflation.ts` (puro, testato): `INFLATION_SERIES` = ordine e
+  nomi da lettore (generale, carrello, alimentari, energetici, con
+  `detail` che dice cosa contengono); `summarizeInflation` = per serie
+  ultimo mese, variazione annua ISTAT, indice in base 2025 e variazione
+  dal primo mese sulla serie RACCORDATA (null se manca un coefficiente).
+  `getConsumerPriceIndex` in queries.ts (tutto lo storico, poche
+  centinaia di righe), `loadInflation` in dashboard.ts (`.catch → []`,
+  freschezza `istat_nic` sul mese più recente, run `fetch-istat-nic`).
+  `InflationCard` (numero grande = variazione annua, ruggine/verde col
+  segno; sotto indice 2025=100 e "da gennaio 2016"; descrizione con due
+  righe riservate da `sm`, altrimenti il carrello andava più in basso),
+  `sections/InflationSection` (cifra chiave sul generale + la voce che
+  cresce di più, "ultimo mese pubblicato" con FreshnessBadge, SourceNote
+  con i coefficienti LETTI dalle costanti). Nuovi: `formatMonthYear` in
+  format.ts, fonte `istat` in sources.ts con la scheda in metodologia
+  (SENZA licenza: CC BY non verificata nella sessione), ISTAT nella
+  citazione di `CiteBox`.
+  **Barra di navigazione**: con la sezione 05 le voci erano già 1582 px
+  su 1280 (le pagine secondarie fuori schermo a 1400 px), con la 06 1740.
+  Decisione di Yuri: Metodologia/Glossario/Numeri/Stato dei dati salgono
+  nell'header da `lg` (`site/HeaderPageLinks.tsx`, riga sotto "Codice
+  sorgente"); nella barra restano fra `sm` e `lg` (lì scorre comunque);
+  voci delle sezioni `lg:px-4`. Misurato: a 1280 e 1400 px la barra sta
+  in 1280 px esatti. **Una settima sezione non ci starà più**: servirà
+  accorciare le etichette o togliere i numeri.
+  **UI, passo 2 — grafico (24/9, branch)**: `components/InflationChart.tsx`
+  (client) sotto le schede. Quattro serie su UN asse (stessa unità),
+  interruttore di misura "Variazione annua" (predefinita) / "Indice
+  (2025 = 100)", periodi `INFLATION_WINDOWS` (1 anno = 13 mesi, 5 anni =
+  61, "Dal 2016") — non 1/3 mesi: il dato è mensile. Linea tratteggiata
+  a 0 (variazione) o 100 (indice). Punti preparati sul server da
+  `buildInflationChart` (`src/lib/inflationChart.ts`, puro e testato:
+  un punto per mese, indice già raccordato, null se manca una serie) e
+  filtrati nel browser: nessuna richiesta al cambio di periodo.
+  **Colori**: nuovi token `system-series-1…3` in globals.css (viola
+  #7b4fb0 carrello, verde-acqua #00959e alimentari, ocra dorato #a06a00
+  energetici), indice generale in `system-ink` più spesso. Validati con
+  lo script della skill dataviz, TUTTE le coppie, sfondo #fffdf8: peggiore
+  ΔE 12,3 deutan (soglia 8), 20,6 visione normale (soglia 15). Scartati:
+  blu+viola (ΔE 3,1 protan), verde-acqua scuro (saturazione < 0,10).
+  Mai ruggine/verde/cremisi/ambra del marchio per identità.
+  **Legenda cliccabile**: sulla variazione gli energetici (≈+70% nel
+  2022) schiacciano le altre voci (0-13%); un clic nasconde una serie e
+  la scala si stringe. Di partenza tutte visibili, l'ultima non si
+  toglie. Tooltip con testo in inchiostro e ordine della legenda
+  (`itemStyle`, `itemSorter`); tabella dei dati in `<details>` chiuso.
+  `HistoryWindowSelector` ora vuole `windows` esplicito (generico sulla
+  chiave): i due grafici esistenti passano `HISTORY_WINDOWS`.
+  Screenshot con dati FINTI (forme inventate) a 1400 e 400 px.
+  **UI, passo 3 — home (24/9, branch)**: sesta `SectionPreview`
+  (variazione annua del generale, ruggine/verde col segno; frase con
+  energetici e carrello). Con sei anteprime la griglia è tre righe da
+  due: il traffico marittimo NON ha più `md:col-span-2`. ISTAT
+  nell'intro della home; "Fonti in linea" conta anche `istat_nic`
+  (`loadSummary` legge `loadInflation`). NESSUNA cella nuova nella
+  fascia (decisione del 24/9). Nuovo `formatAtMonth` in format.ts: "ad
+  agosto", "ad aprile", "a settembre" — la prima versione scriveva "a
+  agosto" in home, nella cifra chiave e nelle schede.
+  **UI, passo 4 — metodologia (24/9, branch)**: sezione **05
+  "Inflazione"** in `/metodologia` (ancora `#inflazione`, linkata dalla
+  nota Fonte di `/inflazione`; "Codice sorgente" e "API pubblica" passate
+  a 06 e 07), testo in `components/methodology/InflationMethodology.tsx`.
+  Cosa è il NIC (non IPCA, non FOI), le quattro serie, la variazione
+  annua presa da ISTAT, il cambio di base con l'esempio 146,1 → 98,9,
+  tabella dei coefficienti LETTA da `spliceCoefficient` (valore e
+  provenienza ISTAT / calcolato da Mercuriale), il controllo del metodo,
+  i limiti (serie ricostruite in ECOICOP v2, un decimale, revisioni in
+  "Stato dei dati", nessun segnale di dato provvisorio, uscita a metà del
+  mese dopo). In "Frequenza di aggiornamento": cron giornaliero e 77
+  giorni di cadenza attesa. Verificata sulla pagina VERA (non legge il
+  database) a 1400 e 400 px.
+  **Stato (24/9, sera)**: schema, fetcher, raccordo, cron, backfill e
+  passo 1 (pagina + header) sono IN PRODUZIONE con la PR
+  drakekluser99/Mercuriale#27, fusa da Yuri: **il cron
+  `fetch-istat-nic` gira da quel merge**, ogni giorno alle 11 UTC. I
+  passi 2-4 (grafico, home, metodologia) sono stati riportati sopra
+  `main` con un rebase e sono nella PR drakekluser99/Mercuriale#28.
 
 ## Skill: vercel-react-best-practices
 

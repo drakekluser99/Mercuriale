@@ -115,7 +115,12 @@ export function PriceHistoryChart({
   const longRange = (activeWindow?.days ?? 0) > 365;
 
   const windowSelector = historyKind && (
-    <HistoryWindowSelector active={windowKey} status={status} onSelect={selectWindow} />
+    <HistoryWindowSelector
+      windows={HISTORY_WINDOWS}
+      active={windowKey}
+      status={status}
+      onSelect={selectWindow}
+    />
   );
 
   if (!selected || selected.points.length === 0) {

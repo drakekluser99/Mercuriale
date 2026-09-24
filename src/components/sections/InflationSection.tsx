@@ -1,12 +1,15 @@
+import Link from "next/link";
 import { FreshnessBadge } from "@/components/FreshnessBadge";
 import { InflationCard } from "@/components/InflationCard";
+import { InflationChart } from "@/components/InflationChart";
 import { KeyFigure } from "@/components/KeyFigure";
 import { SectionHeading } from "@/components/SectionHeading";
 import { SourceNote } from "@/components/SourceNote";
 import { EmptyState, NO_DATA_YET } from "@/components/site/PageShell";
 import type { FreshnessState } from "@/lib/freshness/config";
 import type { InflationSummary } from "@/lib/inflation";
-import { formatMonthYear, formatPercent } from "@/lib/format";
+import type { InflationChartPoint } from "@/lib/inflationChart";
+import { formatAtMonth, formatMonthYear, formatPercent } from "@/lib/format";
 import {
   CALCULATED_SPLICE_2015_TO_2025,
   OFFICIAL_SPLICE_2015_TO_2025,
@@ -24,6 +27,7 @@ export function InflationSection({
   latestMonth,
   freshness,
   checkedAt,
+  chartPoints,
 }: {
   number: string;
   series: InflationSummary[];
@@ -33,6 +37,8 @@ export function InflationSection({
   freshness: FreshnessState | null;
   /** Ultima esecuzione del cron, per la nota "Fonte". */
   checkedAt: Date | null;
+  /** Punti del grafico, uno per mese (inflationChart.ts). */
+  chartPoints: InflationChartPoint[];
 }) {
   // La voce che cresce di più fra le altre, da citare accanto al generale.
   const fastest = series
@@ -47,7 +53,7 @@ export function InflationSection({
           value={formatPercent(headline.yoyChangePct)}
           tone={headline.yoyChangePct > 0 ? "up" : headline.yoyChangePct < 0 ? "down" : "neutral"}
         >
-          Prezzi al consumo in Italia a {formatMonthYear(headline.month)} rispetto
+          Prezzi al consumo in Italia {formatAtMonth(headline.month)} rispetto
           a un anno prima (indice generale NIC di ISTAT).
           {fastest && fastest.yoyChangePct !== null && (
             <>
@@ -85,6 +91,11 @@ export function InflationSection({
           </div>
         </>
       )}
+      {chartPoints.length > 0 && (
+        <div className="mt-6">
+          <InflationChart points={chartPoints} />
+        </div>
+      )}
 
       <SourceNote
         sources={["istat"]}
@@ -100,7 +111,13 @@ export function InflationSection({
         con lo stesso metodo (
         {CALCULATED_SPLICE_2015_TO_2025.FOODHPC?.toLocaleString("it-IT") ?? "—"} e{" "}
         {CALCULATED_SPLICE_2015_TO_2025.ENRGY?.toLocaleString("it-IT") ?? "—"}),
-        perché ISTAT non li pubblica per questi aggregati
+        perché ISTAT non li pubblica per questi aggregati ·{" "}
+        <Link
+          href="/metodologia#inflazione"
+          className="text-system-accent underline decoration-dotted underline-offset-2 hover:decoration-solid"
+        >
+          come si raccordano le basi
+        </Link>
       </SourceNote>
     </section>
   );

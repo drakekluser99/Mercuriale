@@ -100,7 +100,14 @@ export function ShippingHistoryChart({
   const selected = series.find((s) => s.key === selectedKey) ?? series[0];
   const activeWindow = HISTORY_WINDOWS.find((w) => w.key === windowKey);
   const longRange = (activeWindow?.days ?? 0) > 365;
-  const selector = <HistoryWindowSelector active={windowKey} status={status} onSelect={selectWindow} />;
+  const selector = (
+    <HistoryWindowSelector
+      windows={HISTORY_WINDOWS}
+      active={windowKey}
+      status={status}
+      onSelect={selectWindow}
+    />
+  );
 
   if (!selected || selected.points.length === 0) {
     return (

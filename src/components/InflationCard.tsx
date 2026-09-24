@@ -1,5 +1,5 @@
 import type { InflationSummary } from "@/lib/inflation";
-import { formatDecimal, formatMonthYear, formatPercent } from "@/lib/format";
+import { formatAtMonth, formatDecimal, formatMonthYear, formatPercent } from "@/lib/format";
 
 /**
  * Scheda di una serie dell'inflazione (24 set 2026, pagina /inflazione).
@@ -44,7 +44,7 @@ export function InflationCard({ data }: { data: InflationSummary }) {
             {formatPercent(yoyChangePct)}
           </p>
           <p className="mt-1 text-sm text-system-ink-secondary">
-            {formatMonthYear(month)} rispetto a {formatMonthYear(yearBefore(month))}
+            {formatMonthYear(month)} rispetto {formatAtMonth(yearBefore(month))}
           </p>
         </>
       )}

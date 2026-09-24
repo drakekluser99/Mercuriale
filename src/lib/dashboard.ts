@@ -14,6 +14,7 @@ import {
   getConsumerPriceIndex,
 } from "@/lib/db/queries";
 import { summarizeInflation } from "@/lib/inflation";
+import { buildInflationChart } from "@/lib/inflationChart";
 import { monthToDate } from "@/lib/fetchers/istatNic";
 import {
   CHOKEPOINT_SHORT_NAMES,
@@ -384,11 +385,12 @@ function shippingStat(headline: Awaited<ReturnType<typeof loadShipping>>["headli
 // ─── Panoramica (home) ──────────────────────────────────────────────────
 
 export const loadSummary = cache(async () => {
-  const [commodities, fuel, narratives, shipping] = await Promise.all([
+  const [commodities, fuel, narratives, shipping, inflation] = await Promise.all([
     loadCommodities(),
     loadFuel(),
     narrativesQ(),
     loadShipping(),
+    loadInflation(),
   ]);
   const now = getNow();
 
@@ -427,6 +429,10 @@ export const loadSummary = cache(async () => {
       "imf_portwatch",
       shipping.chokepoints.some((c) => c.freshness !== "non_aggiornato")
     );
+  }
+  // ISTAT (inflazione, 24 set 2026): una cadenza per tutta la fonte.
+  if (inflation.freshness) {
+    sourceStates.set("istat_nic", inflation.freshness !== "non_aggiornato");
   }
   const sourcesOnline = Array.from(sourceStates.values()).filter(Boolean).length;
   const sourcesTotal = sourceStates.size;
@@ -519,7 +525,8 @@ export const loadInflation = cache(async () => {
     ? computeFreshness(monthToDate(latestMonth), getFreshnessConfig("istat_nic"), now)
     : null;
   return {
-    rows,
+    // Solo i punti del grafico vanno al browser, non le righe grezze.
+    chartPoints: buildInflationChart(rows),
     series,
     headline: series.find((s) => s.code === "00") ?? null,
     latestMonth,
