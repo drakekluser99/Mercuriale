@@ -210,13 +210,17 @@ export function FuelPriceTable({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[480px] text-sm">
+          {/* Su telefono (sotto `sm`) carburante e data non hanno una colonna
+              propria: vanno in una seconda riga sotto il paese. Con quattro
+              colonne la tabella era larga 480 px e la data finiva fuori
+              schermo. Da `sm` in su resta la tabella a quattro colonne. */}
+          <table className="w-full text-sm sm:min-w-[480px]">
             <thead>
               <tr className="border-b border-system-border text-left font-mono text-xs uppercase tracking-wider text-system-ink-secondary">
-                <th className="px-4 py-3 font-medium">Regione</th>
-                <th className="px-4 py-3 font-medium">Carburante</th>
-                <th className="px-4 py-3 text-right font-medium">Prezzo / litro</th>
-                <th className="px-4 py-3 text-right font-medium">Data</th>
+                <th className="px-3 py-3 font-medium sm:px-4">Regione</th>
+                <th className="hidden px-4 py-3 font-medium sm:table-cell">Carburante</th>
+                <th className="px-3 py-3 text-right font-medium sm:px-4">Prezzo / litro</th>
+                <th className="hidden px-4 py-3 text-right font-medium sm:table-cell">Data</th>
               </tr>
             </thead>
             <tbody>
@@ -226,14 +230,18 @@ export function FuelPriceTable({
                     key={`${regionName}-${f.fuelType}`}
                     className="border-b border-system-border-subtle transition-colors last:border-0 hover:bg-system-bg"
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3 sm:px-4">
                       {localizedCountryName(regionName)}
+                      <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-system-ink-muted sm:hidden">
+                        {f.fuelType === "petrol" ? "Benzina" : "Diesel"} · {f.recordedAtFormatted}
+                        {f.freshness && <FreshnessBadge state={f.freshness} />}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-system-ink-secondary capitalize">
+                    <td className="hidden px-4 py-3 text-system-ink-secondary capitalize sm:table-cell">
                       {f.fuelType === "petrol" ? "Benzina" : "Diesel"}
                     </td>
                     <td
-                      className="whitespace-nowrap px-4 py-3 text-right font-mono tabular-nums"
+                      className="whitespace-nowrap px-3 py-3 text-right align-top font-mono tabular-nums sm:px-4 sm:align-middle"
                       title={`Valore grezzo della fonte: ${f.price} ${f.currency}/litro`}
                     >
                       {formatFuelPrice(parseFloat(f.price))}{" "}
@@ -241,7 +249,7 @@ export function FuelPriceTable({
                         {currencySymbol(f.currency)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-system-ink-muted">
+                    <td className="hidden px-4 py-3 text-right text-system-ink-muted sm:table-cell">
                       <span className="inline-flex items-center gap-2">
                         {f.freshness && <FreshnessBadge state={f.freshness} />}
                         {f.recordedAtFormatted}

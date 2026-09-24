@@ -927,10 +927,11 @@ decorative. Escluso per ora: redesign totale, Oceania/LatAm,
 estrapolazioni causali. (Media UE ponderata e storico lungo, esclusi in
 origine, sono stati fatti il 15 set 2026: vedi i blocchi A e C in fondo.)
 
-**PUNTO DI RIPRESA — fine sessione 24 set 2026, notte (Claude Code nel
-cloud).** Leggere questo blocco per primo. Il dettaglio è nelle voci in
-fondo a questa sezione: "Traffico marittimo", "CI rifatta", "Ricognizione
-ISTAT" e "Sezione inflazione".
+**PUNTO DI RIPRESA — fine sessione 24 set 2026, sera tardi (Claude Code
+nel cloud, dopo le PR #29 e #30).** Leggere questo blocco per primo. Il
+dettaglio è nelle voci in fondo a questa sezione: "Traffico marittimo",
+"CI rifatta", "Ricognizione ISTAT", "Sezione inflazione" e "Controllo
+grafico di tutto il sito".
 
 | PR | Cosa |
 |---|---|
@@ -950,6 +951,7 @@ ISTAT" e "Sezione inflazione".
 | #27 | Inflazione: schema, fetcher ISTAT, raccordo, cron, backfill, pagina `/inflazione` (06), pagine secondarie nell'header |
 | #28 | Inflazione: grafico dal 2016, anteprima in home, metodologia |
 | #29 | Controllo grafico PC/telefono: barra, numero del giorno, tabella province, formati del grafico (voce "Controllo grafico" in fondo) |
+| #30 | Tabelle di Europa, calcolatore e materie prime leggibili su telefono |
 
 - **Stato**: traffico marittimo e sezione inflazione COMPLETI, tutto in
   `main` e in produzione: dati ISTAT (512 righe dal 2016), cron
@@ -968,6 +970,23 @@ ISTAT" e "Sezione inflazione".
   blocco di 1-2 giorni se superato; dal cloud ISTAT non si raggiunge e
   Yuri ha deciso di NON aprire i domini (le verifiche le lancia lui dal
   PC); il cron fa UNA richiesta per esecuzione, nessun nuovo tentativo.
+- **Ultima sessione (24/9, sera tardi)**: controllo grafico di tutte le
+  pagine su PC e telefono con le correzioni (PR
+  drakekluser99/Mercuriale#29) e tabelle di Europa, calcolatore e
+  materie prime rifatte per il telefono (#30). Preparati per Yuri, FUORI
+  dal repository: una bozza del post LinkedIn su traffico marittimo e
+  inflazione, e lo script Playwright `cattura-linkedin.js` che dal suo PC
+  fa screenshot e video del sito in produzione (dal cloud il sito non si
+  raggiunge). Pubblicare il post tocca a lui.
+  **Metodo del controllo grafico, da riusare**: dal cloud il database non
+  si raggiunge, quindi si sostituisce TEMPORANEAMENTE
+  `src/lib/db/queries.ts` con una versione a dati finti (stesse firme e
+  tipi, valori deterministici), si avvia `next dev` con un
+  `DATABASE_URL` fittizio e si fotografano le pagine vere con Playwright
+  (l'atlante del mondo servito con `page.route`, vedi "Mappa regionale").
+  Prima del commit si rimette l'originale e si verifica con `git status`
+  che `queries.ts` non compaia. Attenzione: `pkill -f "next dev"` nella
+  stessa riga di altri comandi interrompe anche quelli; lanciarlo da solo.
 - **Nessun lavoro nuovo concordato.** Idee emerse ma NON decise: altre
   divisioni ECOICOP (es. `04` abitazione, `07` trasporti) nella pagina
   inflazione; una settima sezione richiederebbe di rifare la barra (a
@@ -979,7 +998,13 @@ ISTAT" e "Sezione inflazione".
   screenshot di `docs/readme/`** (mostrano la home di prima della
   divisione in pagine: dal cloud non si possono fare con i dati veri);
   verificare sul sito ISTAT la licenza dei dati (probabilmente CC BY
-  4.0, non ancora scritta in metodologia perché non verificata).
+  4.0, non ancora scritta in metodologia perché non verificata);
+  pubblicare il post LinkedIn (numeri da ricontrollare sul sito il giorno
+  stesso: PortWatch aggiorna il martedì).
+- **Resta aperto, lavoro di codice**: `/paese/[slug]` e
+  `/provincia/[slug]` hanno ancora la cornice vecchia (niente header
+  scuro né barra delle sezioni); la barra delle sezioni sta in 1280 px
+  senza margine, un'etichetta più lunga la fa scorrere di nuovo.
 - **Come si è lavorato**: sessione Claude Code nel cloud, con accesso
   diretto al repo e alle PR via GitHub. Un passo alla volta: codice e
   screenshot con dati finti (Playwright, pagina di prova temporanea mai
@@ -2614,10 +2639,28 @@ sezione). Resta aperto:
     `shortUnit`. Prezzo e "€" su una riga in `FuelPriceTable`.
   - "Europa (media UE)" → "Europa (media dei 27)" nel calcolatore e nelle
     serie del grafico carburanti (è la media semplice).
-  **Resta aperto**: su telefono le tabelle di `/europa`, `/calcolatore` e
-  `/materie-prime` scorrono di lato e a prima vista nascondono una
-  colonna (la data; nel calcolatore l'intera colonna Stati Uniti). Serve
-  un layout apposta per il telefono, non un ritocco. Le pagine
+  **Tabelle su telefono — FATTO subito dopo (24 set 2026, sera, PR
+  drakekluser99/Mercuriale#30).** Le
+  tabelle di `/europa`, `/calcolatore` e `/materie-prime` scorrevano di
+  lato e nascondevano una colonna (la data; nel calcolatore gli Stati
+  Uniti). Sotto `sm` ora:
+  - `FuelPriceTable` e tabella materie prime: le colonne secondarie
+    (carburante o categoria, data, badge di freschezza) diventano una
+    seconda riga piccola sotto il nome, con `hidden sm:table-cell` sulle
+    colonne originali. Il simbolo della fonte (WTI, COPPER…) compare solo
+    da `sm`. Nessun dato tolto, solo spostato.
+  - `FuelImpactCalculator`: ogni riga è una griglia a due colonne
+    (`max-sm:grid`): la metrica a tutta larghezza, sotto Europa a
+    sinistra e Stati Uniti a destra. Ruoli ARIA espliciti (`row`,
+    `cell`, `columnheader`, `rowheader`) perché con `display: grid` una
+    riga di tabella può smettere di esserlo per i lettori di schermo.
+    Spazio non separabile in "(oggi −3,9%)": va a capo prima della
+    parentesi.
+  Da `sm` in su le tre tabelle sono identiche a prima (verificato a
+  1400 px). Scorrono ancora di lato, di proposito: la tabella dati
+  dell'inflazione (dentro "Vedi i dati"), il JSON di esempio in
+  metodologia, le correzioni in `/stato-dati`.
+  **Resta aperto**: le pagine
   `/paese/[slug]` e `/provincia/[slug]` hanno ancora la cornice vecchia
   (senza header scuro né barra).
   Nello stesso giro: script Playwright per screenshot e video del post
