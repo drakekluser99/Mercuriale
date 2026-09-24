@@ -986,9 +986,18 @@ ISTAT".
   decimali; alcune celle sono testo con "(r)" = revisionato (es.
   `'1,228 (r)'` sul generale senza tabacchi): chi le legge deve gestirle.
   Il file FOI omonimo (`DCSP_FOI_CR_…`) è di un altro indice, NON usarlo.
-  Manca la `TB2` ("Tipologie di prodotto") per `FOODHPC`/`ENRGY`.
-  Proposta: i 4 coefficienti come COSTANTE nel codice con fonte e data
-  (cambiano solo al prossimo cambio di base), come `CHOKEPOINT_BASELINES`.
+  **`FOODHPC`/`ENRGY`: coefficiente 2015→2025 NON pubblicato** su
+  IstatData (24/9, controllati tutti i download di "coefficienti di
+  raccordo": `TB2`, `TB2_1…_5`, `TB3.zip` e `TB3_1.zip`, più il file
+  regionale `NUTS2_b15_b25`. Gli aggregati speciali arrivano solo al
+  raccordo 2010→2015, e molti file sono copie identiche. NON
+  riscaricarli). **Decisione di Yuri (24/9)**: coefficiente CALCOLATO =
+  media dei 12 mesi 2025 in base 2015 ÷ 100, con controllo: il backfill
+  fa lo stesso calcolo su `00` e `01` e si FERMA se non dà 1,226 e 1,344
+  alla terza decimale. Dichiarato in metodologia ("calcolato da
+  Mercuriale con il metodo ISTAT, non pubblicato da ISTAT"). I due
+  ufficiali restano una COSTANTE nel codice con fonte e data (cambiano
+  solo al prossimo cambio di base), come `CHOKEPOINT_BASELINES`.
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
