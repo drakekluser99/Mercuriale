@@ -270,3 +270,72 @@ export function baselineFor(baseline: ChokepointBaseline, date: string): number 
     ? baseline.monthly[Number(date.slice(5, 7)) - 1]
     : baseline.value;
 }
+
+// ─── Oscillazione normale della media a 7 giorni (soglie degli stati) ─────
+//
+// Un singolo giorno oscilla molto (Hormuz a settembre, in condizioni
+// normali: da 61 a 129 navi), quindi il sito confronta con la baseline la
+// MEDIA DEGLI ULTIMI 7 GIORNI. Per decidere quando quella media è "fuori
+// dal normale" non si sceglie una percentuale a tavolino: si guarda quanto
+// oscillava la stessa media, rispetto alla stessa baseline, DENTRO il
+// periodo di riferimento, cioè quando il traffico era normale per
+// definizione.
+
+export type RollingDeviation = {
+  /** Ultimo giorno della finestra. */
+  endDate: string;
+  /** Media dei transiti nei `windowDays` giorni fino a endDate compreso. */
+  mean: number;
+  /** Valore normale per endDate (vedi baselineFor). */
+  baseline: number;
+  /** Scostamento percentuale: (media / normale − 1) × 100. */
+  deviationPct: number;
+};
+
+/**
+ * Per ogni giorno del periodo, la media dei `windowDays` giorni che
+ * finiscono lì, confrontata con la baseline di quel giorno. Si usa la
+ * baseline del giorno FINALE della finestra: è la stessa regola della
+ * pagina ("ultimi 7 giorni contro il normale del mese dell'ultimo dato").
+ * Contano solo le finestre interamente dentro il periodo, e ogni giorno
+ * della finestra deve esserci.
+ */
+export function rollingDeviations(
+  points: DailyTransits[],
+  baseline: ChokepointBaseline,
+  period: BaselinePeriod,
+  windowDays = 7
+): RollingDeviation[] {
+  const byDate = new Map(points.map((p) => [p.date, p.transitCalls]));
+  const out: RollingDeviation[] = [];
+  const first = toUtcMs(period.from) + (windowDays - 1) * DAY_MS;
+  for (let t = first; t <= toUtcMs(period.to); t += DAY_MS) {
+    const values: number[] = [];
+    for (let k = windowDays - 1; k >= 0; k--) {
+      const v = byDate.get(fromUtcMs(t - k * DAY_MS));
+      if (v === undefined) {
+        throw new Error(`Media mobile: manca il giorno ${fromUtcMs(t - k * DAY_MS)}`);
+      }
+      values.push(v);
+    }
+    const endDate = fromUtcMs(t);
+    const mean = values.reduce((s, v) => s + v, 0) / values.length;
+    const base = baselineFor(baseline, endDate);
+    out.push({ endDate, mean, baseline: base, deviationPct: (mean / base - 1) * 100 });
+  }
+  return out;
+}
+
+/**
+ * Percentile `p` (0–100) con interpolazione lineare fra i due valori
+ * vicini: il metodo più comune (è quello predefinito di Excel e NumPy),
+ * così il numero si può ricontrollare con qualunque foglio di calcolo.
+ */
+export function percentile(values: number[], p: number): number {
+  if (values.length === 0) throw new Error("Percentile di un elenco vuoto");
+  const sorted = [...values].sort((a, b) => a - b);
+  const rank = (p / 100) * (sorted.length - 1);
+  const lo = Math.floor(rank);
+  const hi = Math.ceil(rank);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (rank - lo);
+}

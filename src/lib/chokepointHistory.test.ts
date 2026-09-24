@@ -6,6 +6,8 @@ import {
   findDateGaps,
   flatBaseline,
   monthlyAverages,
+  percentile,
+  rollingDeviations,
   seasonalBaseline,
 } from "./chokepointHistory";
 
@@ -127,5 +129,54 @@ describe("CHOKEPOINT_BASELINES", () => {
     expect(baselineFor(CHOKEPOINT_BASELINES.hormuz, "2026-09-20")).toBe(98.1);
     expect(baselineFor(CHOKEPOINT_BASELINES.hormuz, "2026-01-05")).toBe(73.14);
     expect(baselineFor(CHOKEPOINT_BASELINES.bab_el_mandeb, "2026-09-20")).toBe(74.8);
+  });
+});
+
+describe("rollingDeviations", () => {
+  const flat = {
+    method: "piatta" as const,
+    period: { from: "2023-01-01", to: "2023-01-10" },
+    breakDate: "2023-02-01",
+    value: 10,
+  };
+
+  it("media dei 7 giorni fino al giorno finale, confrontata con la baseline", () => {
+    // 1-7 gennaio a 10, poi 8-10 a 17: la finestra che finisce il 10
+    // contiene quattro 10 e tre 17 → media 13, +30%.
+    const pts = series("2023-01-01", "2023-01-10", (d) => (d <= "2023-01-07" ? 10 : 17));
+    const out = rollingDeviations(pts, flat, flat.period);
+    expect(out.map((r) => r.endDate)).toEqual(["2023-01-07", "2023-01-08", "2023-01-09", "2023-01-10"]);
+    expect(out[0].deviationPct).toBe(0);
+    expect(out[3].mean).toBe(13);
+    expect(out[3].deviationPct).toBeCloseTo(30, 10);
+  });
+
+  it("usa la baseline del mese del giorno FINALE (stagionale)", () => {
+    const seasonal = {
+      method: "stagionale" as const,
+      period: { from: "2023-01-25", to: "2023-02-03" },
+      breakDate: "2024-01-01",
+      monthly: [10, 20, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    };
+    const pts = series("2023-01-25", "2023-02-03", () => 20);
+    const out = rollingDeviations(pts, seasonal, seasonal.period);
+    expect(out.find((r) => r.endDate === "2023-01-31")?.deviationPct).toBe(100);
+    expect(out.find((r) => r.endDate === "2023-02-01")?.deviationPct).toBe(0);
+  });
+
+  it("si ferma se manca un giorno", () => {
+    const pts = series("2023-01-01", "2023-01-10", () => 10).filter((p) => p.date !== "2023-01-05");
+    expect(() => rollingDeviations(pts, flat, flat.period)).toThrow(/manca il giorno 2023-01-05/);
+  });
+});
+
+describe("percentile", () => {
+  it("interpolazione lineare, come Excel e NumPy", () => {
+    const v = [1, 2, 3, 4, 5];
+    expect(percentile(v, 0)).toBe(1);
+    expect(percentile(v, 50)).toBe(3);
+    expect(percentile(v, 100)).toBe(5);
+    expect(percentile(v, 5)).toBeCloseTo(1.2, 10);
+    expect(percentile([5, 1, 3], 50)).toBe(3); // ordine in ingresso indifferente
   });
 });

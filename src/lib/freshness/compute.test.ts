@@ -69,3 +69,25 @@ describe("getFreshnessConfig", () => {
     );
   });
 });
+
+describe("IMF PortWatch (imf_portwatch)", () => {
+  // Il dato del 20/9 (domenica) esce martedì 22/9; il successivo, con i
+  // dati fino al 27/9, martedì 29/9. Qui si verifica che la soglia 9 + 4
+  // dia gli stati attesi sul calendario vero.
+  const config = getFreshnessConfig("imf_portwatch");
+  const recordedAt = new Date("2026-09-20T00:00:00.000Z");
+  const at = (iso: string) => computeFreshness(recordedAt, config, new Date(iso));
+
+  it("resta 'aggiornato' fino alla vigilia dell'uscita successiva", () => {
+    expect(at("2026-09-24T12:00:00.000Z")).toBe("aggiornato");
+    expect(at("2026-09-29T00:00:00.000Z")).toBe("aggiornato");
+  });
+
+  it("passa a 'in_attesa' se l'uscita slitta di qualche giorno", () => {
+    expect(at("2026-10-01T00:00:00.000Z")).toBe("in_attesa");
+  });
+
+  it("diventa 'non_aggiornato' oltre la tolleranza", () => {
+    expect(at("2026-10-04T12:00:00.000Z")).toBe("non_aggiornato");
+  });
+});

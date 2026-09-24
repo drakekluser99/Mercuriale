@@ -41,6 +41,7 @@ const JOB_LABELS: Record<string, string> = {
   "fetch-us-fuel-prices": "Carburanti — Stati Uniti",
   "fetch-mimit-prices": "Carburanti — Italia, per provincia (MIMIT)",
   "fetch-ch-fuel-prices": "Carburanti — Svizzera (BFS, mensile)",
+  "fetch-chokepoint-transits": "Traffico marittimo — Hormuz e Bab el-Mandeb (IMF PortWatch)",
 };
 
 /**
@@ -59,7 +60,15 @@ const JOB_LABELS: Record<string, string> = {
 // (giornaliera), e da quel giorno `latest_recorded_at` è la data vera
 // dell'estrazione e non l'ora del download (vedi mimitExtractedOn.ts).
 // `bfs_lik` (Svizzera, mensile) aggiunto il 15 set 2026, stessa logica.
-const SOURCE_LEVEL_FRESHNESS = new Set(["eu_weekly_oil_bulletin", "eia_us", "mimit", "bfs_lik"]);
+// `imf_portwatch` (traffico marittimo) aggiunto il 24 set 2026: un job,
+// una cadenza per tutta la fonte (vedi FRESHNESS_CONFIG).
+const SOURCE_LEVEL_FRESHNESS = new Set([
+  "eu_weekly_oil_bulletin",
+  "eia_us",
+  "mimit",
+  "bfs_lik",
+  "imf_portwatch",
+]);
 
 /** Quante correzioni mostrare — vedi getRecentCorrections in queries.ts,
  *  stesso numero passato esplicitamente qui per poterlo citare nel testo. */
