@@ -30,7 +30,8 @@
     "backfill:eu-fuel": "tsx scripts/backfill.ts eu-fuel",
     "backfill:ch-fuel": "tsx scripts/backfill.ts ch-fuel",
     "backfill:chokepoints": "tsx scripts/backfill-chokepoints.ts",
-    "chokepoint:baselines": "tsx scripts/chokepoint-baselines.ts"
+    "chokepoint:baselines": "tsx scripts/chokepoint-baselines.ts",
+    "backfill:nic": "tsx scripts/backfill-nic.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

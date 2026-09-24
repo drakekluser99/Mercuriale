@@ -1048,7 +1048,38 @@ ISTAT".
   con `Math.round(x*1000)/1000`: un "trucco" di arrotondamento provato
   e tolto il 24/9, non cambiava niente (l'errore sui valori a metà nasce
   nella media, non nell'arrotondamento).
-  Prossimo: cron e backfill (lo script stampa i coefficienti da fissare).
+  **Cron e backfill — FATTI (24/9, branch)**:
+  - `runNicJob.ts` (job condiviso fra route e script, come
+    `runChokepointTransitsJob`): SOLO base 2025 (`85`), da
+    `cronStartPeriod(now)` = 12 mesi prima (copre le revisioni),
+    `logCorrections: true`. Route `fetch-istat-nic`, `maxDuration` 10,
+    **ogni giorno alle 11 UTC** (dopo i comunicati delle 10 di Roma, ora
+    libera). Una richiesta, nessun nuovo tentativo.
+  - Freschezza `istat_nic` **77 + 10 giorni** (dato del 1/8 uscito il
+    16/9; quello di settembre esce verso il 16/10, quindi fino ad allora
+    agosto ha fino a ~76 giorni). `/stato-dati`: etichetta del job, badge
+    di freschezza (`SOURCE_LEVEL_FRESHNESS`), e le correzioni NIC
+    formattate come indice (1 decimale) e variazione (col segno), NON
+    come prezzi.
+  - `npm run backfill:nic` (`scripts/backfill-nic.ts`): il primo lancio fa
+    UNA richiesta (4 serie × basi 2015+2025 × indice e variazione, dal
+    2016-01) e salva la risposta in `istat-nic-backfill.xml` (in
+    .gitignore); se il file esiste si RIFIUTA di riscaricare. Poi sempre
+    `--file istat-nic-backfill.xml` (zero richieste), anche con `--save`.
+    Stampa mesi per serie e base, mesi mancanti a intervalli, il
+    controllo del raccordo (si ferma se `00`/`01` non danno 1,226/1,344)
+    e i coefficienti di `FOODHPC`/`ENRGY` da fissare. `--save` rifiutato
+    con mesi mancanti; scrive senza run e senza correzioni. `--cron` =
+    esegue `runNicJob` (una richiesta, riga in `fetch_runs`).
+  - Provato nel cloud su due file (niente rete): la query 9 vera (mesi
+    mancanti e raccordo impossibile, esce con 1) e uno storico finto
+    2016-01 → 2026-08 (512 righe, coefficienti ufficiali riprodotti,
+    dicembre 2025 = 100,0); con 122,75 al posto di 122,63 si ferma.
+  **Da fare da Yuri, in quest'ordine**: `npm run db:migrate` (0014) →
+  `npm run backfill:nic` (una richiesta) → incollare l'output in chat →
+  fissare i due coefficienti calcolati → `--file … --save`.
+  Poi: UI (`/inflazione`, anteprima in home, metodologia con la fonte
+  ISTAT in `sources.ts` + la sua scheda).
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.

@@ -282,3 +282,42 @@ export async function fetchNic(
   assertAllCategories(points);
   return points;
 }
+
+/**
+ * Il mese da cui il cron chiede i dati: 12 mesi prima di `now`. Copre il
+ * mese appena pubblicato, le eventuali revisioni ISTAT dei mesi precedenti
+ * (finiscono in `data_corrections`) e resta una risposta di pochi KB.
+ * `now` è un parametro per poterla provare con una data fissa.
+ */
+export function cronStartPeriod(now: Date): string {
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 12, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/**
+ * I mesi che mancano in una serie, da `from` all'ultimo mese presente.
+ * Serve al backfill: uno storico con buchi non si salva senza saperlo.
+ * Pura; restituisce i mesi mancanti per categoria (vuoto = continua).
+ */
+export function missingMonths(
+  points: readonly NicPoint[],
+  from: string
+): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const { code } of NIC_CATEGORIES) {
+    const months = new Set(points.filter((p) => p.category === code).map((p) => p.month));
+    const last = [...months].sort().at(-1);
+    const missing: string[] = [];
+    if (last) {
+      const d = monthToDate(from);
+      const end = monthToDate(last);
+      while (d <= end) {
+        const m = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+        if (!months.has(m)) missing.push(m);
+        d.setUTCMonth(d.getUTCMonth() + 1);
+      }
+    }
+    out[code] = missing;
+  }
+  return out;
+}

@@ -4,7 +4,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   assertAllCategories,
   buildNicUrl,
+  cronStartPeriod,
   fetchNic,
+  missingMonths,
   monthToDate,
   parseNicGenericData,
 } from "./istatNic";
@@ -192,5 +194,26 @@ describe("fetchNic", () => {
       vi.fn(async () => new Response(doc(series({}, [["2026-01", "100"]])), { status: 200 }))
     );
     await expect(fetchNic(["85"], "2026-01")).rejects.toThrow(/serie assenti/);
+  });
+});
+
+describe("cronStartPeriod", () => {
+  it("parte 12 mesi prima, anche a cavallo d'anno", () => {
+    expect(cronStartPeriod(new Date("2026-09-24T11:00:00Z"))).toBe("2025-09");
+    expect(cronStartPeriod(new Date("2027-01-03T11:00:00Z"))).toBe("2026-01");
+  });
+});
+
+describe("missingMonths", () => {
+  it("sul file vero non manca nessun mese", () => {
+    const m = missingMonths(parseNicGenericData(REAL), "2025-11");
+    expect(m).toEqual({ "00": [], "01": [], FOODHPC: [], ENRGY: [] });
+  });
+
+  it("trova i buchi, anche all'inizio", () => {
+    const points = parseNicGenericData(
+      doc(series({}, [["2026-01", "100"], ["2026-03", "101"]]))
+    );
+    expect(missingMonths(points, "2025-12")["00"]).toEqual(["2025-12", "2026-02"]);
   });
 });
