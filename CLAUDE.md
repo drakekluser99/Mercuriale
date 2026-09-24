@@ -938,7 +938,7 @@ ISTAT".
 | #23 | Carico stimato (campo `capacity`, tonnellate metriche) nelle schede dei passaggi |
 | #24 | CLAUDE.md: CI rifatta in `.github/workflows/` (la vecchia era nella radice e non era mai partita) |
 | #25 | CLAUDE.md: ruleset "Proteggi main" e ricognizione ISTAT sul NIC |
-| (questa PR) | CLAUDE.md: storico NIC dal 1996 e questo punto di ripresa |
+| #26 | CLAUDE.md: storico NIC dal 1996 e questo punto di ripresa |
 
 - **Stato**: tutto in `main` e in produzione. Il traffico marittimo è
   COMPLETO, nessun punto aperto.
