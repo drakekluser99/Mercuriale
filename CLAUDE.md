@@ -950,15 +950,15 @@ ISTAT" e "Sezione inflazione".
 | #27 | Inflazione: schema, fetcher ISTAT, raccordo, cron, backfill, pagina `/inflazione` (06), pagine secondarie nell'header |
 | #28 | Inflazione: grafico dal 2016, anteprima in home, metodologia |
 
-- **Stato**: traffico marittimo e sezione inflazione COMPLETI. In
-  produzione tutto fino alla PR drakekluser99/Mercuriale#27 compresa:
-  dati ISTAT (512 righe dal 2016), cron `fetch-istat-nic` attivo ogni
-  giorno alle 11 UTC, pagina `/inflazione` (sezione 06) con le schede,
-  pagine secondarie nell'header. **La PR drakekluser99/Mercuriale#28**
-  (grafico dell'inflazione, anteprima in home, metodologia, README
-  aggiornato) era aperta a fine sessione: la nuova sessione controlli se
-  è stata fusa; se no, CI e commenti, e chieda a Yuri se l'ha vista
-  sulla Preview. Il branch era `claude/focused-pascal-flzbqz`.
+- **Stato**: traffico marittimo e sezione inflazione COMPLETI, tutto in
+  `main` e in produzione: dati ISTAT (512 righe dal 2016), cron
+  `fetch-istat-nic` attivo ogni giorno alle 11 UTC, pagina `/inflazione`
+  (sezione 06) con schede e grafico, anteprima in home, metodologia,
+  pagine secondarie nell'header, README aggiornato (PR
+  drakekluser99/Mercuriale#27 e #28, fuse il 24/9). Nessuna PR aperta.
+  Da verificare nei prossimi giorni: la prima riga di `fetch-istat-nic`
+  in `/stato-dati` (`ok`, 4 serie × 8-12 mesi di punti salvati) e, verso
+  il 16 ottobre, che il dato di settembre arrivi da solo.
 - **CI e protezione di `main`**: `.github/workflows/ci.yml` gira a ogni
   PR e push su `main` (typegen, tipi, lint, test). Il ruleset "Proteggi
   main" blocca il merge finché il check `check` non è verde: una PR
