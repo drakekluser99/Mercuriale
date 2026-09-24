@@ -955,6 +955,7 @@ grafico di tutto il sito".
 | #31 | Pagine `/paese/[slug]` e `/provincia/[slug]` nella cornice comune (header scuro, barra, link di ritorno) |
 | #32 | Bordo completo della forma sotto il mouse nelle mappe di province ed Europa |
 | #33 | Barra delle sezioni con margine su PC (icone solo sotto `lg`) |
+| #34 | CLAUDE.md: punto di ripresa dopo la sessione del 25/9 |
 
 - **Stato**: traffico marittimo e sezione inflazione COMPLETI, tutto in
   `main` e in produzione: dati ISTAT (512 righe dal 2016), cron
