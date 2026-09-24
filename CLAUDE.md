@@ -1779,9 +1779,9 @@ sezione). Resta aperto:
     bloccato**: la verifica si fa dal PC con lo script sotto.
   - **Passaggi seguiti** (`CHOKEPOINTS` in `src/lib/fetchers/portwatch.ts`):
     `hormuz` = portid `chokepoint6` / portname "Strait of Hormuz";
-    `bab_el_mandeb` = `chokepoint4` / "Bab el-Mandeb Strait". Suez
-    (`chokepoint1`, "Suez Canal") esiste nella fonte ma non si salva:
-    aggiungerlo è una riga in `CHOKEPOINTS`. Filtro con `=` sul nome esatto
+    `bab_el_mandeb` = `chokepoint4` / "Bab el-Mandeb Strait"; dal 24/9
+    anche `suez` = `chokepoint1` / "Suez Canal" (vedi la voce Suez sotto
+    "STATO"). Filtro con `=` sul nome esatto
     (non `LIKE`) e controllo incrociato del `portid`.
   - **Tabella `chokepoint_transits`** (migrazione `0013`): `chokepoint`,
     `recorded_at` (timestamp a mezzanotte UTC, non `date`: coerenza con le
@@ -1901,8 +1901,8 @@ sezione). Resta aperto:
       bloccato). Confermata quella, si mostra la capacità nelle schede
       (`capacityReading` è pronto) e si aggiorna il paragrafo "La capacità
       stimata" in `ShippingMethodology.tsx`.
-    - **Suez — FATTO (24 set 2026, sera), sul branch
-      `claude/youthful-knuth-dixxvo`, in attesa della verifica di Yuri.**
+    - **Suez — FATTO (24 set 2026, sera), in `main` con la PR
+      drakekluser99/Mercuriale#20 (Preview verificata da Yuri).**
       - **Dati**: `suez` in `CHOKEPOINTS` (`chokepoint1`, "Suez Canal").
         Backfill fatto da Yuri: 2.820 righe dal 2019-01-01 al 2026-09-20,
         calendario continuo, nessun giorno con capacità 0.
@@ -1929,8 +1929,9 @@ sezione). Resta aperto:
       - `npm run chokepoint:baselines` senza argomenti verifica ora anche
         Suez (le due baseline piatte sono un ciclo unico); la modalità
         `--candidate` resta per il prossimo passaggio da aggiungere.
-      - Il cron salva Suez solo dopo il merge (in produzione gira `main`):
-        "0 con fetch_run_id del cron" fino ad allora è atteso.
+      - Il backfill di Suez è stato fatto dal branch, prima del merge:
+        per questo le sue righe fino al 20/9 non hanno `fetch_run_id`. Il
+        cron lo salva dal primo run dopo il merge.
     - **Decisioni già prese da Yuri, da NON ridiscutere**: baseline
       (Hormuz stagionale variante B, Bab el-Mandeb piatta), tre stati con
       nome e colori neutro / ocra / ruggine, soglie p5 per passaggio e
