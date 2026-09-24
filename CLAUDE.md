@@ -998,6 +998,16 @@ ISTAT".
   Mercuriale con il metodo ISTAT, non pubblicato da ISTAT"). I due
   ufficiali restano una COSTANTE nel codice con fonte e data (cambiano
   solo al prossimo cambio di base), come `CHOKEPOINT_BASELINES`.
+  **Schema — FATTO (24/9, branch, migrazione `0014` NON ancora applicata
+  al DB)**: tabella `consumer_price_index` (`category` = codice ECOICOP
+  della fonte, `recorded_at` = primo del mese UTC, `base_year` 2015/2025,
+  `index_value` nella base ORIGINALE — il raccordo si applica in lettura,
+  come i franchi di `swiss_fuel_prices` —, `yoy_change_pct` nullable,
+  `retrieved_at`, `fetch_run_id`, `source` = "istat_nic"). Unica su
+  (`category`, `recorded_at`), SENZA la base: le basi non si
+  sovrappongono, e un mese in due basi deve far scattare il conflitto.
+  Revisioni ISTAT → `data_corrections` (tabella generica, non va toccata).
+  Prossimo: fetcher + parser XML (test), poi cron e backfill.
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
