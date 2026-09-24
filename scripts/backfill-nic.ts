@@ -190,9 +190,16 @@ async function main(): Promise<number> {
   return 0;
 }
 
+// `process.exitCode` e non `process.exit()`: chiudere di colpo mentre la
+// connessione al database si sta ancora chiudendo fa stampare a Node su
+// Windows "Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)" (visto
+// al primo --save del 24/9, DOPO che le righe erano già scritte). Così
+// Node esce da solo quando non ha più niente in sospeso.
 main()
-  .then((code) => process.exit(code))
+  .then((code) => {
+    process.exitCode = code;
+  })
   .catch((err) => {
     console.error(err instanceof Error ? err.message : err);
-    process.exit(1);
+    process.exitCode = 1;
   });

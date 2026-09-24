@@ -1084,9 +1084,20 @@ ISTAT".
   1,301**, **`ENRGY` 1,501**, fissati in `CALCULATED_SPLICE_2015_TO_2025`.
   Dicembre 2025 in base 2025: generale 100,0, alimentari 100,6, carrello
   100,3, energetici 97,3 (energia in calo nel 2025, −4,5% a dicembre).
-  Resta: `npm run backfill:nic -- --file istat-nic-backfill.xml --save`.
-  Poi: UI (`/inflazione`, anteprima in home, metodologia con la fonte
-  ISTAT in `sources.ts` + la sua scheda).
+  **Salvato (24/9)**: `--file istat-nic-backfill.xml` → i quattro
+  coefficienti "coincide"; `--save` → **512 righe in
+  `consumer_price_index`, ultimo mese 2026-08** (quindi anche la
+  migrazione 0014 è applicata). Dopo il messaggio finale Node su Windows
+  ha stampato "Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)":
+  innocuo (righe già scritte), causato da `process.exit()` con la
+  connessione al database ancora in chiusura. Corretto in
+  `backfill-nic.ts` con `process.exitCode`. Gli altri script
+  (`backfill.ts`, `backfill-chokepoints.ts`, `chokepoint-baselines.ts`)
+  usano ancora `process.exit()`: se stampano lo stesso messaggio, stessa
+  correzione.
+  Prossimo: UI (`/inflazione`, anteprima in home, metodologia con la
+  fonte ISTAT in `sources.ts` + la sua scheda). Il cron partirà solo
+  dopo il merge (in Preview i cron non girano).
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
