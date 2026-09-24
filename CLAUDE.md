@@ -928,7 +928,7 @@ estrapolazioni causali. (Media UE ponderata e storico lungo, esclusi in
 origine, sono stati fatti il 15 set 2026: vedi i blocchi A e C in fondo.)
 
 **PUNTO DI RIPRESA — 25 set 2026 (Claude Code nel cloud, dopo le PR
-#29–#32).** Leggere questo blocco per primo. Il
+#29–#33).** Leggere questo blocco per primo. Il
 dettaglio è nelle voci in fondo a questa sezione: "Traffico marittimo",
 "CI rifatta", "Ricognizione ISTAT", "Sezione inflazione" e "Controllo
 grafico di tutto il sito".
@@ -954,6 +954,7 @@ grafico di tutto il sito".
 | #30 | Tabelle di Europa, calcolatore e materie prime leggibili su telefono |
 | #31 | Pagine `/paese/[slug]` e `/provincia/[slug]` nella cornice comune (header scuro, barra, link di ritorno) |
 | #32 | Bordo completo della forma sotto il mouse nelle mappe di province ed Europa |
+| #33 | Barra delle sezioni con margine su PC (icone solo sotto `lg`) |
 
 - **Stato**: traffico marittimo e sezione inflazione COMPLETI, tutto in
   `main` e in produzione: dati ISTAT (512 righe dal 2016), cron
@@ -1005,8 +1006,8 @@ grafico di tutto il sito".
   stesso: PortWatch aggiorna il martedì).
 - **Resta aperto, lavoro di codice**: niente di concordato. Fatti il
   25/9: pagine di dettaglio nella cornice comune (#31), bordo delle mappe
-  (#32), margine della barra delle sezioni (voce "Barra delle sezioni
-  senza icone su PC" in fondo).
+  (#32), margine della barra delle sezioni (#33, voce "Barra delle
+  sezioni senza icone su PC" in fondo).
 - **Come si è lavorato**: sessione Claude Code nel cloud, con accesso
   diretto al repo e alle PR via GitHub. Un passo alla volta: codice e
   screenshot con dati finti (Playwright, pagina di prova temporanea mai
@@ -2716,7 +2717,8 @@ sezione). Resta aperto:
   (Firenze, Austria). Chi aggiunge un'altra mappa con evidenziazione al
   passaggio del mouse usi lo stesso schema.
 
-- **Barra delle sezioni senza icone su PC (25 set 2026).** Misurato: con
+- **Barra delle sezioni senza icone su PC (25 set 2026, PR
+  drakekluser99/Mercuriale#33).** Misurato: con
   sette voci la barra occupava ~1273 px su 1280 (padding 168, icone 133,
   numeri 133, spaziatura delle lettere ~125), quindi ~7 px di margine e
   il rischio di rivedere "Panoramica" tagliata. Scelta di Yuri fra tre
