@@ -521,3 +521,24 @@ export async function getRecentChokepointTransits(since: Date): Promise<Chokepoi
     tradeVolumeEst: r.tradeVolumeEst === null ? null : Number(r.tradeVolumeEst),
   }));
 }
+
+/**
+ * Storico di UNA materia prima, come coppie giorno/valore (24 set 2026,
+ * grafico transiti + Brent). `getCommodityPriceHistory` porterebbe tutte e
+ * dieci le serie per usarne una sola.
+ */
+export async function getCommoditySymbolHistory(
+  symbol: string,
+  sinceDate: Date
+): Promise<{ date: string; value: number }[]> {
+  const rows = await db
+    .select({ price: priceHistory.price, recordedAt: priceHistory.recordedAt })
+    .from(priceHistory)
+    .innerJoin(commodities, eq(priceHistory.commodityId, commodities.id))
+    .where(and(eq(commodities.symbol, symbol), gte(priceHistory.recordedAt, sinceDate)))
+    .orderBy(priceHistory.recordedAt);
+  return rows.map((r) => ({
+    date: r.recordedAt.toISOString().slice(0, 10),
+    value: parseFloat(r.price),
+  }));
+}

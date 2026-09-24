@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ShippingSection } from "@/components/sections/ShippingSection";
 import { PageShell } from "@/components/site/PageShell";
-import { getNow, loadShipping } from "@/lib/dashboard";
+import { getNow, loadShipping, SHIPPING_CHART_INITIAL_WINDOW } from "@/lib/dashboard";
 import { sectionPage } from "@/lib/siteNav";
 
 export const dynamic = "force-dynamic";
@@ -15,12 +15,12 @@ export const metadata: Metadata = {
 };
 
 /**
- * /traffico-marittimo — sezione 05 (24 set 2026). Passo 1 della UI: le
- * schede per passaggio. Grafico con il Brent, mappa, cella in home e
- * metodologia arrivano nei passi successivi (vedi CLAUDE.md).
+ * /traffico-marittimo — sezione 05 (24 set 2026): schede per passaggio
+ * (passo 1) e grafico dei transiti con il Brent sotto (passo 2). Mappa,
+ * cella in home e metodologia arrivano nei passi successivi (CLAUDE.md).
  */
 export default async function TrafficoMarittimoPage() {
-  const { chokepoints, headline, run } = await loadShipping();
+  const { chokepoints, headline, run, chart } = await loadShipping();
   const now = getNow();
 
   return (
@@ -34,6 +34,8 @@ export default async function TrafficoMarittimoPage() {
         chokepoints={chokepoints}
         headline={headline}
         checkedAt={run?.startedAt ?? null}
+        chart={chart}
+        chartWindow={SHIPPING_CHART_INITIAL_WINDOW}
       />
     </PageShell>
   );

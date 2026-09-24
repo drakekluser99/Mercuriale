@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import type { PriceSeries } from "@/lib/priceHistory";
 import { HISTORY_WINDOWS, type HistoryWindowKey } from "@/lib/historyWindows";
+import { HistoryWindowSelector } from "@/components/HistoryWindowSelector";
 
 type PriceHistoryChartProps = {
   title: string;
@@ -114,37 +115,7 @@ export function PriceHistoryChart({
   const longRange = (activeWindow?.days ?? 0) > 365;
 
   const windowSelector = historyKind && (
-    <div
-      role="group"
-      aria-label="Periodo del grafico"
-      className="flex flex-wrap items-center gap-1"
-    >
-      {HISTORY_WINDOWS.map((w) => (
-        <button
-          key={w.key}
-          type="button"
-          onClick={() => selectWindow(w.key)}
-          aria-pressed={w.key === windowKey}
-          disabled={status === "loading"}
-          className={`rounded px-2 py-0.5 font-mono text-[11px] tabular-nums transition-colors disabled:cursor-wait ${
-            w.key === windowKey
-              ? "bg-system-ink text-system-surface"
-              : "text-system-ink-secondary hover:bg-system-panel hover:text-system-ink"
-          }`}
-        >
-          {w.label}
-        </button>
-      ))}
-      {/* Stato del caricamento, annunciato anche agli screen reader. */}
-      <span aria-live="polite" className="ml-1 text-xs text-system-ink-muted">
-        {status === "loading" && "Caricamento…"}
-        {status === "error" && (
-          <span className="text-system-signal-up">
-            Storico non disponibile, riprova più tardi.
-          </span>
-        )}
-      </span>
-    </div>
+    <HistoryWindowSelector active={windowKey} status={status} onSelect={selectWindow} />
   );
 
   if (!selected || selected.points.length === 0) {
