@@ -949,6 +949,7 @@ ISTAT" e "Sezione inflazione".
 | #26 | CLAUDE.md: storico NIC dal 1996 e questo punto di ripresa |
 | #27 | Inflazione: schema, fetcher ISTAT, raccordo, cron, backfill, pagina `/inflazione` (06), pagine secondarie nell'header |
 | #28 | Inflazione: grafico dal 2016, anteprima in home, metodologia |
+| #29 | Controllo grafico PC/telefono: barra, numero del giorno, tabella province, formati del grafico (voce "Controllo grafico" in fondo) |
 
 - **Stato**: traffico marittimo e sezione inflazione COMPLETI, tutto in
   `main` e in produzione: dati ISTAT (512 righe dal 2016), cron
@@ -2591,7 +2592,7 @@ sezione). Resta aperto:
   `main` con un rebase e sono nella PR drakekluser99/Mercuriale#28.
 
 - **Controllo grafico di tutto il sito (24 set 2026, sera, Claude Code nel
-  cloud).** Tutte le 13 pagine a 1400 px e 390 px, con `queries.ts`
+  cloud, PR drakekluser99/Mercuriale#29).** Tutte le 13 pagine a 1400 px e 390 px, con `queries.ts`
   sostituito TEMPORANEAMENTE da una versione a dati finti (mai
   committata: le pagine vere girano identiche, cambia solo l'origine dei
   numeri) e uno script Playwright che segnala sbordi orizzontali e
