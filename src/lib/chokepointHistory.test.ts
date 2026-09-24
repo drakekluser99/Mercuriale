@@ -9,6 +9,8 @@ import {
   percentile,
   rollingDeviations,
   seasonalBaseline,
+  STRONGLY_REDUCED_BELOW_PCT,
+  transitState,
 } from "./chokepointHistory";
 
 describe("findDateGaps", () => {
@@ -178,5 +180,23 @@ describe("percentile", () => {
     expect(percentile(v, 100)).toBe(5);
     expect(percentile(v, 5)).toBeCloseTo(1.2, 10);
     expect(percentile([5, 1, 3], 50)).toBe(3); // ordine in ingresso indifferente
+  });
+});
+
+describe("transitState", () => {
+  it("tre stati, con le soglie 'sotto' strette", () => {
+    expect(transitState(5, -15.6)).toBe("normale");
+    expect(transitState(-15.6, -15.6)).toBe("normale");
+    expect(transitState(-15.7, -15.6)).toBe("ridotto");
+    expect(transitState(-40, -15.6)).toBe("ridotto");
+    expect(transitState(-40.1, -15.6)).toBe("fortemente_ridotto");
+    expect(transitState(-96.8, -15.6)).toBe("fortemente_ridotto");
+  });
+
+  it("le soglie 'ridotto' stanno fra lo zero e quella comune", () => {
+    for (const b of Object.values(CHOKEPOINT_BASELINES)) {
+      expect(b.reducedBelowPct).toBeLessThan(0);
+      expect(b.reducedBelowPct).toBeGreaterThan(STRONGLY_REDUCED_BELOW_PCT);
+    }
   });
 });

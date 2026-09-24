@@ -200,7 +200,8 @@ export function seasonalBaseline(
 
 // ─── Baseline fissate (24 set 2026) ───────────────────────────────────────
 
-export type ChokepointBaseline =
+/** Solo il "normale": metodo, periodo, rottura e valori. */
+export type BaselineValues =
   | {
       method: "stagionale";
       period: BaselinePeriod;
@@ -216,6 +217,13 @@ export type ChokepointBaseline =
       /** Transiti medi al giorno. */
       value: number;
     };
+
+/**
+ * Baseline completa: il "normale" più la soglia sotto cui la media dei
+ * 7 giorni diventa "ridotto" (percentuale negativa, es. −15,6). La seconda
+ * soglia, "fortemente ridotto", è comune: STRONGLY_REDUCED_BELOW_PCT.
+ */
+export type ChokepointBaseline = BaselineValues & { reducedBelowPct: number };
 
 /**
  * Il "traffico normale" di ciascun passaggio, per colorare la mappa e per
@@ -253,6 +261,9 @@ export const CHOKEPOINT_BASELINES = {
     method: "stagionale",
     period: { from: "2022-11-01", to: "2025-10-31" },
     breakDate: "2026-03-01",
+    // 5° percentile dello scostamento della media a 7 giorni nel periodo
+    // di riferimento (1.090 finestre; minimo −31,4%). Vedi sotto.
+    reducedBelowPct: -15.6,
     //        gen    feb    mar    apr     mag     giu     lug    ago    set    ott    nov    dic
     monthly: [73.14, 77.8, 88.28, 99.98, 103.85, 103.04, 99.67, 97.17, 98.1, 91.55, 81.62, 74.88],
   },
@@ -261,11 +272,13 @@ export const CHOKEPOINT_BASELINES = {
     period: { from: "2022-12-16", to: "2023-12-15" },
     breakDate: "2023-12-16",
     value: 74.8,
+    // 5° percentile nel periodo di riferimento (359 finestre; minimo −13,3%).
+    reducedBelowPct: -8.1,
   },
 } as const satisfies Record<string, ChokepointBaseline>;
 
 /** Il valore "normale" per un giorno: quello del suo mese, o quello unico. */
-export function baselineFor(baseline: ChokepointBaseline, date: string): number {
+export function baselineFor(baseline: BaselineValues, date: string): number {
   return baseline.method === "stagionale"
     ? baseline.monthly[Number(date.slice(5, 7)) - 1]
     : baseline.value;
@@ -302,7 +315,7 @@ export type RollingDeviation = {
  */
 export function rollingDeviations(
   points: DailyTransits[],
-  baseline: ChokepointBaseline,
+  baseline: BaselineValues,
   period: BaselinePeriod,
   windowDays = 7
 ): RollingDeviation[] {
@@ -338,4 +351,49 @@ export function percentile(values: number[], p: number): number {
   const lo = Math.floor(rank);
   const hi = Math.ceil(rank);
   return sorted[lo] + (sorted[hi] - sorted[lo]) * (rank - lo);
+}
+
+// ─── Stati del traffico (24 set 2026) ─────────────────────────────────────
+//
+// Tre stati con un nome, non una scala continua di colore: nel sito il
+// verde vuol dire "sotto la media / in discesa" e per i prezzi si legge
+// come una buona notizia, quindi un passaggio chiuso dipinto di verde
+// direbbe il contrario del vero. L'etichetta scritta accompagna sempre il
+// colore.
+//
+// Soglie scelte sui dati (npm run chokepoint:baselines, 24/9/2026), sulla
+// media dei 7 giorni rispetto alla baseline:
+//
+// - "ridotto" sotto il 5° PERCENTILE del periodo di riferimento, diverso
+//   per passaggio perché Hormuz oscilla il doppio di Bab el-Mandeb anche
+//   in tempi normali (p5 −15,6% contro −8,1%). Vuol dire "sotto a quello
+//   che succede nel 95% delle settimane normali": circa una settimana
+//   normale su venti risulta comunque "ridotto", ed è accettato — non è
+//   un allarme.
+// - "fortemente ridotto" sotto −40%, COMUNE ai due passaggi: sta sotto
+//   ogni settimana normale di entrambi (la peggiore: −31,4% a Hormuz) e
+//   sopra quasi tutte le settimane dopo le rotture. Non −50%: Bab
+//   el-Mandeb dal 2024 oscilla attorno a −55% con circa il 10% delle
+//   settimane sopra −50%, e lo stato cambierebbe di continuo senza che
+//   la situazione cambi.
+// - Nessuno stato "aumentato": anche +15% è oscillazione normale.
+
+export const STRONGLY_REDUCED_BELOW_PCT = -40;
+
+export type TransitState = "normale" | "ridotto" | "fortemente_ridotto";
+
+export const TRANSIT_STATE_LABELS: Record<TransitState, string> = {
+  normale: "normale",
+  ridotto: "ridotto",
+  fortemente_ridotto: "fortemente ridotto",
+};
+
+/**
+ * Lo stato di uno scostamento percentuale. Le soglie sono "sotto"
+ * strette: esattamente −40% è ancora "ridotto".
+ */
+export function transitState(deviationPct: number, reducedBelowPct: number): TransitState {
+  if (deviationPct < STRONGLY_REDUCED_BELOW_PCT) return "fortemente_ridotto";
+  if (deviationPct < reducedBelowPct) return "ridotto";
+  return "normale";
 }

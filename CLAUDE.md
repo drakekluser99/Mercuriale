@@ -1855,13 +1855,39 @@ sezione). Resta aperto:
       di settembre), Bab el-Mandeb 24,71 (−67,0%). Anche Bab el-Mandeb è
       sceso ad agosto–settembre 2026 (27,4 e 25,9 di media, contro 31–37
       del 2024–2026): osservato, non interpretato.
-  - **Da fare**: la UI (cella nella fascia, mappa a punti colorata sullo
-    scostamento da `CHOKEPOINT_BASELINES`, pagina dedicata con il Brent
-    affiancato) e la sezione in metodologia che dichiara i due metodi, i
-    periodi e le date di rottura. Con la UI vanno aggiunti anche `imf_portwatch` a
-    `sources.ts` e a `freshness/config.ts` e l'etichetta del job in
-    `/stato-dati`: fino ad allora la card lì mostra il nome grezzo
-    `fetch-chokepoint-transits` (scelta accettata).
+  - **Stati del traffico — FISSATI (24 set 2026)**: tre stati con nome
+    (`transitState`, `TRANSIT_STATE_LABELS` in `chokepointHistory.ts`),
+    NON una scala continua: il verde nel sito vuol dire "sotto la media",
+    e per i prezzi si legge come buona notizia — un passaggio chiuso in
+    verde direbbe il contrario del vero. Colori previsti: normale =
+    neutro, ridotto = ocra (`signal-wait`), fortemente ridotto = ruggine
+    (`signal-up`), sempre con l'etichetta scritta. Si confronta la **media
+    degli ultimi 7 giorni** con la baseline del giorno finale
+    (`rollingDeviations`): il singolo giorno oscilla troppo.
+    - **"ridotto"** sotto il **5° percentile** dello scostamento nel
+      periodo di riferimento, per passaggio (`reducedBelowPct`): Hormuz
+      **−15,6%**, Bab el-Mandeb **−8,1%** (Hormuz oscilla il doppio).
+      Circa una settimana normale su venti risulta "ridotto": accettato.
+    - **"fortemente ridotto"** sotto **−40%**, comune
+      (`STRONGLY_REDUCED_BELOW_PCT`): sotto ogni settimana normale di
+      entrambi (peggiore −31,4% a Hormuz), sopra quasi tutte quelle dopo
+      le rotture. Non −50%: Bab el-Mandeb dal 2024 sta attorno a −55% con
+      ~10% delle settimane sopra −50%, lo stato cambierebbe di continuo.
+    - Nessuno stato "aumentato" (anche +15% è oscillazione normale).
+      `npm run chokepoint:baselines` stampa percentili e conteggio per
+      stato di ogni periodo.
+  - **Registri — FATTO (24 set 2026)**: fonte `imf-portwatch` (primaria)
+    in `sources.ts`; freschezza `imf_portwatch` **9 + 4 giorni** (dati
+    giornalieri pubblicati il martedì fino alla domenica prima: subito
+    prima dell'uscita successiva il dato ha ~9 giorni); `/stato-dati` ha
+    etichetta e badge per `fetch-chokepoint-transits`.
+  - **Da fare (UI, un passo alla volta)**: pagina `/traffico-marittimo`
+    come sezione 05 (schede per passaggio, grafico dei transiti con il
+    Brent sotto e linea del normale, `kind=chokepoints` in
+    `/api/history`), mappa regionale Italia–Golfo con `Marker` di
+    react-simple-maps (niente dipendenze nuove), sesta cella nella fascia
+    della home + quinta anteprima, sezione in metodologia (metodi,
+    periodi, rotture, soglie, `capacity = 0`).
 
 ## Skill: vercel-react-best-practices
 
