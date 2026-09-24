@@ -100,7 +100,7 @@ export function groupFuelHistory(rows: FuelHistoryRow[]): PriceSeries[] {
   }
 
   const CONTINENT_LABELS: Record<string, string> = {
-    europe: "Europa (media UE)",
+    europe: "Europa (media dei 27)",
     north_america: "USA",
     oceania: "Oceania",
     latam: "LatAm",

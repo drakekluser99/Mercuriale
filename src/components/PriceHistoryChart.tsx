@@ -13,6 +13,16 @@ import {
 import type { PriceSeries } from "@/lib/priceHistory";
 import { HISTORY_WINDOWS, type HistoryWindowKey } from "@/lib/historyWindows";
 import { HistoryWindowSelector } from "@/components/HistoryWindowSelector";
+import { shortUnit } from "@/lib/format";
+
+// Separatori italiani anche dentro il grafico (regola del sito: mai il
+// punto decimale in pagina). Le tacche dell'asse mostrano solo i decimali
+// che servono, il tooltip sempre tre come le tabelle dei carburanti.
+const axisNumber = new Intl.NumberFormat("it-IT", { maximumFractionDigits: 4 });
+const tooltipNumber = new Intl.NumberFormat("it-IT", {
+  minimumFractionDigits: 3,
+  maximumFractionDigits: 3,
+});
 
 type PriceHistoryChartProps = {
   title: string;
@@ -149,7 +159,7 @@ export function PriceHistoryChart({
       : last.value < first.value
         ? "in discesa"
         : "stabile";
-  const chartSummary = `Andamento di ${selected.label}${activeWindow ? ` negli ultimi ${activeWindow.label}` : ""}: da ${first.value.toFixed(3)} a ${last.value.toFixed(3)} ${selected.unit}, ${trend} nel periodo. Minimo ${min.toFixed(3)}, massimo ${max.toFixed(3)} ${selected.unit}, su ${selected.points.length} punti.`;
+  const chartSummary = `Andamento di ${selected.label}${activeWindow ? ` negli ultimi ${activeWindow.label}` : ""}: da ${tooltipNumber.format(first.value)} a ${tooltipNumber.format(last.value)} ${shortUnit(selected.unit)}, ${trend} nel periodo. Minimo ${tooltipNumber.format(min)}, massimo ${tooltipNumber.format(max)} ${shortUnit(selected.unit)}, su ${selected.points.length} punti.`;
   const showDots = selected.points.length <= MAX_POINTS_WITH_DOTS;
 
   return (
@@ -227,10 +237,11 @@ export function PriceHistoryChart({
               tick={{ fontSize: 11, fill: "var(--color-system-ink-muted)" }}
               width={48}
               domain={["auto", "auto"]}
+              tickFormatter={(value: number) => axisNumber.format(value)}
             />
             <Tooltip
               formatter={(value) => [
-                `${Number(value).toFixed(3)} ${selected.unit}`,
+                `${tooltipNumber.format(Number(value))} ${shortUnit(selected.unit)}`,
                 selected.label,
               ]}
               labelFormatter={(label) =>
@@ -261,7 +272,7 @@ export function PriceHistoryChart({
       </div>
 
       <p className="mt-2 text-xs text-system-ink-muted">
-        Unità: {selected.unit} · {selected.points.length}{" "}
+        Unità: {shortUnit(selected.unit)} · {selected.points.length}{" "}
         {selected.points.length === 1 ? "punto" : "punti"} nel periodo
         {longRange &&
           " · sui periodi lunghi ogni punto è la media di più rilevazioni consecutive"}

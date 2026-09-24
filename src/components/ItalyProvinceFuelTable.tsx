@@ -146,15 +146,20 @@ export function ItalyProvinceFuelTable({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[420px] text-sm">
+          {/* Sotto `sm` niente larghezza minima e l'unità "€/L" sta
+              nell'intestazione invece che in ogni cella: con 420 px fissi
+              la colonna del gasolio usciva dallo schermo del telefono. */}
+          <table className="w-full text-sm sm:min-w-[420px]">
             <thead>
               <tr className="border-b border-system-border text-left font-mono text-xs uppercase tracking-wider text-system-ink-secondary">
-                <th className="px-4 py-3 font-medium">Provincia</th>
-                <th className="px-4 py-3 text-right font-medium">
+                <th className="px-3 py-3 font-medium sm:px-4">Provincia</th>
+                <th className="px-3 py-3 text-right font-medium sm:px-4">
                   Benzina self
+                  <span className="block normal-case tracking-normal text-system-ink-muted sm:hidden">€/L</span>
                 </th>
-                <th className="px-4 py-3 text-right font-medium">
+                <th className="px-3 py-3 text-right font-medium sm:px-4">
                   Gasolio self
+                  <span className="block normal-case tracking-normal text-system-ink-muted sm:hidden">€/L</span>
                 </th>
               </tr>
             </thead>
@@ -173,7 +178,7 @@ export function ItalyProvinceFuelTable({
                     onClick={() => router.push(href)}
                     className="cursor-pointer border-b border-system-border-subtle transition-colors last:border-0 hover:bg-system-bg"
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3 sm:px-4">
                       <Link
                         href={href}
                         className="text-system-ink hover:text-system-accent hover:underline"
@@ -181,15 +186,25 @@ export function ItalyProvinceFuelTable({
                         {r.provinceName}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono tabular-nums">
-                      {r.petrolSelf !== null
-                        ? `${formatFuelPrice(r.petrolSelf)} €/L`
-                        : "—"}
+                    <td className="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap sm:px-4">
+                      {r.petrolSelf !== null ? (
+                        <>
+                          {formatFuelPrice(r.petrolSelf)}
+                          <span className="max-sm:hidden"> €/L</span>
+                        </>
+                      ) : (
+                        "—"
+                      )}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono tabular-nums">
-                      {r.dieselSelf !== null
-                        ? `${formatFuelPrice(r.dieselSelf)} €/L`
-                        : "—"}
+                    <td className="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap sm:px-4">
+                      {r.dieselSelf !== null ? (
+                        <>
+                          {formatFuelPrice(r.dieselSelf)}
+                          <span className="max-sm:hidden"> €/L</span>
+                        </>
+                      ) : (
+                        "—"
+                      )}
                     </td>
                   </tr>
                 );

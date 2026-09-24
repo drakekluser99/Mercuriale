@@ -80,7 +80,7 @@ export function SectionNav() {
               href={href}
               // `aria-current="page"`: per uno screen reader, "sei qui".
               aria-current={isActive ? "page" : undefined}
-              className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-l border-l-system-chrome-border px-4 py-3 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors first:border-l-0 hover:bg-white/[0.03] hover:text-system-chrome-accent sm:px-5 lg:px-4 ${
+              className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-l border-l-system-chrome-border px-4 py-3 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors first:border-l-0 hover:bg-white/[0.03] hover:text-system-chrome-accent sm:px-5 lg:px-3 ${
                 isActive
                   ? "border-b-system-chrome-accent bg-white/[0.05] text-system-chrome-accent"
                   : "border-b-transparent text-system-chrome-ink-muted"

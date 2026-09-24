@@ -2590,6 +2590,39 @@ sezione). Resta aperto:
   passi 2-4 (grafico, home, metodologia) sono stati riportati sopra
   `main` con un rebase e sono nella PR drakekluser99/Mercuriale#28.
 
+- **Controllo grafico di tutto il sito (24 set 2026, sera, Claude Code nel
+  cloud).** Tutte le 13 pagine a 1400 px e 390 px, con `queries.ts`
+  sostituito TEMPORANEAMENTE da una versione a dati finti (mai
+  committata: le pagine vere girano identiche, cambia solo l'origine dei
+  numeri) e uno script Playwright che segnala sbordi orizzontali e
+  riquadri scorrevoli con contenuto nascosto. Nessuno sbordo della
+  pagina. Corretti:
+  - **Barra delle sezioni**: con sette voci era 1322 px in 1280, quindi
+    scorreva e "Panoramica" restava tagliata a sinistra su PC. Voci
+    `lg:px-3` (erano `lg:px-4`): ora 1280 su 1280. **Non c'è margine**:
+    un'etichetta più lunga la fa scorrere di nuovo.
+  - "Il numero del giorno": cifra e unità separate ("26,7" grande,
+    "miliardi di €" più piccolo); prima "€" restava solo sull'ultima riga.
+  - Fascia, "Ultimo dato": solo la data (`formatDate`), era data + "00:00".
+  - Tabella province su telefono: la colonna del gasolio usciva dallo
+    schermo. Sotto `sm` niente `min-w`, `px-3`, "€/L" nell'intestazione.
+  - Legenda della mappa d'Europa su telefono: "media dei 27" sopra il suo
+    valore (i tre gruppi erano attaccati).
+  - `PriceHistoryChart`: asse, tooltip e riassunto accessibile col punto
+    decimale e l'unità inglese ("dollars per barrel"); ora `it-IT` e
+    `shortUnit`. Prezzo e "€" su una riga in `FuelPriceTable`.
+  - "Europa (media UE)" → "Europa (media dei 27)" nel calcolatore e nelle
+    serie del grafico carburanti (è la media semplice).
+  **Resta aperto**: su telefono le tabelle di `/europa`, `/calcolatore` e
+  `/materie-prime` scorrono di lato e a prima vista nascondono una
+  colonna (la data; nel calcolatore l'intera colonna Stati Uniti). Serve
+  un layout apposta per il telefono, non un ritocco. Le pagine
+  `/paese/[slug]` e `/provincia/[slug]` hanno ancora la cornice vecchia
+  (senza header scuro né barra).
+  Nello stesso giro: script Playwright per screenshot e video del post
+  LinkedIn, da lanciare dal PC contro la produzione (dal cloud il sito
+  non si raggiunge). Non è nel repository.
+
 ## Skill: vercel-react-best-practices
 
 Skill installata in .claude/skills/vercel-react-best-practices/.

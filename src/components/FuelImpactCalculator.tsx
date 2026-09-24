@@ -86,7 +86,7 @@ function useNumericField(defaultValue: number) {
 }
 
 /**
- * Calcolatore d'impatto costi carburante: Europa (media UE) vs Stati Uniti,
+ * Calcolatore d'impatto costi carburante: Europa (media dei 27) vs Stati Uniti,
  * fianco a fianco, ciascuna regione nella propria valuta originale.
  *
  * NON converte EUR↔USD: un tasso di cambio aggiornato non è ancora
@@ -108,7 +108,7 @@ export default function FuelImpactCalculator({ europe, us }: Props) {
 
   // Colonne della tabella: una per regione. La riga d'intestazione le nomina.
   const regions = [
-    { key: "eu", label: "Europa (media UE)", data: europe },
+    { key: "eu", label: "Europa (media dei 27)", data: europe },
     { key: "us", label: "Stati Uniti", data: us },
   ];
 

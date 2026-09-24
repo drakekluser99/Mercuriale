@@ -29,7 +29,6 @@ import { displayCommodityPrice } from "@/lib/commodityDisplay";
 import {
   formatCommodityPrice,
   formatDate,
-  formatDateTime,
   formatFuelPrice,
   formatDecimal,
   formatPercent,
@@ -480,7 +479,7 @@ export const loadSummary = cache(async () => {
     {
       key: "ultimo-dato",
       label: "Ultimo dato",
-      value: lastUpdated ? formatDateTime(lastUpdated) : "n/d",
+      value: lastUpdated ? formatDate(lastUpdated) : "n/d",
       note: "Materie prime: ogni giorno",
     },
     {
