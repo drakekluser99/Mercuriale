@@ -1007,7 +1007,23 @@ ISTAT".
   (`category`, `recorded_at`), SENZA la base: le basi non si
   sovrappongono, e un mese in due basi deve far scattare il conflitto.
   Revisioni ISTAT → `data_corrections` (tabella generica, non va toccata).
-  Prossimo: fetcher + parser XML (test), poi cron e backfill.
+  **Fetcher — FATTO (24/9, branch)**: `src/lib/fetchers/istatNic.ts`.
+  `buildNicUrl(dataTypes, startPeriod)` = UNA richiesta con le 4 serie e
+  le misure 4+7 unite da `+`, niente `endPeriod` (ignorato dal server).
+  `parseNicGenericData` (pura) legge il GenericData con espressioni
+  regolari e non con una libreria XML (forma fissa e piatta; ogni pezzo
+  inatteso deve comunque fermare il parser): ricompone indice e
+  variazione in UNA riga per (serie, mese); si ferma su testo non XML
+  (gli errori ISTAT sono testo semplice), base/categoria/misura/frequenza
+  sconosciute, mese non "AAAA-MM", valore vuoto o non numerico (mai zero),
+  stesso mese in due basi, misura ripetuta, variazione senza indice.
+  `assertAllCategories` (separata: regola di chi chiama) fa fermare il run
+  se manca una serie. `fetchNic`: timeout 8 s, NESSUN nuovo tentativo, su
+  429 lo dice ("NON riprovare"). `monthToDate` → primo del mese UTC. Test
+  in `istatNic.test.ts` sul file VERO della query 9, salvato in
+  `src/lib/fetchers/fixtures/istat-nic-2025-11.xml`.
+  Prossimo: salvataggio (upsert + `data_corrections`), raccordo con i
+  coefficienti e il controllo, poi cron e backfill.
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
