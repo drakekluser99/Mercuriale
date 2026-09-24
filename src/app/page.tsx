@@ -9,9 +9,10 @@ import {
   loadCommodities,
   loadFuel,
   loadItaly,
+  loadShipping,
   loadSummary,
 } from "@/lib/dashboard";
-import { formatFuelPrice, formatPercent } from "@/lib/format";
+import { formatDecimal, formatFuelPrice, formatPercent } from "@/lib/format";
 import { sectionPage } from "@/lib/siteNav";
 
 export const dynamic = "force-dynamic";
@@ -25,19 +26,21 @@ export const dynamic = "force-dynamic";
  * - qui restano la fascia dei valori, la sintesi della settimana e una
  *   cifra chiave per ogni sezione, con il link alla sua pagina;
  * - il dettaglio (mappe, tabelle, grafici, calcolatore) vive in /europa,
- *   /calcolatore, /materie-prime e /italia (elenco in src/lib/siteNav.ts).
+ *   /calcolatore, /materie-prime, /italia e /traffico-marittimo (elenco in
+ *   src/lib/siteNav.ts).
  *
  * I dati arrivano da src/lib/dashboard.ts, lo stesso modulo che usano le
  * pagine di sezione: i numeri in anteprima sono per costruzione gli stessi
  * che si trovano aprendo la pagina.
  */
 export default async function Home() {
-  const [summary, fuel, commodities, italy, calc] = await Promise.all([
+  const [summary, fuel, commodities, italy, calc, shipping] = await Promise.all([
     loadSummary(),
     loadFuel(),
     loadCommodities(),
     loadItaly(),
     loadCalculator(),
+    loadShipping(),
   ]);
   const now = getNow();
 
@@ -45,13 +48,15 @@ export default async function Home() {
   const calcolatore = sectionPage("/calcolatore");
   const materiePrime = sectionPage("/materie-prime");
   const italia = sectionPage("/italia");
+  const traffico = sectionPage("/traffico-marittimo");
+  const ship = shipping.headline;
   const { italyGap, countrySpread } = fuel;
   const mover = commodities.topMover;
 
   return (
     <PageShell
       title="Prezzi di materie prime e carburanti"
-      intro="Dati raccolti da fonti pubbliche — Commissione Europea, EIA, Ministero delle Imprese, Alpha Vantage — aggiornati alla cadenza di ciascuna fonte, con fonte, data e limiti dichiarati."
+      intro="Dati raccolti da fonti pubbliche — Commissione Europea, EIA, Ministero delle Imprese, Alpha Vantage, IMF PortWatch — aggiornati alla cadenza di ciascuna fonte, con fonte, data e limiti dichiarati."
       consultedOn={now}
       backdropPoints={summary.heroSeries}
       headerExtra={summary.lastUpdated && <TickerBand stats={summary.headerStats} />}
@@ -122,6 +127,22 @@ export default async function Home() {
               ? `Di differenza sulla benzina self fra ${italy.spread.highest.provinceName} e ${italy.spread.lowest.provinceName}. Mappa e classifica delle 107 province.`
               : "Mappa e classifica delle 107 province italiane."}
           </SectionPreview>
+          {/* Quinta anteprima: su due colonne resterebbe sola a metà riga,
+              quindi occupa tutta la larghezza. */}
+          <div className="md:col-span-2">
+            <SectionPreview
+              href={traffico.href}
+              number={traffico.number}
+              title={traffico.label}
+              value={
+                ship && ship.deviationPct !== null ? formatPercent(ship.deviationPct, 0) : null
+              }
+            >
+              {ship && ship.mean7 !== null
+                ? `${ship.name}: ${formatDecimal(ship.mean7)} navi al giorno negli ultimi 7 giorni, contro le ${formatDecimal(ship.baseline)} del ${ship.baselineLabel}. Mappa, schede e grafico con il Brent per Hormuz e Bab el-Mandeb.`
+                : "Navi in transito negli stretti di Hormuz e Bab el-Mandeb: mappa, schede e grafico con il Brent."}
+            </SectionPreview>
+          </div>
         </div>
       </section>
     </PageShell>

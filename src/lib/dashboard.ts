@@ -12,7 +12,11 @@ import {
   getLatestSwissFuelRows,
   getRecentChokepointTransits,
 } from "@/lib/db/queries";
-import { furthestFromNormal, summarizeChokepoints } from "@/lib/chokepointStatus";
+import {
+  CHOKEPOINT_SHORT_NAMES,
+  furthestFromNormal,
+  summarizeChokepoints,
+} from "@/lib/chokepointStatus";
 import { loadShippingChart } from "@/lib/shippingChartData";
 import { summarizeSwissFuel } from "@/lib/swissFuel";
 import { summarizeEuWeightedAverage } from "@/lib/euWeightedAverage";
@@ -23,6 +27,7 @@ import {
   formatDate,
   formatDateTime,
   formatFuelPrice,
+  formatDecimal,
   formatPercent,
   shortUnit,
   currencySymbol,
@@ -295,7 +300,12 @@ export const loadItaly = cache(async () => {
  */
 export const SHIPPING_CHART_INITIAL_WINDOW = "1a" as const;
 
-const shippingChartQ = cache(() =>
+/**
+ * Grafico della pagina /traffico-marittimo: un anno di transiti e di
+ * Brent. Letto a parte da `loadShipping`, che serve anche alla home: lì il
+ * grafico non c'è, e quella query sarebbe lavoro buttato a ogni visita.
+ */
+export const loadShippingChartInitial = cache(() =>
   loadShippingChart(SHIPPING_CHART_INITIAL_WINDOW, getNow()).catch((err) => {
     console.error("Grafico traffico marittimo non disponibile:", err);
     return [];
@@ -303,7 +313,7 @@ const shippingChartQ = cache(() =>
 );
 
 export const loadShipping = cache(async () => {
-  const [rows, runs, chart] = await Promise.all([chokepointQ(), fetchRunsQ(), shippingChartQ()]);
+  const [rows, runs] = await Promise.all([chokepointQ(), fetchRunsQ()]);
   const now = getNow();
   const freshnessConfig = getFreshnessConfig("imf_portwatch");
   const chokepoints = summarizeChokepoints(rows).map((s) => {
@@ -318,7 +328,6 @@ export const loadShipping = cache(async () => {
     chokepoints,
     headline: furthestFromNormal(chokepoints),
     run: findRun(runs, "fetch-chokepoint-transits"),
-    chart,
   };
 });
 
@@ -349,13 +358,27 @@ export const loadCalculator = cache(async () => {
   };
 });
 
+function shippingStat(headline: Awaited<ReturnType<typeof loadShipping>>["headline"]): TickerStat {
+  if (!headline || headline.mean7 === null || headline.deviationPct === null) {
+    return { key: "traffico", label: "Traffico marittimo", value: "n/d" };
+  }
+  return {
+    key: "traffico",
+    label: CHOKEPOINT_SHORT_NAMES[headline.key],
+    value: formatDecimal(headline.mean7),
+    unit: "navi/g",
+    note: `normale ${formatDecimal(headline.baseline, 0)} · ${formatPercent(headline.deviationPct, 0)}`,
+  };
+}
+
 // ─── Panoramica (home) ──────────────────────────────────────────────────
 
 export const loadSummary = cache(async () => {
-  const [commodities, fuel, narratives] = await Promise.all([
+  const [commodities, fuel, narratives, shipping] = await Promise.all([
     loadCommodities(),
     loadFuel(),
     narrativesQ(),
+    loadShipping(),
   ]);
   const now = getNow();
 
@@ -387,6 +410,13 @@ export const loadSummary = cache(async () => {
     const mostRecent = new Date(Math.max(...fuels.map((f) => f.recordedAt.getTime())));
     const state = computeFreshness(mostRecent, getFreshnessConfig(source), now);
     sourceStates.set(source, (sourceStates.get(source) ?? false) || state !== "non_aggiornato");
+  }
+  // IMF PortWatch: in linea se almeno un passaggio ha il dato nei tempi.
+  if (shipping.chokepoints.length > 0) {
+    sourceStates.set(
+      "imf_portwatch",
+      shipping.chokepoints.some((c) => c.freshness !== "non_aggiornato")
+    );
   }
   const sourcesOnline = Array.from(sourceStates.values()).filter(Boolean).length;
   const sourcesTotal = sourceStates.size;
@@ -425,6 +455,12 @@ export const loadSummary = cache(async () => {
       unit: avg.diesel !== null ? `${currencySymbol(avg.currency)}/L` : undefined,
       ...changeNote(changeOf(fuel.series, "europe|diesel"), 30),
     },
+    // Traffico marittimo (24 set 2026): il passaggio più lontano dal
+    // normale, media degli ultimi 7 giorni. Nota in tono NEUTRO: il verde
+    // "in discesa" direbbe una buona notizia, la ruggine "in salita" il
+    // contrario del vero. Il nome del passaggio è l'etichetta: se un
+    // giorno l'altro si allontana di più, la cella lo dice da sé.
+    shippingStat(shipping.headline),
     {
       key: "ultimo-dato",
       label: "Ultimo dato",

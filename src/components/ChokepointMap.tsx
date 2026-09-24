@@ -2,7 +2,11 @@
 
 import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
 import { TRANSIT_STATE_LABELS, type TransitState } from "@/lib/chokepointHistory";
-import type { ChokepointKey, ChokepointSummary } from "@/lib/chokepointStatus";
+import {
+  CHOKEPOINT_SHORT_NAMES,
+  type ChokepointKey,
+  type ChokepointSummary,
+} from "@/lib/chokepointStatus";
 import { NO_DATA_FILL } from "@/lib/divergingColor";
 import { formatPercent } from "@/lib/format";
 import { WORLD_ATLAS_50M_URL } from "@/lib/geo";
@@ -45,11 +49,6 @@ const COORDINATES: Record<ChokepointKey, [number, number]> = {
 const LABEL_POSITION: Record<ChokepointKey, "left" | "below"> = {
   hormuz: "left",
   bab_el_mandeb: "below",
-};
-
-const SHORT_NAMES: Record<ChokepointKey, string> = {
-  hormuz: "Hormuz",
-  bab_el_mandeb: "Bab el-Mandeb",
 };
 
 // Variabili CSS e non hex: i token restano la fonte unica dei colori
@@ -158,7 +157,7 @@ export function ChokepointMap({ chokepoints }: { chokepoints: ChokepointSummary[
                   className="text-[30px] max-sm:text-[46px]"
                   style={{ ...halo, fill: "var(--color-system-ink)", fontWeight: 600 }}
                 >
-                  {SHORT_NAMES[c.key]}
+                  {CHOKEPOINT_SHORT_NAMES[c.key]}
                 </text>
                 <text
                   x={x}
@@ -190,7 +189,7 @@ export function ChokepointMap({ chokepoints }: { chokepoints: ChokepointSummary[
               style={{ background: c.state ? STATE_COLORS[c.state] : INCOMPLETE_COLOR }}
             />
             <span className="flex flex-wrap gap-x-2">
-              <span className="whitespace-nowrap font-medium">{SHORT_NAMES[c.key]}</span>
+              <span className="whitespace-nowrap font-medium">{CHOKEPOINT_SHORT_NAMES[c.key]}</span>
               <span className="whitespace-nowrap font-mono tabular-nums text-system-ink-secondary">
                 {detailText(c)}
               </span>

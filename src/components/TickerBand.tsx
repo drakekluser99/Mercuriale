@@ -58,11 +58,13 @@ export function TickerBand({ stats }: TickerBandProps) {
        attraverserebbe la fascia invece di fermarsi dietro. */
     <div className="relative border-y border-system-chrome-border bg-system-chrome-raised">
       <div className="mx-auto max-w-7xl">
-        {/* 2 colonne su mobile, tutte in riga da `lg` in su. I divisori
+        {/* 2 colonne su mobile, tutte e sei in riga da `lg` in su (sei
+            dal 24 set 2026, con il traffico marittimo: su due colonne
+            restano tre righe pari). I divisori
             verticali (border-l) esistono solo dove le celle stanno
             davvero su una riga sola: su due colonne un border-l cadrebbe
             a metà di righe che vanno a capo. */}
-        <div className="grid grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-2 lg:grid-cols-6">
           {stats.map((stat, i) => {
             // Contenuto condiviso fra la cella "muta" (div) e quella
             // cliccabile (Link, solo quando stat.href è presente — vedi
