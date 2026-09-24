@@ -106,6 +106,24 @@ export function formatBillionsEur(valueEur: number): string {
 }
 
 /**
+ * Tonnellate con la scala adatta al valore (es. carico stimato delle navi
+ * in un passaggio marittimo): 3.352.114 -> "3,4 milioni di t",
+ * 52.310 -> "52 mila t", 850 -> "850 t". Un decimale sui milioni e
+ * nessuno sotto: è una STIMA della fonte, e "3.352.114 t" suggerirebbe
+ * una precisione al chilo che non ha. Con Hormuz quasi chiuso (1–7 navi
+ * al giorno) il valore scende a decine di migliaia: "0,05 milioni di t"
+ * sarebbe illeggibile, da qui la scala che cambia.
+ */
+export function formatTonnes(tonnes: number): string {
+  const abs = Math.abs(tonnes);
+  // Soglie a 999.500 e 999,5 e non a 1.000.000 e 1.000: altrimenti
+  // l'arrotondamento produce "1.000 mila t" invece di "1,0 milioni di t".
+  if (abs >= 999_500) return `${nf(1).format(tonnes / 1_000_000)} milioni di t`;
+  if (abs >= 999.5) return `${nf(0).format(tonnes / 1_000)} mila t`;
+  return `${nf(0).format(tonnes)} t`;
+}
+
+/**
  * Data in formato it-IT (es. "03/09/2026"). Era definita solo dentro
  * page.tsx: spostata qui perché ora serve anche alle pagine /paese/[slug],
  * ed è comunque formattazione — lo stesso motivo per cui vive questo file.

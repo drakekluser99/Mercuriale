@@ -933,6 +933,7 @@ marittimo" più in basso.
 | #18 | Metodologia, sezione 04 "Traffico marittimo" |
 | #19 | Metodologia: tutte e nove le fonti dei dati |
 | #20 | Canale di Suez (terzo passaggio) |
+| #22, #23 | CLAUDE.md sulla freschezza delle province; carico stimato (campo `capacity`, tonnellate) nelle schede dei passaggi |
 
 - **Stato**: tutto in `main` e in produzione (ultimo merge `f384c56`).
   Sul PC di Yuri `main` è allineato a `f384c56` e il branch
@@ -942,11 +943,10 @@ marittimo" più in basso.
   el-Mandeb e Suez. Settimana 14–20/9/2026: Hormuz −96,8%, Bab el-Mandeb
   −67,0%, Suez −43,4%, tutti "fortemente ridotto".
 - **Resta aperto**:
-  1. l'unità del campo `capacity` di PortWatch (pagina "Data &
-     Methodology", da leggere dal browser: dal cloud è bloccata).
-     Confermata quella: capacità nelle schede (`capacityReading` è
-     pronto) e paragrafo "La capacità stimata" in
-     `ShippingMethodology.tsx`;
+  1. ~~l'unità del campo `capacity`~~ — **fatto la sera del 24/9**, PR
+     drakekluser99/Mercuriale#23 (Preview verificata da Yuri):
+     tonnellate metriche di carico, mostrate nelle schede. Vedi
+     "Carico stimato nelle schede" nella voce "Traffico marittimo";
   2. rilanciare `npm run chokepoint:baselines` ogni tanto (circa una volta
      al mese): se un valore non coincide più, PortWatch ha rivisto lo
      storico e si decide a mano;
@@ -1947,11 +1947,28 @@ sezione). Resta aperto:
       tutti fatti e restano come registro delle scelte. Verificato da Yuri
       il 24/9 con `npm run chokepoint:baselines`: tutte e tre le baseline
       coincidono con la costante.
-    - **Resta aperto**: l'unità del campo `capacity` (da leggere su
-      PortWatch "Data & Methodology" dal browser; dal cloud il sito è
-      bloccato). Confermata quella, si mostra la capacità nelle schede
-      (`capacityReading` è pronto) e si aggiorna il paragrafo "La capacità
-      stimata" in `ShippingMethodology.tsx`.
+    - **Carico stimato nelle schede (24 set 2026, sera, PR
+      drakekluser99/Mercuriale#23, in `main`)**. Unità del
+      campo `capacity`: **tonnellate metriche di carico** (stima), non la
+      portata delle navi. Verifica, con il CSV completo scaricato da Yuri
+      da PortWatch (`Daily_Chokepoints_Data.csv`, 78.960 righe; la pagina
+      "Data & Methodology" non dava la definizione in chiaro):
+      - `capacity` = `capacity_cargo` + `capacity_tanker` in tutte le
+        righe; le fonti secondarie (OpenBB, scheda del dataset nei
+        risultati di ricerca) parlano di "trade volume in metric tons";
+      - 2023, cisterne a Hormuz: 2,69 milioni di t al giorno, in linea con
+        i ~20 milioni di barili/giorno di petrolio dell'EIA (× 0,136 t/bbl
+        ≈ 2,7). Come portata (deadweight) il valore sarebbe molto più alto:
+        conterebbe anche le cisterne che entrano vuote nel Golfo. Totali
+        2023: Suez 1,22 miliardi di t, Bab el-Mandeb 1,23, Hormuz 1,35.
+      UI: in `ChokepointCard` il carico sta nella riga "Ultimo dato",
+      accanto alle navi DELLO STESSO GIORNO (è giornaliero: vicino alla
+      media dei 7 giorni si leggerebbe come media); `not_available` →
+      "carico: stima non disponibile", campo vuoto → niente. Nuovo
+      `formatTonnes` in `format.ts` (milioni con un decimale, poi "mila t",
+      poi "t"; soglie a 999.500 e 999,5 per non stampare "1.000 mila t").
+      Paragrafo "Il carico stimato" in `ShippingMethodology.tsx` al posto
+      di "La capacità stimata".
     - **Suez — FATTO (24 set 2026, sera), in `main` con la PR
       drakekluser99/Mercuriale#20 (Preview verificata da Yuri).**
       - **Dati**: `suez` in `CHOKEPOINTS` (`chokepoint1`, "Suez Canal").
@@ -2036,11 +2053,8 @@ sezione). Resta aperto:
       - Cifra chiave in tono NEUTRO (il verde "in discesa" direbbe una
         buona notizia); scostamento in inchiostro, colore solo
         sull'etichetta di stato.
-      - **Capacità NON mostrata**: l'unità di `capacity` non è confermata
-        (`portwatch.imf.org` bloccato dal cloud; fonti secondarie dicono
-        "deadweight tonnage" aggregata, non basta). Da confermare sulla
-        pagina "Data & Methodology" di PortWatch dal browser, poi
-        aggiungerla alla scheda (la logica `capacityReading` è pronta).
+      - **Capacità NON mostrata** al passo 1 (unità non confermata).
+        Superato la sera del 24/9: vedi "Carico stimato nelle schede".
       - Nuovi formatter in `format.ts`: `formatDecimal`, `formatIsoDay`
         (giorno ISO → gg/mm/aaaa senza passare da `Date`, niente fuso).
       - `CiteBox`: la citazione nomina anche IMF PortWatch.

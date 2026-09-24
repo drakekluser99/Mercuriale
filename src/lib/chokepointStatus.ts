@@ -48,7 +48,8 @@ export type ChokepointRow = {
   /** Giorno del dato, "AAAA-MM-GG". */
   date: string;
   transitCalls: number;
-  /** Campo `capacity` della fonte, già convertito in numero; null se assente. */
+  /** Campo `capacity` della fonte (carico stimato, tonnellate metriche),
+   * già convertito in numero; null se assente. */
   tradeVolumeEst: number | null;
 };
 

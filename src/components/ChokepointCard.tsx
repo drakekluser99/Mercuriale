@@ -2,7 +2,7 @@ import { FreshnessBadge } from "@/components/FreshnessBadge";
 import type { ChokepointSummary } from "@/lib/chokepointStatus";
 import { TRANSIT_STATE_LABELS, type TransitState } from "@/lib/chokepointHistory";
 import type { FreshnessState } from "@/lib/freshness/config";
-import { formatDecimal, formatIsoDay, formatPercent } from "@/lib/format";
+import { formatDecimal, formatIsoDay, formatPercent, formatTonnes } from "@/lib/format";
 
 /**
  * Scheda di un passaggio marittimo (24 set 2026, pagina
@@ -18,9 +18,13 @@ import { formatDecimal, formatIsoDay, formatPercent } from "@/lib/format";
  *   verde vuol dire "in discesa / sotto la media" ed è una buona notizia
  *   per un prezzo, mentre un passaggio chiuso non lo è. Lo scostamento
  *   percentuale resta in inchiostro per lo stesso motivo;
- * - la capacità stimata NON è ancora in scheda: l'unità del campo
- *   `capacity` va confermata sulla documentazione PortWatch (vedi
- *   schema.ts), e un numero senza unità certa non si pubblica.
+ * - il CARICO STIMATO (campo `capacity` della fonte, tonnellate
+ *   metriche) sta nella riga dell'ultimo dato, accanto alle navi DELLO
+ *   STESSO GIORNO: è un valore giornaliero, e messo vicino alla media dei
+ *   7 giorni si leggerebbe come media anch'esso. Se la fonte scrive 0 con
+ *   navi transitate, la scheda dice "stima non disponibile" e non "0 t";
+ *   se il campo è vuoto, non scrive niente. Unità verificata il 24/9/2026
+ *   sui dati: vedi il paragrafo "Il carico stimato" in metodologia.
  */
 
 const STATE_CLASSES: Record<TransitState, string> = {
@@ -47,6 +51,7 @@ export function ChokepointCard({ data }: { data: ChokepointCardData }) {
     windowFrom,
     freshness,
     ageDays,
+    capacity,
   } = data;
 
   return (
@@ -104,6 +109,15 @@ export function ChokepointCard({ data }: { data: ChokepointCardData }) {
         <span>
           Ultimo dato: {formatIsoDay(latestDate)} ·{" "}
           {latestTransits === 1 ? "1 nave" : `${latestTransits} navi`}
+          {capacity.kind === "value" && (
+            // Numero e unità non si separano mai: su telefono "48 / mila t"
+            // andava a capo a metà.
+            <>
+              {" "}· carico stimato{" "}
+              <span className="whitespace-nowrap">{formatTonnes(capacity.value)}</span>
+            </>
+          )}
+          {capacity.kind === "not_available" && <> · carico: <span className="whitespace-nowrap">stima non disponibile</span></>}
         </span>
         <FreshnessBadge
           state={freshness}
