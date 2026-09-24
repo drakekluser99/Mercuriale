@@ -975,7 +975,20 @@ ISTAT".
   ECOICOP (`00`, `01`), `TB2` = tipologie (`FOODHPC`, `ENRGY`), `TB3` =
   per regione (non serve). **Le tabelle `DF_BULK_…` NON si leggono via
   SDMX** (query 10: "doesn't contain a mapping set", sono
-  `isExternalReference`): vanno scaricate come file dal sito IstatData.
+  `isExternalReference`): vanno scaricate come file dal sito IstatData
+  (ricerca "coefficienti di raccordo" → pulsante `SCARICA_XLSX`).
+  **`TB1` scaricata il 24/9** (`DCSP_NIC_CR_Ecoicov2_rev.xlsx`, foglio
+  `IT`, intestazione alla riga 15: codice, livello, denominazione, poi i
+  tre coefficienti 1995→2010, 2010→2015, **2015→2025**): generale `00` =
+  **1,226**, alimentari `01` = **1,344**. Il coefficiente è vecchio ÷
+  nuovo: **indice base 2025 = indice base 2015 ÷ coefficiente** (torna con
+  la media 2025 in base 2015 già calcolata: 122,63 e 134,41). Tre
+  decimali; alcune celle sono testo con "(r)" = revisionato (es.
+  `'1,228 (r)'` sul generale senza tabacchi): chi le legge deve gestirle.
+  Il file FOI omonimo (`DCSP_FOI_CR_…`) è di un altro indice, NON usarlo.
+  Manca la `TB2` ("Tipologie di prodotto") per `FOODHPC`/`ENRGY`.
+  Proposta: i 4 coefficienti come COSTANTE nel codice con fonte e data
+  (cambiano solo al prossimo cambio di base), come `CHOKEPOINT_BASELINES`.
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
