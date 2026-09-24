@@ -2003,6 +2003,17 @@ sezione). Resta aperto:
         sinistra del punto, Bab el-Mandeb sotto (a destra usciva dal
         riquadro). Per il numero la classe `font-mono` e non una var()
         scritta a mano (usciva in Courier).
+      - **Italia disegnata per ultima** (anche in `EuropeFuelMap`): in
+        SVG vince l'ultimo elemento disegnato, e i bordi bianchi di
+        Svizzera, Austria, Slovenia coprivano il contorno ambra sui confini
+        di terra (visto da Yuri sulla Preview). Nella mappa d'Europa NON si
+        porta in cima anche il paese sotto il mouse: spostarlo nel DOM
+        farebbe perdere il focus da tastiera.
+      - **Telefono**: le dimensioni del testo SVG sono in unità della mappa
+        e sotto `sm` si rimpiccioliscono di più della metà. Lì il nome si
+        ingrandisce (`max-sm:text-[46px]`), la seconda riga sparisce e
+        scostamento e stato vanno in un elenco sotto la mappa (`sm:hidden`),
+        con nome e scostamento che non si spezzano mai a metà.
       - Niente zoom né tooltip: i numeri sono nelle schede. SVG
         `aria-hidden`, descrizione nell'`aria-label` del contenitore;
         larghezza massima `max-w-3xl` perché il testo SVG cresce con la

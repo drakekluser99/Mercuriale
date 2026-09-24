@@ -61,6 +61,13 @@ const STATE_COLORS: Record<TransitState, string> = {
 };
 const INCOMPLETE_COLOR = "var(--color-system-ink-muted)";
 
+/** "−97% · fortemente ridotto", oppure "dati incompleti". */
+function detailText(c: ChokepointSummary): string {
+  return c.state && c.deviationPct !== null
+    ? `${formatPercent(c.deviationPct, 0)} · ${TRANSIT_STATE_LABELS[c.state]}`
+    : "dati incompleti";
+}
+
 export function ChokepointMap({ chokepoints }: { chokepoints: ChokepointSummary[] }) {
   const description = chokepoints
     .map((c) =>
@@ -92,7 +99,13 @@ export function ChokepointMap({ chokepoints }: { chokepoints: ChokepointSummary[
         >
           <Geographies geography={WORLD_ATLAS_50M_URL}>
             {({ geographies }) =>
-              geographies.map((geo) => {
+              // Italia disegnata per ULTIMA: in SVG vince l'ultimo elemento
+              // disegnato, e i bordi bianchi di Francia, Svizzera, Austria e
+              // Slovenia coprivano il suo contorno ambra sui confini di terra
+              // (segnalato da Yuri sulla Preview del 24/9).
+              [...geographies]
+                .sort((a, b) => Number(a.properties.name === "Italy") - Number(b.properties.name === "Italy"))
+                .map((geo) => {
                 // L'Italia col contorno ambra, come nella mappa d'Europa:
                 // il punto di vista di chi legge.
                 const isItaly = geo.properties.name === "Italy";
@@ -120,7 +133,7 @@ export function ChokepointMap({ chokepoints }: { chokepoints: ChokepointSummary[
             // Due righe: nome (grassetto) e scostamento · stato. A sinistra
             // allineate a destra sul punto; sotto, centrate.
             const x = below ? 0 : -18;
-            const [y1, y2] = below ? [44, 74] : [-4, 26];
+            const [y1, y2] = below ? [50, 80] : [-4, 26];
             const anchor = below ? "middle" : "end";
             // Alone chiaro attorno al testo (`paintOrder: stroke`): si
             // legge anche sopra la terra e i confini.
@@ -133,11 +146,17 @@ export function ChokepointMap({ chokepoints }: { chokepoints: ChokepointSummary[
             return (
               <Marker key={c.key} coordinates={COORDINATES[c.key]}>
                 <circle r={10} style={{ fill: color, stroke: "#ffffff", strokeWidth: 3 }} />
+                {/* Dimensioni in classi e non in `style`: in SVG la
+                    dimensione del testo è in unità della mappa, che su un
+                    telefono si rimpicciolisce di più della metà. Sotto `sm`
+                    il nome si ingrandisce e la seconda riga sparisce (la
+                    ripete l'elenco sotto la mappa, a grandezza normale). */}
                 <text
                   x={x}
                   y={y1}
                   textAnchor={anchor}
-                  style={{ ...halo, fill: "var(--color-system-ink)", fontSize: 30, fontWeight: 600 }}
+                  className="text-[30px] max-sm:text-[46px]"
+                  style={{ ...halo, fill: "var(--color-system-ink)", fontWeight: 600 }}
                 >
                   {SHORT_NAMES[c.key]}
                 </text>
@@ -147,18 +166,38 @@ export function ChokepointMap({ chokepoints }: { chokepoints: ChokepointSummary[
                   textAnchor={anchor}
                   // `font-mono` di Tailwind e non una var() scritta a mano:
                   // è la stessa classe dei numeri nel resto del sito.
-                  className="font-mono"
-                  style={{ ...halo, fill: color, fontSize: 25, fontWeight: 500 }}
+                  className="font-mono text-[25px] max-sm:hidden"
+                  style={{ ...halo, fill: color, fontWeight: 500 }}
                 >
-                  {c.state && c.deviationPct !== null
-                    ? `${formatPercent(c.deviationPct, 0)} · ${TRANSIT_STATE_LABELS[c.state]}`
-                    : "dati incompleti"}
+                  {detailText(c)}
                 </text>
               </Marker>
             );
           })}
         </ComposableMap>
       </div>
+
+      {/* Solo su telefono: i dettagli che sulla mappa sarebbero illeggibili. */}
+      <ul className="mt-3 space-y-1 text-sm sm:hidden">
+        {chokepoints.map((c) => (
+          // Pallino in una colonna a sé: se lo scostamento va a capo,
+          // riparte allineato al nome e non sotto il pallino. Nome e
+          // scostamento non si spezzano mai a metà.
+          <li key={c.key} className="grid grid-cols-[auto_1fr] items-baseline gap-x-2">
+            <span
+              aria-hidden="true"
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{ background: c.state ? STATE_COLORS[c.state] : INCOMPLETE_COLOR }}
+            />
+            <span className="flex flex-wrap gap-x-2">
+              <span className="whitespace-nowrap font-medium">{SHORT_NAMES[c.key]}</span>
+              <span className="whitespace-nowrap font-mono tabular-nums text-system-ink-secondary">
+                {detailText(c)}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
 
       <figcaption className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-system-ink-secondary">
         {(Object.keys(STATE_COLORS) as TransitState[]).map((state) => (
