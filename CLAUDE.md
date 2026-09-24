@@ -42,7 +42,7 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
   set la copertura si è allargata ai parser delle fonti (MIMIT,
   PortWatch, ISTAT, con il file VERO in `src/lib/fetchers/fixtures/`),
   al traffico marittimo, al raccordo NIC e ai dati dei grafici: 204 test
-  il 24/9. `vitest.config.ts`
+  il 24/9, 208 il 25/9 (`siteNav.test.ts`). `vitest.config.ts`
   usa `vite-tsconfig-paths` per risolvere l'alias `@/*` leggendo lo stesso
   `tsconfig.json` di Next.js, invece di duplicare a mano il mapping.
 
@@ -973,8 +973,20 @@ grafico di tutto il sito".
   blocco di 1-2 giorni se superato; dal cloud ISTAT non si raggiunge e
   Yuri ha deciso di NON aprire i domini (le verifiche le lancia lui dal
   PC); il cron fa UNA richiesta per esecuzione, nessun nuovo tentativo.
-- **Ultima sessione (24/9, sera tardi)**: controllo grafico di tutte le
-  pagine su PC e telefono con le correzioni (PR
+- **Ultima sessione (25/9)**: pagine `/paese/[slug]` e
+  `/provincia/[slug]` nella cornice comune (PR
+  drakekluser99/Mercuriale#31), bordo intero della forma sotto il mouse
+  nelle mappe di province ed Europa (#32), barra delle sezioni senza
+  icone su PC con ~146 px di margine (#33). Ogni passo verificato da Yuri
+  sulla Preview prima della PR; tutte fuse a CI verde, nessuna PR aperta.
+  Yuri ha cambiato PC (dal portatile di lavoro al PC personale): per la
+  sessione nel cloud non cambia niente, l'accesso a GitHub dipende
+  dall'account claude.ai e non dal computer. Sul PC personale vanno
+  invece rifatti, se servono, il clone locale con `.env.local` (backfill
+  e verifiche sui dati) e la cartella dello script LinkedIn (`npm install
+  playwright`, `npx playwright install chromium`).
+- **Sessione precedente (24/9, sera tardi)**: controllo grafico di tutte
+  le pagine su PC e telefono con le correzioni (PR
   drakekluser99/Mercuriale#29) e tabelle di Europa, calcolatore e
   materie prime rifatte per il telefono (#30). Preparati per Yuri, FUORI
   dal repository: una bozza del post LinkedIn su traffico marittimo e
@@ -992,8 +1004,9 @@ grafico di tutto il sito".
   stessa riga di altri comandi interrompe anche quelli; lanciarlo da solo.
 - **Nessun lavoro nuovo concordato.** Idee emerse ma NON decise: altre
   divisioni ECOICOP (es. `04` abitazione, `07` trasporti) nella pagina
-  inflazione; una settima sezione richiederebbe di rifare la barra (a
-  1280 px è piena); gli altri script con `process.exit()` (vedi la voce
+  inflazione; una settima sezione (dopo la #33 la barra ha ~146 px di
+  margine a 1280 px: una voce di lunghezza media ci sta appena, va
+  rimisurata); gli altri script con `process.exit()` (vedi la voce
   "Sezione inflazione").
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
