@@ -96,7 +96,12 @@ export function SectionNav() {
                   {number}
                 </span>
               )}
-              <Icon size={13} aria-hidden="true" />
+              {/* Icona solo sotto `lg` (25 set 2026): su PC le sette voci
+                  stavano in 1280 px con ~7 px di margine, e una resa del
+                  carattere appena diversa le faceva scorrere tagliando
+                  "Panoramica". Il numero dice già quale sezione è; senza
+                  icone il margine sale a ~140 px. */}
+              <Icon size={13} aria-hidden="true" className="lg:hidden" />
               {label}
             </Link>
           );
