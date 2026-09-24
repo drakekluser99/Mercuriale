@@ -1075,9 +1075,16 @@ ISTAT".
     mancanti e raccordo impossibile, esce con 1) e uno storico finto
     2016-01 → 2026-08 (512 righe, coefficienti ufficiali riprodotti,
     dicembre 2025 = 100,0); con 122,75 al posto di 122,63 si ferma.
-  **Da fare da Yuri, in quest'ordine**: `npm run db:migrate` (0014) →
-  `npm run backfill:nic` (una richiesta) → incollare l'output in chat →
-  fissare i due coefficienti calcolati → `--file … --save`.
+  **Primo backfill vero (24/9, Yuri dal PC)**: `db:migrate` lanciato (NON
+  ha stampato la conferma finale, solo l'avviso sul driver websocket: da
+  verificare col `--save`, che si ferma se la tabella non c'è);
+  `backfill:nic` = UNA richiesta, 122.605 caratteri, 512 righe, nessun
+  mese mancante, 120 mesi base 2015 + 8 base 2025 per serie. Raccordo:
+  `00` 1,226 e `01` 1,344 riprodotti ESATTAMENTE; calcolati **`FOODHPC`
+  1,301**, **`ENRGY` 1,501**, fissati in `CALCULATED_SPLICE_2015_TO_2025`.
+  Dicembre 2025 in base 2025: generale 100,0, alimentari 100,6, carrello
+  100,3, energetici 97,3 (energia in calo nel 2025, −4,5% a dicembre).
+  Resta: `npm run backfill:nic -- --file istat-nic-backfill.xml --save`.
   Poi: UI (`/inflazione`, anteprima in home, metodologia con la fonte
   ISTAT in `sources.ts` + la sua scheda).
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run

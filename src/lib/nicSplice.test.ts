@@ -91,6 +91,14 @@ describe("toBase2025", () => {
     expect(toBase2025("01", 2015, 135.2)).toBeCloseTo(100.6, 1);
   });
 
+  it("usa i coefficienti calcolati fissati il 24/9 (valori veri di dicembre 2025)", () => {
+    expect(spliceCoefficient("FOODHPC")).toEqual({ value: 1.301, kind: "calcolato" });
+    // Query 9: carrello 130,5 e energetici 146,1 in base 2015.
+    expect(toBase2025("FOODHPC", 2015, 130.5)).toBeCloseTo(100.3, 1);
+    // Gli energetici erano scesi nel 2025 (−4,5% a dicembre): sotto 100.
+    expect(toBase2025("ENRGY", 2015, 146.1)).toBeCloseTo(97.3, 1);
+  });
+
   it("senza coefficiente fissato restituisce null, non un numero inventato", () => {
     if (CALCULATED_SPLICE_2015_TO_2025.ENRGY === null) {
       expect(toBase2025("ENRGY", 2015, 146.1)).toBeNull();

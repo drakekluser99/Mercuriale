@@ -42,16 +42,20 @@ export const OFFICIAL_SPLICE_2015_TO_2025 = {
  * `00` e `01` il calcolo deve dare ESATTAMENTE i valori ufficiali, oppure
  * `checkSplice` si ferma (vedi sotto).
  *
- * `null` = non ancora fissato: si fissa DOPO il backfill, copiando il
- * valore che lo script stampa. Finché è null quella serie non ha l'indice
- * raccordato prima del 2026 (`toBase2025` restituisce null) e il sito ne
- * mostra solo la variazione annua. Numeri fissi e non ricalcolati a ogni
- * richiesta, come `CHOKEPOINT_BASELINES`: un riferimento dichiarato in
- * metodologia non deve cambiare se la fonte rivede lo storico.
+ * Fissati il 24/9/2026 dal primo `npm run backfill:nic` sui dati veri
+ * (risposta ISTAT del 24/9, 2016-01 → 2026-08, nessun mese mancante): lo
+ * stesso lancio ha riprodotto ESATTAMENTE 1,226 e 1,344 su `00` e `01`.
+ * Ogni lancio successivo ricalcola e dice se coincidono ancora.
+ *
+ * `null` vorrebbe dire "non ancora fissato": `toBase2025` restituirebbe
+ * null e il sito mostrerebbe solo la variazione annua di quella serie.
+ * Numeri fissi e non ricalcolati a ogni richiesta, come
+ * `CHOKEPOINT_BASELINES`: un riferimento dichiarato in metodologia non deve
+ * cambiare se la fonte rivede lo storico.
  */
 export const CALCULATED_SPLICE_2015_TO_2025: Record<"FOODHPC" | "ENRGY", number | null> = {
-  FOODHPC: null,
-  ENRGY: null,
+  FOODHPC: 1.301,
+  ENRGY: 1.501,
 };
 
 export type SpliceKind = "ufficiale" | "calcolato";
