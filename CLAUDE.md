@@ -1889,15 +1889,12 @@ sezione). Resta aperto:
     prima dell'uscita successiva il dato ha ~9 giorni); `/stato-dati` ha
     etichetta e badge per `fetch-chokepoint-transits`.
   - **PUNTO DI RIPRESA (aggiornato 24 set 2026, sera)**.
-    - **In `main`**: tabella, cron giornaliero, storico dal 2019,
-      `CHOKEPOINT_BASELINES` (PR drakekluser99/Mercuriale#11 e #12),
-      registri fonte/freschezza/`/stato-dati`, soglie e `transitState`
-      (drakekluser99/Mercuriale#13), pagina con le schede, passo 1
-      (drakekluser99/Mercuriale#14), grafico transiti + Brent, passo 2
-      (drakekluser99/Mercuriale#15).
-    - **Passo 3 (mappa) FATTO sul branch `claude/youthful-knuth-dixxvo`,
+    - **In `main`**: backend (PR drakekluser99/Mercuriale#11, #12, #13),
+      pagina con le schede (#14), grafico transiti + Brent (#15), mappa
+      regionale (#16).
+    - **Passo 4 (home) FATTO sul branch `claude/youthful-knuth-dixxvo`,
       in attesa della verifica di Yuri sulla Preview** — vedi la voce
-      "Mappa regionale" qui sotto. Poi PR e merge, poi passo 4 (home).
+      "Home" qui sotto. Poi PR e merge, poi passo 5 (metodologia).
     - **Decisioni già prese da Yuri, da NON ridiscutere**: baseline
       (Hormuz stagionale variante B, Bab el-Mandeb piatta), tre stati con
       nome e colori neutro / ocra / ruggine, soglie p5 per passaggio e
@@ -2023,6 +2020,25 @@ sezione). Resta aperto:
       - Dal cloud jsdelivr è bloccato: per gli screenshot si scarica
         `world-atlas@2` con `npm pack` e Playwright lo serve con
         `page.route` al posto dell'URL della CDN.
+    - **Home (passo 4, 24 set 2026)**:
+      - Sesta cella in `TickerBand` (`lg:grid-cols-6`; su telefono tre
+        righe da due), dopo "Diesel UE": etichetta = nome breve del
+        passaggio più lontano dal normale (`furthestFromNormal`), valore
+        = media 7 giorni in "navi/g", nota "normale 98 · −97%" in tono
+        NEUTRO. Nessun `href`: la fascia diventa cliccabile solo per
+        segnalare un problema (regola di `TickerStat.href`); il link sta
+        nell'anteprima. A 1024 px la data di "Ultimo dato" va a capo.
+      - "Fonti in linea" conta anche `imf_portwatch` (in linea se almeno
+        un passaggio non è `non_aggiornato`).
+      - Quinta `SectionPreview` a tutta larghezza (`md:col-span-2`, da
+        sola a metà riga sarebbe sembrata un buco), scostamento come
+        cifra in tono neutro. Intro della home con IMF PortWatch fra le
+        fonti.
+      - `loadShipping` non legge più il grafico: il grafico ha la sua
+        `loadShippingChartInitial`, usata solo da /traffico-marittimo,
+        così la home non fa a ogni visita la query di un anno.
+      - `CHOKEPOINT_SHORT_NAMES` in `chokepointStatus.ts` (prima dentro
+        la mappa), condiviso da mappa e fascia.
     - **Verifica visiva**: dal cloud il database non si raggiunge, quindi
       pagina di prova con dati finti a 1.400 e 400 px, screenshot a Yuri
       prima del push; verifica sui dati veri sulla Preview.

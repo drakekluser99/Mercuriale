@@ -28,6 +28,12 @@ export const CHOKEPOINT_NAMES: Record<ChokepointKey, string> = {
   bab_el_mandeb: "Stretto di Bab el-Mandeb",
 };
 
+/** Nomi brevi, per la mappa e la fascia della home. */
+export const CHOKEPOINT_SHORT_NAMES: Record<ChokepointKey, string> = {
+  hormuz: "Hormuz",
+  bab_el_mandeb: "Bab el-Mandeb",
+};
+
 const MONTH_NAMES = [
   "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
   "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre",
