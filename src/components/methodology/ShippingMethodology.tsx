@@ -167,14 +167,29 @@ export function ShippingMethodology() {
         affidato solo al colore.
       </p>
 
-      <SubHeading>La capacità stimata</SubHeading>
+      <SubHeading>Il carico stimato</SubHeading>
       <p className={`mt-2 ${text}`}>
-        La fonte pubblica anche una stima della capacità delle navi
-        transitate. In alcuni giorni la stima vale zero anche se sono passate
-        navi (a Hormuz è successo 11 volte dal 2019): il sito lo tratta come{" "}
-        <strong>stima non disponibile</strong>, non come capacità nulla. Per
-        ora la capacità non è mostrata in pagina, finché non è verificata
-        l&apos;unità di misura sulla documentazione della fonte.
+        Oltre al numero di navi, la fonte stima quanta merce hanno trasportato
+        in <strong>tonnellate metriche</strong> (campo{" "}
+        <code className="font-mono text-xs">capacity</code>, somma delle stime
+        per cisterne e navi da carico). È una stima costruita dai segnali AIS
+        e dalle caratteristiche delle navi, non una dichiarazione doganale.
+        Le schede la mostrano per l&apos;ultimo giorno pubblicato, accanto al
+        numero di navi di quel giorno.
+      </p>
+      <p className={`mt-2 ${text}`}>
+        L&apos;unità è stata controllata sui dati: nel 2023 le cisterne in
+        transito a Hormuz risultano in media 2,7 milioni di tonnellate al
+        giorno, in linea con i circa 20 milioni di barili di petrolio al
+        giorno che passano per lo Stretto secondo l&apos;EIA. Se il campo
+        fosse la portata delle navi, cioè quanto potrebbero caricare, il
+        valore sarebbe molto più alto, perché conterebbe anche le cisterne che
+        entrano nel Golfo vuote.
+      </p>
+      <p className={`mt-2 ${text}`}>
+        In alcuni giorni la stima vale zero anche se sono passate navi (a
+        Hormuz è successo 11 volte dal 2019): il sito lo tratta come{" "}
+        <strong>stima non disponibile</strong>, non come carico nullo.
       </p>
 
       <SubHeading>Il Brent accanto ai transiti</SubHeading>

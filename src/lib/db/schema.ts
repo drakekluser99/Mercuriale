@@ -484,9 +484,9 @@ export const chokepointTransits = pgTable(
     transitCalls: integer("transit_calls").notNull(),
     // Stima della capacità transitata (campo `capacity`, così come la
     // pubblica la fonte). È una STIMA costruita dal FMI sui segnali AIS
-    // delle navi, non una misura: il nome della colonna lo dice. L'unità
-    // (tonnellate) va confermata sulla documentazione PortWatch prima di
-    // mostrarla in pagina. Nullable: se la fonte non la dà quel giorno resta
+    // delle navi, non una misura: il nome della colonna lo dice. Unità:
+    // tonnellate metriche di carico (verificato sui dati il 24/9/2026, vedi
+    // "Il carico stimato" in ShippingMethodology.tsx). Nullable: se la fonte non la dà quel giorno resta
     // vuota, non diventa zero.
     tradeVolumeEst: numeric("trade_volume_est", { precision: 16, scale: 2 }),
     retrievedAt: timestamp("retrieved_at"),

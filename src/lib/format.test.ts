@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   currencySymbol,
   formatBillionsEur,
+  formatTonnes,
   formatCommodityPrice,
   formatDate,
   formatDateTime,
@@ -92,6 +93,23 @@ describe("currencySymbol", () => {
 describe("formatBillionsEur", () => {
   it("converte in miliardi con 1 decimale", () => {
     expect(formatBillionsEur(26_700_000_000)).toBe("26,7 miliardi di €");
+  });
+});
+
+describe("formatTonnes", () => {
+  it("milioni con un decimale", () => {
+    expect(formatTonnes(3_352_114)).toBe("3,4 milioni di t");
+  });
+  it("migliaia senza decimali", () => {
+    expect(formatTonnes(52_310)).toBe("52 mila t");
+  });
+  it("sotto il migliaio in tonnellate", () => {
+    expect(formatTonnes(850)).toBe("850 t");
+    expect(formatTonnes(0)).toBe("0 t");
+  });
+  it("niente \"1.000 mila t\" sul confine", () => {
+    expect(formatTonnes(999_600)).toBe("1,0 milioni di t");
+    expect(formatTonnes(999.7)).toBe("1 mila t");
   });
 });
 
