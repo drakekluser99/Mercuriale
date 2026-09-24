@@ -15,6 +15,8 @@
  *   meglio tenerlo fuori dal riferimento "normale". Rottura: 01/03/2026.
  * - Bab el-Mandeb, PIATTA, 16/12/2022 – 15/12/2023: l'anno che precede la
  *   rottura (16/12/2023). Nessuna stagionalità visibile nei dati.
+ * - Suez (aggiunto il 24/9 con la modalità candidato qui sotto), PIATTA,
+ *   23/12/2022 – 22/12/2023: stesso criterio, rottura il 23/12/2023.
  *
  * I valori sono stati fissati il 24/9 in CHOKEPOINT_BASELINES
  * (chokepointHistory.ts), da cui lo script prende anche i periodi. Ora
@@ -95,7 +97,6 @@ async function main(): Promise<number> {
     TRANSIT_STATE_LABELS,
   } = await import("../src/lib/chokepointHistory");
   const HORMUZ_PERIOD = CHOKEPOINT_BASELINES.hormuz.period;
-  const BAB_EL_MANDEB_PERIOD = CHOKEPOINT_BASELINES.bab_el_mandeb.period;
   let mismatches = 0;
   // La costante ha due decimali: coincide se la differenza sta nell'arrotondamento.
   const same = (a: number, b: number) => Math.abs(a - b) < 0.005 + 1e-9;
@@ -215,25 +216,28 @@ async function main(): Promise<number> {
       `stato: ${TRANSIT_STATE_LABELS[transitState((hw.mean / hBase - 1) * 100, CHOKEPOINT_BASELINES.hormuz.reducedBelowPct)]}`
   );
 
-  // Bab el-Mandeb
-  const bab = await load("bab_el_mandeb");
-  console.log(
-    `\n=== Bab el-Mandeb — baseline PIATTA, dal ${BAB_EL_MANDEB_PERIOD.from} al ${BAB_EL_MANDEB_PERIOD.to}`
-  );
-  console.log(`(righe in tabella: ${bab.length})`);
-  const flat = flatBaseline(bab, BAB_EL_MANDEB_PERIOD);
-  const fixedFlat = CHOKEPOINT_BASELINES.bab_el_mandeb.value;
-  if (!same(flat.mean, fixedFlat)) mismatches++;
-  console.log(
-    `  giorni ${flat.days} · media ${flat.mean.toFixed(2)} · min ${flat.min} · max ${flat.max}` +
-      (same(flat.mean, fixedFlat) ? "" : `  ≠ costante ${fixedFlat}`)
-  );
-  const bw = lastWeek(bab);
-  console.log(
-    `Oggi: media ${bw.mean.toFixed(2)} transiti/giorno (${bw.from} → ${bw.to}), ` +
-      `baseline ${flat.mean.toFixed(2)} → ${pct(bw.mean, flat.mean)} · ` +
-      `stato: ${TRANSIT_STATE_LABELS[transitState((bw.mean / fixedFlat - 1) * 100, CHOKEPOINT_BASELINES.bab_el_mandeb.reducedBelowPct)]}`
-  );
+  // Baseline PIATTE: Bab el-Mandeb e, dal 24/9, Suez. Stesso controllo per
+  // entrambe: ricalcolo della media sul periodo e confronto con la costante.
+  const flatPoints: Record<string, { date: string; transitCalls: number }[]> = {};
+  for (const key of ["bab_el_mandeb", "suez"] as const) {
+    const b = CHOKEPOINT_BASELINES[key];
+    const points = await load(key);
+    flatPoints[key] = points;
+    console.log(`\n=== ${key} — baseline PIATTA, dal ${b.period.from} al ${b.period.to}`);
+    console.log(`(righe in tabella: ${points.length})`);
+    const flat = flatBaseline(points, b.period);
+    if (!same(flat.mean, b.value)) mismatches++;
+    console.log(
+      `  giorni ${flat.days} · media ${flat.mean.toFixed(2)} · min ${flat.min} · max ${flat.max}` +
+        (same(flat.mean, b.value) ? "" : `  ≠ costante ${b.value}`)
+    );
+    const w = lastWeek(points);
+    console.log(
+      `Oggi: media ${w.mean.toFixed(2)} transiti/giorno (${w.from} → ${w.to}), ` +
+        `baseline ${b.value.toFixed(2)} → ${pct(w.mean, b.value)} · ` +
+        `stato: ${TRANSIT_STATE_LABELS[transitState((w.mean / b.value - 1) * 100, b.reducedBelowPct)]}`
+    );
+  }
 
   // ─── Soglie degli stati (24 set 2026) ───────────────────────────────────
   // Quanto oscillava la media di 7 giorni rispetto alla baseline DENTRO il
@@ -264,7 +268,8 @@ async function main(): Promise<number> {
   }
   for (const [key, points] of [
     ["hormuz", hormuz],
-    ["bab_el_mandeb", bab],
+    ["bab_el_mandeb", flatPoints.bab_el_mandeb],
+    ["suez", flatPoints.suez],
   ] as const) {
     const b = CHOKEPOINT_BASELINES[key];
     const lastDate = points[points.length - 1].date;

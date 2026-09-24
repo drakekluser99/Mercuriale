@@ -1901,34 +1901,36 @@ sezione). Resta aperto:
       bloccato). Confermata quella, si mostra la capacità nelle schede
       (`capacityReading` è pronto) e si aggiorna il paragrafo "La capacità
       stimata" in `ShippingMethodology.tsx`.
-    - **Suez — FASE 1 FATTA (24 set 2026, sera), FASE 2 in attesa dei
-      dati.** Fase 1: `suez` in `CHOKEPOINTS` (`portid` `chokepoint1`,
-      `portname` "Suez Canal"), quindi il cron lo salva ogni giorno e il
-      backfill lo scarica; nel sito NON compare ancora, perché la UI parte
-      dalle chiavi di `CHOKEPOINT_BASELINES` e Suez non ha un normale
-      fissato (le sue righe in tabella vengono ignorate da schede, mappa e
-      grafico). `npm run chokepoint:baselines` ha una modalità
-      `--candidate <chiave> --method stagionale|piatta --from --to
-      [--break]` che prova un periodo senza toccare il codice: normale,
-      soglia p5 proposta, stati nel periodo e dopo la rottura, ultima
-      settimana. Argomenti controllati prima di aprire il database.
-      **Passi di Yuri dal PC** (dopo il merge, su `main` aggiornato):
-      1. `npm run backfill:chokepoints -- --only suez` (sola lettura:
-         buchi nel calendario, medie mensili dal 2019);
-      2. se serve, `-- --only suez --around AAAA-MM-GG` sui punti dove la
-         serie cambia livello;
-      3. `npm run backfill:chokepoints -- --only suez --save`;
-      4. `npm run chokepoint:baselines -- --candidate suez ...` sui
-         periodi candidati.
-      **Fase 2** (con quei numeri, decisione di Yuri su metodo, periodo
-      e rottura): voce `suez` in `CHOKEPOINT_BASELINES` (commento con le
-      motivazioni come per gli altri due), `CHOKEPOINT_NAMES` e
-      `CHOKEPOINT_SHORT_NAMES`, `COORDINATES` e `LABEL_POSITION` in
-      `ChokepointMap.tsx` (Suez sta dentro l'inquadratura attuale, vicino
-      alla costa del Sinai: l'etichetta va provata a video), testi con
-      "Hormuz e Bab el-Mandeb" (descrizioni di pagina, intro, anteprima in
-      home, metodologia), verifica dello script senza `--candidate`
-      (oggi controlla solo Hormuz e Bab el-Mandeb).
+    - **Suez — FATTO (24 set 2026, sera), sul branch
+      `claude/youthful-knuth-dixxvo`, in attesa della verifica di Yuri.**
+      - **Dati**: `suez` in `CHOKEPOINTS` (`chokepoint1`, "Suez Canal").
+        Backfill fatto da Yuri: 2.820 righe dal 2019-01-01 al 2026-09-20,
+        calendario continuo, nessun giorno con capacità 0.
+      - **Normale**: PIATTA, 23/12/2022 – 22/12/2023, **73,98**; soglia di
+        "ridotto" **−7,7%** (p5 su 359 finestre). Rottura **23/12/2023**,
+        una settimana dopo Bab el-Mandeb (dal 16 al 22/12 ancora 69-91). Il
+        candidato provvisorio con le date di Bab el-Mandeb dava 73,81 e
+        −7,5%: spostato per applicare la stessa regola ("l'anno che precede
+        la rottura DEL passaggio"). Motivazioni nel commento di
+        `CHOKEPOINT_BASELINES`. Esito: periodo 342 normale / 17 ridotto;
+        dopo la rottura 942 fortemente ridotto / 55 ridotto (5,5%) / 0
+        normale; settimana 14–20/9/2026 −43,4%.
+      - **Limite dichiarato in metodologia, soglia NON cambiata**: dal 2024
+        Suez sta attorno a −46% (p95 dopo la rottura −39,8%), quindi circa
+        una settimana su venti è "ridotto" invece di "fortemente ridotto".
+        La soglia comune −40% resta (decisione di Yuri).
+      - **UI**: nomi "Canale di Suez" / "Suez"; mappa con `COORDINATES`
+        [32.3, 30.6] (Ismailia) e etichetta SOPRA. Con tre passaggi
+        l'etichetta di Hormuz è passata a `belowLeft` (sotto, allineata a
+        destra): a sinistra la sua seconda riga finiva sotto il punto di
+        Suez e si leggeva come sua. Schede `lg:grid-cols-3`; pulsanti del
+        grafico con `CHOKEPOINT_SHORT_NAMES` (prima tagliavano "Stretto di "
+        dal nome lungo). Testi aggiornati in pagina, home, metodologia.
+      - `npm run chokepoint:baselines` senza argomenti verifica ora anche
+        Suez (le due baseline piatte sono un ciclo unico); la modalità
+        `--candidate` resta per il prossimo passaggio da aggiungere.
+      - Il cron salva Suez solo dopo il merge (in produzione gira `main`):
+        "0 con fetch_run_id del cron" fino ad allora è atteso.
     - **Decisioni già prese da Yuri, da NON ridiscutere**: baseline
       (Hormuz stagionale variante B, Bab el-Mandeb piatta), tre stati con
       nome e colori neutro / ocra / ruggine, soglie p5 per passaggio e

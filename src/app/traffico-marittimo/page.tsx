@@ -16,7 +16,7 @@ const PAGE = sectionPage("/traffico-marittimo");
 export const metadata: Metadata = {
   title: `${PAGE.title} — Mercuriale`,
   description:
-    "Navi in transito negli stretti di Hormuz e Bab el-Mandeb: media degli ultimi 7 giorni confrontata con il traffico normale. Fonte: IMF PortWatch.",
+    "Navi in transito a Hormuz, Bab el-Mandeb e Suez: media degli ultimi 7 giorni confrontata con il traffico normale. Fonte: IMF PortWatch.",
 };
 
 /**
@@ -34,7 +34,7 @@ export default async function TrafficoMarittimoPage() {
   return (
     <PageShell
       title={PAGE.title}
-      intro="Quante navi attraversano gli stretti di Hormuz e Bab el-Mandeb, e quanto il traffico si allontana dal normale."
+      intro="Quante navi attraversano lo Stretto di Hormuz, lo Stretto di Bab el-Mandeb e il Canale di Suez, e quanto il traffico si allontana dal normale."
       consultedOn={now}
     >
       <ShippingSection

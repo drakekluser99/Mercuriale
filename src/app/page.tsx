@@ -139,8 +139,8 @@ export default async function Home() {
               }
             >
               {ship && ship.mean7 !== null
-                ? `${ship.name}: ${formatDecimal(ship.mean7)} navi al giorno negli ultimi 7 giorni, contro le ${formatDecimal(ship.baseline)} del ${ship.baselineLabel}. Mappa, schede e grafico con il Brent per Hormuz e Bab el-Mandeb.`
-                : "Navi in transito negli stretti di Hormuz e Bab el-Mandeb: mappa, schede e grafico con il Brent."}
+                ? `${ship.name}: ${formatDecimal(ship.mean7)} navi al giorno negli ultimi 7 giorni, contro le ${formatDecimal(ship.baseline)} del ${ship.baselineLabel}. Mappa, schede e grafico con il Brent per Hormuz, Bab el-Mandeb e Suez.`
+                : "Navi in transito a Hormuz, Bab el-Mandeb e Suez: mappa, schede e grafico con il Brent."}
             </SectionPreview>
           </div>
         </div>

@@ -46,8 +46,9 @@ export function ShippingSection({
         </KeyFigure>
       )}
       <p className="mt-4 max-w-3xl text-sm leading-relaxed text-system-ink-secondary">
-        Da questi due stretti passa una parte importante del petrolio e delle
-        merci fra Asia, Golfo ed Europa. Ogni scheda confronta le navi
+        Da questi tre passaggi, uno dopo l&apos;altro sulla rotta fra il
+        Golfo e il Mediterraneo, passa una parte importante del petrolio e
+        delle merci fra Asia, Golfo ed Europa. Ogni scheda confronta le navi
         transitate negli ultimi 7 giorni con il traffico di un periodo
         normale, fissato sui dati dal 2019: lo stato dice quanto la
         settimana si allontana da quello che succede di solito.
@@ -60,7 +61,8 @@ export function ShippingSection({
           <div className="mt-4">
             <ChokepointMap chokepoints={chokepoints} />
           </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {/* Tre schede in riga da `lg`; fra `md` e `lg` due più una. */}
+          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {chokepoints.map((c) => (
               <ChokepointCard key={c.key} data={c} />
             ))}
