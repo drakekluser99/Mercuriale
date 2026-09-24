@@ -952,6 +952,7 @@ grafico di tutto il sito".
 | #28 | Inflazione: grafico dal 2016, anteprima in home, metodologia |
 | #29 | Controllo grafico PC/telefono: barra, numero del giorno, tabella province, formati del grafico (voce "Controllo grafico" in fondo) |
 | #30 | Tabelle di Europa, calcolatore e materie prime leggibili su telefono |
+| #31 | Pagine `/paese/[slug]` e `/provincia/[slug]` nella cornice comune (header scuro, barra, link di ritorno) |
 
 - **Stato**: traffico marittimo e sezione inflazione COMPLETI, tutto in
   `main` e in produzione: dati ISTAT (512 righe dal 2016), cron
@@ -2665,7 +2666,7 @@ sezione). Resta aperto:
   non si raggiunge). Non è nel repository.
 
 - **Pagine paese e provincia nella cornice comune (25 set 2026, Claude
-  Code nel cloud).** `/paese/[slug]` e `/provincia/[slug]` erano le
+  Code nel cloud, PR drakekluser99/Mercuriale#31).** `/paese/[slug]` e `/provincia/[slug]` erano le
   ultime pagine con l'header chiaro fatto a mano, senza barra delle
   sezioni né "Come citare": chi ci arrivava dalla mappa sembrava uscire
   dal sito. Ora usano `PageShell`.
