@@ -1034,8 +1034,21 @@ ISTAT".
   backfill), DOPO il salvataggio. La soglia di "cosa è una correzione"
   ora è `isCorrection` in `correctionsLog.ts`, usata anche da
   `logCorrectionIfChanged`: non ricopiare `0.00005` altrove.
-  Prossimo: raccordo con i coefficienti e il controllo, poi cron e
-  backfill.
+  **Raccordo — FATTO (24/9, branch)**: `src/lib/nicSplice.ts` (puro,
+  testato). `OFFICIAL_SPLICE_2015_TO_2025` = { `00`: 1,226, `01`: 1,344 }
+  con fonte e file nel commento; `CALCULATED_SPLICE_2015_TO_2025` =
+  { `FOODHPC`, `ENRGY` } a **`null` finché non si fissano DOPO il
+  backfill** (copiando il valore stampato dallo script), come
+  `CHOKEPOINT_BASELINES`. `toBase2025` divide l'indice in base 2015 per
+  il coefficiente e restituisce **null** se non è fissato (la UI mostra
+  solo la variazione, niente salto finto). `computeSpliceCoefficient` =
+  media dei 12 mesi 2025 in base 2015 ÷ 100, tre decimali, si ferma se
+  manca un mese. `checkSplice` si FERMA se il calcolo non dà esattamente
+  i due ufficiali; per gli aggregati restituisce il confronto. Arrotonda
+  con `Math.round(x*1000)/1000`: un "trucco" di arrotondamento provato
+  e tolto il 24/9, non cambiava niente (l'errore sui valori a metà nasce
+  nella media, non nell'arrotondamento).
+  Prossimo: cron e backfill (lo script stampa i coefficienti da fissare).
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
