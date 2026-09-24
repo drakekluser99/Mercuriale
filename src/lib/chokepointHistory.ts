@@ -200,7 +200,8 @@ export function seasonalBaseline(
 
 // ─── Baseline fissate (24 set 2026) ───────────────────────────────────────
 
-export type ChokepointBaseline =
+/** Solo il "normale": metodo, periodo, rottura e valori. */
+export type BaselineValues =
   | {
       method: "stagionale";
       period: BaselinePeriod;
@@ -216,6 +217,13 @@ export type ChokepointBaseline =
       /** Transiti medi al giorno. */
       value: number;
     };
+
+/**
+ * Baseline completa: il "normale" più la soglia sotto cui la media dei
+ * 7 giorni diventa "ridotto" (percentuale negativa, es. −15,6). La seconda
+ * soglia, "fortemente ridotto", è comune: STRONGLY_REDUCED_BELOW_PCT.
+ */
+export type ChokepointBaseline = BaselineValues & { reducedBelowPct: number };
 
 /**
  * Il "traffico normale" di ciascun passaggio, per colorare la mappa e per
@@ -253,6 +261,9 @@ export const CHOKEPOINT_BASELINES = {
     method: "stagionale",
     period: { from: "2022-11-01", to: "2025-10-31" },
     breakDate: "2026-03-01",
+    // 5° percentile dello scostamento della media a 7 giorni nel periodo
+    // di riferimento (1.090 finestre; minimo −31,4%). Vedi sotto.
+    reducedBelowPct: -15.6,
     //        gen    feb    mar    apr     mag     giu     lug    ago    set    ott    nov    dic
     monthly: [73.14, 77.8, 88.28, 99.98, 103.85, 103.04, 99.67, 97.17, 98.1, 91.55, 81.62, 74.88],
   },
@@ -261,12 +272,128 @@ export const CHOKEPOINT_BASELINES = {
     period: { from: "2022-12-16", to: "2023-12-15" },
     breakDate: "2023-12-16",
     value: 74.8,
+    // 5° percentile nel periodo di riferimento (359 finestre; minimo −13,3%).
+    reducedBelowPct: -8.1,
   },
 } as const satisfies Record<string, ChokepointBaseline>;
 
 /** Il valore "normale" per un giorno: quello del suo mese, o quello unico. */
-export function baselineFor(baseline: ChokepointBaseline, date: string): number {
+export function baselineFor(baseline: BaselineValues, date: string): number {
   return baseline.method === "stagionale"
     ? baseline.monthly[Number(date.slice(5, 7)) - 1]
     : baseline.value;
+}
+
+// ─── Oscillazione normale della media a 7 giorni (soglie degli stati) ─────
+//
+// Un singolo giorno oscilla molto (Hormuz a settembre, in condizioni
+// normali: da 61 a 129 navi), quindi il sito confronta con la baseline la
+// MEDIA DEGLI ULTIMI 7 GIORNI. Per decidere quando quella media è "fuori
+// dal normale" non si sceglie una percentuale a tavolino: si guarda quanto
+// oscillava la stessa media, rispetto alla stessa baseline, DENTRO il
+// periodo di riferimento, cioè quando il traffico era normale per
+// definizione.
+
+export type RollingDeviation = {
+  /** Ultimo giorno della finestra. */
+  endDate: string;
+  /** Media dei transiti nei `windowDays` giorni fino a endDate compreso. */
+  mean: number;
+  /** Valore normale per endDate (vedi baselineFor). */
+  baseline: number;
+  /** Scostamento percentuale: (media / normale − 1) × 100. */
+  deviationPct: number;
+};
+
+/**
+ * Per ogni giorno del periodo, la media dei `windowDays` giorni che
+ * finiscono lì, confrontata con la baseline di quel giorno. Si usa la
+ * baseline del giorno FINALE della finestra: è la stessa regola della
+ * pagina ("ultimi 7 giorni contro il normale del mese dell'ultimo dato").
+ * Contano solo le finestre interamente dentro il periodo, e ogni giorno
+ * della finestra deve esserci.
+ */
+export function rollingDeviations(
+  points: DailyTransits[],
+  baseline: BaselineValues,
+  period: BaselinePeriod,
+  windowDays = 7
+): RollingDeviation[] {
+  const byDate = new Map(points.map((p) => [p.date, p.transitCalls]));
+  const out: RollingDeviation[] = [];
+  const first = toUtcMs(period.from) + (windowDays - 1) * DAY_MS;
+  for (let t = first; t <= toUtcMs(period.to); t += DAY_MS) {
+    const values: number[] = [];
+    for (let k = windowDays - 1; k >= 0; k--) {
+      const v = byDate.get(fromUtcMs(t - k * DAY_MS));
+      if (v === undefined) {
+        throw new Error(`Media mobile: manca il giorno ${fromUtcMs(t - k * DAY_MS)}`);
+      }
+      values.push(v);
+    }
+    const endDate = fromUtcMs(t);
+    const mean = values.reduce((s, v) => s + v, 0) / values.length;
+    const base = baselineFor(baseline, endDate);
+    out.push({ endDate, mean, baseline: base, deviationPct: (mean / base - 1) * 100 });
+  }
+  return out;
+}
+
+/**
+ * Percentile `p` (0–100) con interpolazione lineare fra i due valori
+ * vicini: il metodo più comune (è quello predefinito di Excel e NumPy),
+ * così il numero si può ricontrollare con qualunque foglio di calcolo.
+ */
+export function percentile(values: number[], p: number): number {
+  if (values.length === 0) throw new Error("Percentile di un elenco vuoto");
+  const sorted = [...values].sort((a, b) => a - b);
+  const rank = (p / 100) * (sorted.length - 1);
+  const lo = Math.floor(rank);
+  const hi = Math.ceil(rank);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (rank - lo);
+}
+
+// ─── Stati del traffico (24 set 2026) ─────────────────────────────────────
+//
+// Tre stati con un nome, non una scala continua di colore: nel sito il
+// verde vuol dire "sotto la media / in discesa" e per i prezzi si legge
+// come una buona notizia, quindi un passaggio chiuso dipinto di verde
+// direbbe il contrario del vero. L'etichetta scritta accompagna sempre il
+// colore.
+//
+// Soglie scelte sui dati (npm run chokepoint:baselines, 24/9/2026), sulla
+// media dei 7 giorni rispetto alla baseline:
+//
+// - "ridotto" sotto il 5° PERCENTILE del periodo di riferimento, diverso
+//   per passaggio perché Hormuz oscilla il doppio di Bab el-Mandeb anche
+//   in tempi normali (p5 −15,6% contro −8,1%). Vuol dire "sotto a quello
+//   che succede nel 95% delle settimane normali": circa una settimana
+//   normale su venti risulta comunque "ridotto", ed è accettato — non è
+//   un allarme.
+// - "fortemente ridotto" sotto −40%, COMUNE ai due passaggi: sta sotto
+//   ogni settimana normale di entrambi (la peggiore: −31,4% a Hormuz) e
+//   sopra quasi tutte le settimane dopo le rotture. Non −50%: Bab
+//   el-Mandeb dal 2024 oscilla attorno a −55% con circa il 10% delle
+//   settimane sopra −50%, e lo stato cambierebbe di continuo senza che
+//   la situazione cambi.
+// - Nessuno stato "aumentato": anche +15% è oscillazione normale.
+
+export const STRONGLY_REDUCED_BELOW_PCT = -40;
+
+export type TransitState = "normale" | "ridotto" | "fortemente_ridotto";
+
+export const TRANSIT_STATE_LABELS: Record<TransitState, string> = {
+  normale: "normale",
+  ridotto: "ridotto",
+  fortemente_ridotto: "fortemente ridotto",
+};
+
+/**
+ * Lo stato di uno scostamento percentuale. Le soglie sono "sotto"
+ * strette: esattamente −40% è ancora "ridotto".
+ */
+export function transitState(deviationPct: number, reducedBelowPct: number): TransitState {
+  if (deviationPct < STRONGLY_REDUCED_BELOW_PCT) return "fortemente_ridotto";
+  if (deviationPct < reducedBelowPct) return "ridotto";
+  return "normale";
 }

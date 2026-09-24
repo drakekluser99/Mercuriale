@@ -58,4 +58,16 @@ export const FRESHNESS_CONFIG: Record<string, FreshnessConfig> = {
   // giorni dopo la sua data: per questo 62 giorni sono ancora "aggiornato".
   // Grace di 10 giorni per una pubblicazione che slitta.
   bfs_lik: { expectedIntervalDays: 62, graceDays: 10, label: 'BFS Svizzera (mensile)' },
+
+  // IMF PortWatch (traffico marittimo, 24 set 2026): righe GIORNALIERE
+  // pubblicate una volta a settimana, di norma il martedì, con i dati fino
+  // alla domenica precedente (il 24/9 l'ultimo giorno era il 20/9). Subito
+  // prima dell'uscita successiva il dato più recente ha quindi circa 9
+  // giorni: sono ancora "aggiornato". 4 di tolleranza per un'uscita che
+  // slitta, come per l'energia (8 + 4).
+  imf_portwatch: {
+    expectedIntervalDays: 9,
+    graceDays: 4,
+    label: 'IMF PortWatch (giornaliero, pubblicato ogni settimana)',
+  },
 };

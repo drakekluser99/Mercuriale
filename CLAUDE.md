@@ -1855,13 +1855,85 @@ sezione). Resta aperto:
       di settembre), Bab el-Mandeb 24,71 (−67,0%). Anche Bab el-Mandeb è
       sceso ad agosto–settembre 2026 (27,4 e 25,9 di media, contro 31–37
       del 2024–2026): osservato, non interpretato.
-  - **Da fare**: la UI (cella nella fascia, mappa a punti colorata sullo
-    scostamento da `CHOKEPOINT_BASELINES`, pagina dedicata con il Brent
-    affiancato) e la sezione in metodologia che dichiara i due metodi, i
-    periodi e le date di rottura. Con la UI vanno aggiunti anche `imf_portwatch` a
-    `sources.ts` e a `freshness/config.ts` e l'etichetta del job in
-    `/stato-dati`: fino ad allora la card lì mostra il nome grezzo
-    `fetch-chokepoint-transits` (scelta accettata).
+  - **Stati del traffico — FISSATI (24 set 2026)**: tre stati con nome
+    (`transitState`, `TRANSIT_STATE_LABELS` in `chokepointHistory.ts`),
+    NON una scala continua: il verde nel sito vuol dire "sotto la media",
+    e per i prezzi si legge come buona notizia — un passaggio chiuso in
+    verde direbbe il contrario del vero. Colori previsti: normale =
+    neutro, ridotto = ocra (`signal-wait`), fortemente ridotto = ruggine
+    (`signal-up`), sempre con l'etichetta scritta. Si confronta la **media
+    degli ultimi 7 giorni** con la baseline del giorno finale
+    (`rollingDeviations`): il singolo giorno oscilla troppo.
+    - **"ridotto"** sotto il **5° percentile** dello scostamento nel
+      periodo di riferimento, per passaggio (`reducedBelowPct`): Hormuz
+      **−15,6%**, Bab el-Mandeb **−8,1%** (Hormuz oscilla il doppio).
+      Circa una settimana normale su venti risulta "ridotto": accettato.
+    - **"fortemente ridotto"** sotto **−40%**, comune
+      (`STRONGLY_REDUCED_BELOW_PCT`): sotto ogni settimana normale di
+      entrambi (peggiore −31,4% a Hormuz), sopra quasi tutte quelle dopo
+      le rotture. Non −50%: Bab el-Mandeb dal 2024 sta attorno a −55% con
+      ~10% delle settimane sopra −50%, lo stato cambierebbe di continuo.
+    - Nessuno stato "aumentato" (anche +15% è oscillazione normale).
+      `npm run chokepoint:baselines` stampa percentili e conteggio per
+      stato di ogni periodo.
+    - **Verificato sui dati il 24/9 (Yuri, dal PC)**. Periodo di
+      riferimento: Hormuz normale 1.035 / ridotto 55 (5,0%) / fortemente
+      0; Bab el-Mandeb 338 / 21 (5,8% — l'arrotondamento a −8,1 sposta 3
+      finestre) / 0. Dopo le rotture: Hormuz 198 su 198 fortemente
+      ridotto; Bab el-Mandeb 981 fortemente (97,7%) e 23 ridotto (la
+      transizione di fine 2023). Settimana 14–20/9/2026: entrambi
+      fortemente ridotto (Hormuz −96,8%, Bab el-Mandeb −67,0%).
+  - **Registri — FATTO (24 set 2026)**: fonte `imf-portwatch` (primaria)
+    in `sources.ts`; freschezza `imf_portwatch` **9 + 4 giorni** (dati
+    giornalieri pubblicati il martedì fino alla domenica prima: subito
+    prima dell'uscita successiva il dato ha ~9 giorni); `/stato-dati` ha
+    etichetta e badge per `fetch-chokepoint-transits`.
+  - **PUNTO DI RIPRESA (fine sessione 24 set 2026)**.
+    - **In `main` / produzione**: tabella, cron giornaliero, storico dal
+      2019, `CHOKEPOINT_BASELINES` (PR drakekluser99/Mercuriale#11 e #12).
+    - **Solo sul branch `claude/adoring-hopper-2u4ssw`, NON ancora in
+      `main`**: commit `585d806` (registri fonte/freschezza/`/stato-dati`,
+      `rollingDeviations`, `percentile`) e `7a9bd04` (soglie e
+      `transitState`), più l'aggiornamento di questo file. Build e test
+      verdi. Prima di tutto: PR e merge (o continuare sullo stesso
+      branch). Finché non sono in `main`, in `/stato-dati` di produzione
+      la card del job mostra ancora il nome grezzo.
+    - **Decisioni già prese da Yuri, da NON ridiscutere**: baseline
+      (Hormuz stagionale variante B, Bab el-Mandeb piatta), tre stati con
+      nome e colori neutro / ocra / ruggine, soglie p5 per passaggio e
+      −40% comune, freschezza 9 + 4, sesta cella nella fascia della home
+      (non una sostituzione), mappa REGIONALE Italia–Golfo e non un
+      planisfero, `capacity = 0` con transiti = "stima non disponibile".
+    - **Prossimi passi della UI, uno alla volta con verifica di Yuri fra
+      l'uno e l'altro** (impostazione approvata il 24/9):
+      1. **Pagina `/traffico-marittimo`, sezione 05** "Traffico
+         marittimo": voce in `SECTION_PAGES` (`siteNav.ts`) + icona
+         (`Ship` di lucide) nelle mappe `ICONS` di `SectionNav.tsx` e
+         `MobileNav.tsx`; `loadShipping` in `dashboard.ts` (con `cache()`
+         e `.catch → []` come le tabelle accessorie) + query in
+         `queries.ts`; `KeyFigure` sulla situazione; una scheda per
+         passaggio (media 7 giorni, normale, scostamento, stato, data
+         dell'ultimo dato, capacità); `SourceNote` con
+         `sources={["imf-portwatch"]}` e `checks` del job
+         `fetch-chokepoint-transits`.
+      2. **Grafico**: componente nuovo, transiti con il Brent SOTTO,
+         stesso periodo con un unico selettore e asse del tempo
+         condiviso, linea tratteggiata del "normale" sui transiti.
+         `/api/history` impara `kind=chokepoints`. Il nesso col Brent si
+         mostra, non si afferma.
+      3. **Mappa** regionale (Mediterraneo, Suez, Mar Rosso, Golfo) con
+         `Marker` di react-simple-maps sullo stesso atlante 50m di
+         `EuropeFuelMap`; punti col nome e lo scostamento scritti
+         accanto (il colore non è mai l'unico veicolo).
+      4. **Home**: sesta cella in `TickerBand` (`lg:grid-cols-6`), es.
+         "Hormuz · 3 navi/g" con sotto "normale 98 · −97%"; quinta
+         `SectionPreview`.
+      5. **Metodologia**: fonte (stima da segnali AIS, non un registro),
+         metodi e periodi delle baseline, date di rottura, soglie,
+         trattamento di `capacity = 0`.
+    - **Verifica visiva**: dal cloud il database non si raggiunge, quindi
+      pagina di prova con dati finti a 1.400 e 400 px, screenshot a Yuri
+      prima del push; verifica sui dati veri sulla Preview.
 
 ## Skill: vercel-react-best-practices
 

@@ -39,9 +39,15 @@ async function main(): Promise<number> {
   const { db } = await import("../src/lib/db/client");
   const { chokepointTransits } = await import("../src/lib/db/schema");
   const { asc, eq } = await import("drizzle-orm");
-  const { flatBaseline, seasonalBaseline, CHOKEPOINT_BASELINES } = await import(
-    "../src/lib/chokepointHistory"
-  );
+  const {
+    flatBaseline,
+    seasonalBaseline,
+    CHOKEPOINT_BASELINES,
+    rollingDeviations,
+    percentile,
+    transitState,
+    TRANSIT_STATE_LABELS,
+  } = await import("../src/lib/chokepointHistory");
   const HORMUZ_PERIOD = CHOKEPOINT_BASELINES.hormuz.period;
   const BAB_EL_MANDEB_PERIOD = CHOKEPOINT_BASELINES.bab_el_mandeb.period;
   let mismatches = 0;
@@ -87,7 +93,8 @@ async function main(): Promise<number> {
   const hBase = seasonal.find((m) => m.month === hMonth)!.mean;
   console.log(
     `Oggi: media ${hw.mean.toFixed(2)} transiti/giorno (${hw.from} → ${hw.to}), ` +
-      `baseline di ${MONTHS[hMonth - 1]} ${hBase.toFixed(2)} → ${pct(hw.mean, hBase)}`
+      `baseline di ${MONTHS[hMonth - 1]} ${hBase.toFixed(2)} → ${pct(hw.mean, hBase)} · ` +
+      `stato: ${TRANSIT_STATE_LABELS[transitState((hw.mean / hBase - 1) * 100, CHOKEPOINT_BASELINES.hormuz.reducedBelowPct)]}`
   );
 
   // Bab el-Mandeb
@@ -106,8 +113,57 @@ async function main(): Promise<number> {
   const bw = lastWeek(bab);
   console.log(
     `Oggi: media ${bw.mean.toFixed(2)} transiti/giorno (${bw.from} → ${bw.to}), ` +
-      `baseline ${flat.mean.toFixed(2)} → ${pct(bw.mean, flat.mean)}`
+      `baseline ${flat.mean.toFixed(2)} → ${pct(bw.mean, flat.mean)} · ` +
+      `stato: ${TRANSIT_STATE_LABELS[transitState((bw.mean / fixedFlat - 1) * 100, CHOKEPOINT_BASELINES.bab_el_mandeb.reducedBelowPct)]}`
   );
+
+  // ─── Soglie degli stati (24 set 2026) ───────────────────────────────────
+  // Quanto oscillava la media di 7 giorni rispetto alla baseline DENTRO il
+  // periodo di riferimento (traffico normale per definizione), e dove sta
+  // dopo la rottura. Serve a scegliere sui dati la soglia fra "normale" e
+  // "ridotto" e quella fra "ridotto" e "fortemente ridotto".
+  const PCTS = [1, 5, 10, 25, 50, 75, 90, 95, 99];
+  const f1 = (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`;
+  function describe(label: string, values: number[], reducedBelowPct: number) {
+    if (values.length === 0) {
+      console.log(`  ${label}: nessuna finestra`);
+      return;
+    }
+    console.log(
+      `  ${label} (${values.length} finestre): min ${f1(Math.min(...values))} · ` +
+        PCTS.map((p) => `p${p} ${f1(percentile(values, p))}`).join(" · ") +
+        ` · max ${f1(Math.max(...values))}`
+    );
+    // Quante finestre cadono in ciascuno stato con le soglie fissate.
+    const counts = { normale: 0, ridotto: 0, fortemente_ridotto: 0 };
+    for (const v of values) counts[transitState(v, reducedBelowPct)]++;
+    console.log(
+      "    stati: " +
+        (Object.keys(counts) as (keyof typeof counts)[])
+          .map((k) => `${TRANSIT_STATE_LABELS[k]} ${counts[k]} (${((counts[k] / values.length) * 100).toFixed(1)}%)`)
+          .join(" · ")
+    );
+  }
+  for (const [key, points] of [
+    ["hormuz", hormuz],
+    ["bab_el_mandeb", bab],
+  ] as const) {
+    const b = CHOKEPOINT_BASELINES[key];
+    const lastDate = points[points.length - 1].date;
+    console.log(`\n=== ${key} — scostamento della media a 7 giorni dalla baseline`);
+    describe(
+      "periodo di riferimento",
+      rollingDeviations(points, b, b.period).map((r) => r.deviationPct),
+      b.reducedBelowPct
+    );
+    // Dopo la rottura: dal 7° giorno del nuovo regime all'ultimo dato.
+    const afterFrom = b.breakDate;
+    describe(
+      `dopo la rottura (${afterFrom} → ${lastDate})`,
+      rollingDeviations(points, b, { from: afterFrom, to: lastDate }).map((r) => r.deviationPct),
+      b.reducedBelowPct
+    );
+  }
 
   console.log(
     mismatches === 0

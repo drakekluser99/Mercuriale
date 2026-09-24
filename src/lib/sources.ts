@@ -12,7 +12,7 @@
 
 export type SourceKind = "primaria" | "aggregata";
 
-export type SourceId = "eu-commission" | "eia" | "alpha-vantage" | "mimit" | "adm" | "eurostat" | "bfs" | "ecb";
+export type SourceId = "eu-commission" | "eia" | "alpha-vantage" | "mimit" | "adm" | "eurostat" | "bfs" | "ecb" | "imf-portwatch";
 
 type SourceMeta = {
   /** Nome per esteso, usato nel testo delle note "Fonte:". */
@@ -61,6 +61,16 @@ export const SOURCES: Record<SourceId, SourceMeta> = {
   },
   ecb: {
     label: "Banca Centrale Europea",
+    kind: "primaria",
+  },
+  // Traffico marittimo (24 set 2026): transiti giornalieri nei passaggi
+  // obbligati. PortWatch è una piattaforma del Fondo Monetario
+  // Internazionale (con l'Università di Oxford) che stima i transiti dai
+  // segnali AIS delle navi: istituzione pubblica, quindi fonte primaria.
+  // Il dato però è una STIMA da segnali satellitari, non un registro di
+  // passaggi: lo dice la metodologia, non il badge.
+  "imf-portwatch": {
+    label: "IMF PortWatch (Fondo Monetario Internazionale)",
     kind: "primaria",
   },
 };
