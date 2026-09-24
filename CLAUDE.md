@@ -927,10 +927,11 @@ decorative. Escluso per ora: redesign totale, Oceania/LatAm,
 estrapolazioni causali. (Media UE ponderata e storico lungo, esclusi in
 origine, sono stati fatti il 15 set 2026: vedi i blocchi A e C in fondo.)
 
-**PUNTO DI RIPRESA — fine sessione 24 set 2026, notte (Claude Code nel
-cloud).** Leggere questo blocco per primo. Il dettaglio è nelle voci in
-fondo a questa sezione: "Traffico marittimo", "CI rifatta", "Ricognizione
-ISTAT" e "Sezione inflazione".
+**PUNTO DI RIPRESA — fine sessione 24 set 2026, sera tardi (Claude Code
+nel cloud, dopo le PR #29 e #30).** Leggere questo blocco per primo. Il
+dettaglio è nelle voci in fondo a questa sezione: "Traffico marittimo",
+"CI rifatta", "Ricognizione ISTAT", "Sezione inflazione" e "Controllo
+grafico di tutto il sito".
 
 | PR | Cosa |
 |---|---|
@@ -969,6 +970,23 @@ ISTAT" e "Sezione inflazione".
   blocco di 1-2 giorni se superato; dal cloud ISTAT non si raggiunge e
   Yuri ha deciso di NON aprire i domini (le verifiche le lancia lui dal
   PC); il cron fa UNA richiesta per esecuzione, nessun nuovo tentativo.
+- **Ultima sessione (24/9, sera tardi)**: controllo grafico di tutte le
+  pagine su PC e telefono con le correzioni (PR
+  drakekluser99/Mercuriale#29) e tabelle di Europa, calcolatore e
+  materie prime rifatte per il telefono (#30). Preparati per Yuri, FUORI
+  dal repository: una bozza del post LinkedIn su traffico marittimo e
+  inflazione, e lo script Playwright `cattura-linkedin.js` che dal suo PC
+  fa screenshot e video del sito in produzione (dal cloud il sito non si
+  raggiunge). Pubblicare il post tocca a lui.
+  **Metodo del controllo grafico, da riusare**: dal cloud il database non
+  si raggiunge, quindi si sostituisce TEMPORANEAMENTE
+  `src/lib/db/queries.ts` con una versione a dati finti (stesse firme e
+  tipi, valori deterministici), si avvia `next dev` con un
+  `DATABASE_URL` fittizio e si fotografano le pagine vere con Playwright
+  (l'atlante del mondo servito con `page.route`, vedi "Mappa regionale").
+  Prima del commit si rimette l'originale e si verifica con `git status`
+  che `queries.ts` non compaia. Attenzione: `pkill -f "next dev"` nella
+  stessa riga di altri comandi interrompe anche quelli; lanciarlo da solo.
 - **Nessun lavoro nuovo concordato.** Idee emerse ma NON decise: altre
   divisioni ECOICOP (es. `04` abitazione, `07` trasporti) nella pagina
   inflazione; una settima sezione richiederebbe di rifare la barra (a
@@ -980,7 +998,13 @@ ISTAT" e "Sezione inflazione".
   screenshot di `docs/readme/`** (mostrano la home di prima della
   divisione in pagine: dal cloud non si possono fare con i dati veri);
   verificare sul sito ISTAT la licenza dei dati (probabilmente CC BY
-  4.0, non ancora scritta in metodologia perché non verificata).
+  4.0, non ancora scritta in metodologia perché non verificata);
+  pubblicare il post LinkedIn (numeri da ricontrollare sul sito il giorno
+  stesso: PortWatch aggiorna il martedì).
+- **Resta aperto, lavoro di codice**: `/paese/[slug]` e
+  `/provincia/[slug]` hanno ancora la cornice vecchia (niente header
+  scuro né barra delle sezioni); la barra delle sezioni sta in 1280 px
+  senza margine, un'etichetta più lunga la fa scorrere di nuovo.
 - **Come si è lavorato**: sessione Claude Code nel cloud, con accesso
   diretto al repo e alle PR via GitHub. Un passo alla volta: codice e
   screenshot con dati finti (Playwright, pagina di prova temporanea mai
