@@ -2614,10 +2614,27 @@ sezione). Resta aperto:
     `shortUnit`. Prezzo e "€" su una riga in `FuelPriceTable`.
   - "Europa (media UE)" → "Europa (media dei 27)" nel calcolatore e nelle
     serie del grafico carburanti (è la media semplice).
-  **Resta aperto**: su telefono le tabelle di `/europa`, `/calcolatore` e
-  `/materie-prime` scorrono di lato e a prima vista nascondono una
-  colonna (la data; nel calcolatore l'intera colonna Stati Uniti). Serve
-  un layout apposta per il telefono, non un ritocco. Le pagine
+  **Tabelle su telefono — FATTO subito dopo (24 set 2026, sera).** Le
+  tabelle di `/europa`, `/calcolatore` e `/materie-prime` scorrevano di
+  lato e nascondevano una colonna (la data; nel calcolatore gli Stati
+  Uniti). Sotto `sm` ora:
+  - `FuelPriceTable` e tabella materie prime: le colonne secondarie
+    (carburante o categoria, data, badge di freschezza) diventano una
+    seconda riga piccola sotto il nome, con `hidden sm:table-cell` sulle
+    colonne originali. Il simbolo della fonte (WTI, COPPER…) compare solo
+    da `sm`. Nessun dato tolto, solo spostato.
+  - `FuelImpactCalculator`: ogni riga è una griglia a due colonne
+    (`max-sm:grid`): la metrica a tutta larghezza, sotto Europa a
+    sinistra e Stati Uniti a destra. Ruoli ARIA espliciti (`row`,
+    `cell`, `columnheader`, `rowheader`) perché con `display: grid` una
+    riga di tabella può smettere di esserlo per i lettori di schermo.
+    Spazio non separabile in "(oggi −3,9%)": va a capo prima della
+    parentesi.
+  Da `sm` in su le tre tabelle sono identiche a prima (verificato a
+  1400 px). Scorrono ancora di lato, di proposito: la tabella dati
+  dell'inflazione (dentro "Vedi i dati"), il JSON di esempio in
+  metodologia, le correzioni in `/stato-dati`.
+  **Resta aperto**: le pagine
   `/paese/[slug]` e `/provincia/[slug]` hanno ancora la cornice vecchia
   (senza header scuro né barra).
   Nello stesso giro: script Playwright per screenshot e video del post

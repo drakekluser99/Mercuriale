@@ -76,7 +76,9 @@ function pastTankCell(
   const change = ((now - past) / past) * 100;
   const sign = change > 0 ? "+" : change < 0 ? "−" : "";
   const pct = Math.abs(change).toLocaleString("it-IT", { maximumFractionDigits: 1 });
-  return `${formatMoney(past * liters, currency)} (oggi ${sign}${pct}%)`;
+  // Spazio non separabile dopo "oggi": su telefono la cella va a capo, e
+  // deve farlo prima della parentesi, non dentro ("(oggi" / "−3,9%)").
+  return `${formatMoney(past * liters, currency)} (oggi\u00A0${sign}${pct}%)`;
 }
 
 function useNumericField(defaultValue: number) {
@@ -210,7 +212,7 @@ export default function FuelImpactCalculator({ europe, us }: Props) {
   ];
 
   return (
-    <div className="rounded-lg border border-system-border bg-system-surface p-6">
+    <div className="rounded-lg border border-system-border bg-system-surface p-4 sm:p-6">
       <div className="grid gap-6 sm:grid-cols-2">
         <label className="block">
           <span className="text-xs font-medium uppercase tracking-wide text-system-ink-secondary">
@@ -242,14 +244,30 @@ export default function FuelImpactCalculator({ europe, us }: Props) {
         </label>
       </div>
 
-      <div className="mt-6 overflow-x-auto">
-        <table className="w-full min-w-[440px] text-sm">
+      {/* Su telefono (sotto `sm`) ogni riga diventa una griglia a due
+          colonne: la metrica sopra, a tutta larghezza, ed Europa e Stati
+          Uniti affiancati sotto. Con tre colonne la tabella era larga
+          440 px e gli Stati Uniti finivano fuori schermo. I `role` ARIA
+          espliciti servono perché una riga con `display: grid` per alcuni
+          browser smette di essere una riga di tabella per i lettori di
+          schermo. */}
+      <div className="mt-6">
+        <table role="table" className="w-full text-sm">
           <thead>
             {/* Intestazioni in stile terminale, come le altre tabelle del sito. */}
-            <tr className="border-b border-system-border text-left font-mono text-xs uppercase tracking-wider text-system-ink-secondary">
-              <th className="py-3 pr-4 font-medium">Metrica</th>
+            <tr
+              role="row"
+              className="border-b border-system-border text-left font-mono text-xs uppercase tracking-wider text-system-ink-secondary max-sm:grid max-sm:grid-cols-2 max-sm:gap-x-4"
+            >
+              <th role="columnheader" className="py-3 pr-4 font-medium max-sm:hidden">
+                Metrica
+              </th>
               {regions.map((r) => (
-                <th key={r.key} className="px-4 py-3 text-right font-medium">
+                <th
+                  key={r.key}
+                  role="columnheader"
+                  className="py-3 font-medium max-sm:last:text-right sm:px-4 sm:text-right"
+                >
                   {r.label}
                 </th>
               ))}
@@ -259,9 +277,13 @@ export default function FuelImpactCalculator({ europe, us }: Props) {
             {rows.map((row) => (
               <tr
                 key={row.key}
-                className="border-b border-system-border-subtle last:border-0"
+                role="row"
+                className="border-b border-system-border-subtle last:border-0 max-sm:grid max-sm:grid-cols-2 max-sm:gap-x-4 max-sm:py-3"
               >
-                <td className="py-3 pr-4 text-system-ink-secondary">
+                <td
+                  role="rowheader"
+                  className="text-system-ink-secondary max-sm:col-span-2 max-sm:pb-1 sm:py-3 sm:pr-4"
+                >
                   <span className="flex items-center gap-1.5">
                     {row.icon}
                     {row.label}
@@ -270,7 +292,8 @@ export default function FuelImpactCalculator({ europe, us }: Props) {
                 {regions.map((r) => (
                   <td
                     key={r.key}
-                    className={`px-4 py-3 text-right font-mono tabular-nums ${
+                    role="cell"
+                    className={`font-mono tabular-nums max-sm:last:text-right sm:px-4 sm:py-3 sm:text-right ${
                       row.strong
                         ? "text-base font-semibold text-system-ink"
                         : "text-system-ink-secondary"

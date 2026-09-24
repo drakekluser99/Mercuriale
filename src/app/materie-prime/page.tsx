@@ -64,13 +64,16 @@ export default async function MateriePrimePage() {
           // Tabella e grafico affiancati sugli schermi larghi.
           <div className="mt-4 grid gap-6 xl:grid-cols-2">
             <div className="min-w-0 overflow-x-auto rounded-lg border border-system-border bg-system-surface xl:self-start">
-              <table className="w-full min-w-[480px] text-sm">
+              {/* Su telefono (sotto `sm`) categoria e data vanno in una
+                  seconda riga sotto il nome, al posto del simbolo: con
+                  quattro colonne la data finiva fuori schermo. */}
+              <table className="w-full text-sm sm:min-w-[480px]">
                 <thead>
                   <tr className="border-b border-system-border text-left font-mono text-xs uppercase tracking-wider text-system-ink-secondary">
-                    <th className="px-4 py-3 font-medium">Materia prima</th>
-                    <th className="px-4 py-3 font-medium">Categoria</th>
-                    <th className="px-4 py-3 text-right font-medium">Prezzo</th>
-                    <th className="px-4 py-3 text-right font-medium">Data</th>
+                    <th className="px-3 py-3 font-medium sm:px-4">Materia prima</th>
+                    <th className="hidden px-4 py-3 font-medium sm:table-cell">Categoria</th>
+                    <th className="px-3 py-3 text-right font-medium sm:px-4">Prezzo</th>
+                    <th className="hidden px-4 py-3 text-right font-medium sm:table-cell">Data</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -79,19 +82,26 @@ export default async function MateriePrimePage() {
                       key={c.symbol}
                       className="border-b border-system-border-subtle transition-colors last:border-0 hover:bg-system-bg"
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-3 sm:px-4">
                         {/* Nome italiano solo in pagina; database, export e
                             API restano con quello della fonte. */}
                         <div className="font-medium">
                           {localizedCommodityName(c.symbol, c.name)}
                         </div>
-                        <div className="text-xs text-system-ink-muted">{c.symbol}</div>
+                        <div className="hidden text-xs text-system-ink-muted sm:block">{c.symbol}</div>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-system-ink-muted sm:hidden">
+                          {CATEGORY_LABELS[c.category] ?? c.category} · {c.recordedAtFormatted}
+                          <FreshnessBadge
+                            state={c.freshnessState}
+                            title={`Ultimo dato ${c.ageDays} giorni fa. ${c.freshnessLabel}: il valore mostrato potrebbe non essere quello corrente.`}
+                          />
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-system-ink-secondary">
+                      <td className="hidden px-4 py-3 text-system-ink-secondary sm:table-cell">
                         {CATEGORY_LABELS[c.category] ?? c.category}
                       </td>
                       <td
-                        className="px-4 py-3 text-right font-mono tabular-nums"
+                        className="whitespace-nowrap px-3 py-3 text-right align-top font-mono tabular-nums sm:px-4 sm:align-middle"
                         title={`Valore grezzo della fonte: ${c.displayPrice} ${c.displayUnit}`}
                       >
                         {formatCommodityPrice(parseFloat(c.displayPrice))}{" "}
@@ -99,7 +109,7 @@ export default async function MateriePrimePage() {
                           {shortUnit(c.displayUnit)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right text-system-ink-muted">
+                      <td className="hidden px-4 py-3 text-right text-system-ink-muted sm:table-cell">
                         <span className="inline-flex items-center gap-2">
                           <FreshnessBadge
                             state={c.freshnessState}
