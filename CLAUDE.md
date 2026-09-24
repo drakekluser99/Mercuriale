@@ -919,6 +919,50 @@ decorative. Escluso per ora: redesign totale, Oceania/LatAm,
 estrapolazioni causali. (Media UE ponderata e storico lungo, esclusi in
 origine, sono stati fatti il 15 set 2026: vedi i blocchi A e C in fondo.)
 
+**PUNTO DI RIPRESA — fine sessione 24 set 2026 (Claude Code nel cloud).**
+Leggere questo blocco per primo; il dettaglio è nella voce "Traffico
+marittimo" più in basso.
+
+| PR | Cosa |
+|---|---|
+| drakekluser99/Mercuriale#11, #12, #13 | Traffico marittimo, backend: tabella `chokepoint_transits`, cron IMF PortWatch, storico dal 2019, baseline del "normale", soglie e stati |
+| #14 | Pagina `/traffico-marittimo` (sezione 05) con le schede |
+| #15 | Grafico transiti con il Brent sotto |
+| #16 | Mappa regionale Italia–Golfo; Italia disegnata per ultima anche in `EuropeFuelMap` |
+| #17 | Home: sesta cella nella fascia, quinta anteprima |
+| #18 | Metodologia, sezione 04 "Traffico marittimo" |
+| #19 | Metodologia: tutte e nove le fonti dei dati |
+| #20 | Canale di Suez (terzo passaggio) |
+
+- **Stato**: tutto in `main` e in produzione (ultimo merge `f384c56`).
+  Sul PC di Yuri `main` è allineato a `f384c56` e il branch
+  `claude/youthful-knuth-dixxvo` è stato cancellato in locale.
+- **Verifica finale (24/9, dal PC)**: `npm run chokepoint:baselines` →
+  "Tutti i valori coincidono con CHOKEPOINT_BASELINES" per Hormuz, Bab
+  el-Mandeb e Suez. Settimana 14–20/9/2026: Hormuz −96,8%, Bab el-Mandeb
+  −67,0%, Suez −43,4%, tutti "fortemente ridotto".
+- **Resta aperto**:
+  1. l'unità del campo `capacity` di PortWatch (pagina "Data &
+     Methodology", da leggere dal browser: dal cloud è bloccata).
+     Confermata quella: capacità nelle schede (`capacityReading` è
+     pronto) e paragrafo "La capacità stimata" in
+     `ShippingMethodology.tsx`;
+  2. rilanciare `npm run chokepoint:baselines` ogni tanto (circa una volta
+     al mese): se un valore non coincide più, PortWatch ha rivisto lo
+     storico e si decide a mano;
+  3. ancora aperti dal 15/9: dominio personalizzato (`SITE_URL`) e
+     manutenzione annuale di `/numeri`.
+- **Come si è lavorato**: sessione Claude Code nel cloud, con accesso
+  diretto al repo e alle PR via GitHub. Un passo alla volta: codice e
+  screenshot con dati finti (Playwright, pagina di prova temporanea mai
+  committata), push sul branch, verifica di Yuri sulla Preview, poi PR e
+  merge fatti da Claude. Dal cloud database, PortWatch, jsdelivr e
+  `portwatch.imf.org` NON si raggiungono: backfill e verifiche sui dati
+  li lancia Yuri dal PC e incolla l'output in chat.
+  **Regola imparata**: aggiornare CLAUDE.md PRIMA del merge (con il
+  numero della PR verificato), altrimenti in `main` resta scritto "in
+  attesa di verifica".
+
 **Registro aggiornamenti del 15 set 2026** (in ordine di commit; il
 dettaglio di ciascuno è nelle voci in fondo a questa sezione o in "Errori
 noti"):
@@ -1766,8 +1810,9 @@ sezione). Resta aperto:
   nei primi giorni del mese.
 
 - **Traffico marittimo nei passaggi obbligati — FATTO (24 set 2026):
-  backend e UI in produzione, PR drakekluser99/Mercuriale#11–#18.** Resta
-  aperta solo la capacità (vedi "STATO" in fondo alla voce). Punto 3 della
+  backend e UI in produzione, PR drakekluser99/Mercuriale#11–#20, tre
+  passaggi (Hormuz, Bab el-Mandeb, Suez).** Resta aperta solo la capacità
+  (vedi "STATO" in fondo alla voce). Punto 3 della
   roadmap del 23/9 (`docs/`
   non contiene la roadmap: è stata passata come allegato in chat).
   - **Fonte**: IMF PortWatch, "Daily Chokepoint Transit Calls and Trade
@@ -1893,9 +1938,11 @@ sezione). Resta aperto:
   - **STATO (fine sessione 24 set 2026)**.
     - **Tutto in `main` / produzione**: backend (PR
       drakekluser99/Mercuriale#11, #12, #13), schede (#14), grafico (#15),
-      mappa (#16), home (#17), metodologia (#18). La UI è COMPLETA: i
-      cinque passi qui sotto sono tutti fatti e restano come registro
-      delle scelte.
+      mappa (#16), home (#17), metodologia (#18), fonti in metodologia
+      (#19), Suez (#20). La UI è COMPLETA: i cinque passi qui sotto sono
+      tutti fatti e restano come registro delle scelte. Verificato da Yuri
+      il 24/9 con `npm run chokepoint:baselines`: tutte e tre le baseline
+      coincidono con la costante.
     - **Resta aperto**: l'unità del campo `capacity` (da leggere su
       PortWatch "Data & Methodology" dal browser; dal cloud il sito è
       bloccato). Confermata quella, si mostra la capacità nelle schede
