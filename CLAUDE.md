@@ -933,6 +933,7 @@ marittimo" più in basso.
 | #18 | Metodologia, sezione 04 "Traffico marittimo" |
 | #19 | Metodologia: tutte e nove le fonti dei dati |
 | #20 | Canale di Suez (terzo passaggio) |
+| #22, #23 | CLAUDE.md sulla freschezza delle province; carico stimato (campo `capacity`, tonnellate) nelle schede dei passaggi |
 
 - **Stato**: tutto in `main` e in produzione (ultimo merge `f384c56`).
   Sul PC di Yuri `main` è allineato a `f384c56` e il branch
@@ -942,7 +943,8 @@ marittimo" più in basso.
   el-Mandeb e Suez. Settimana 14–20/9/2026: Hormuz −96,8%, Bab el-Mandeb
   −67,0%, Suez −43,4%, tutti "fortemente ridotto".
 - **Resta aperto**:
-  1. ~~l'unità del campo `capacity`~~ — **fatto la sera del 24/9**:
+  1. ~~l'unità del campo `capacity`~~ — **fatto la sera del 24/9**, PR
+     drakekluser99/Mercuriale#23 (Preview verificata da Yuri):
      tonnellate metriche di carico, mostrate nelle schede. Vedi
      "Carico stimato nelle schede" nella voce "Traffico marittimo";
   2. rilanciare `npm run chokepoint:baselines` ogni tanto (circa una volta
@@ -1945,7 +1947,8 @@ sezione). Resta aperto:
       tutti fatti e restano come registro delle scelte. Verificato da Yuri
       il 24/9 con `npm run chokepoint:baselines`: tutte e tre le baseline
       coincidono con la costante.
-    - **Carico stimato nelle schede (24 set 2026, sera)**. Unità del
+    - **Carico stimato nelle schede (24 set 2026, sera, PR
+      drakekluser99/Mercuriale#23, in `main`)**. Unità del
       campo `capacity`: **tonnellate metriche di carico** (stima), non la
       portata delle navi. Verifica, con il CSV completo scaricato da Yuri
       da PortWatch (`Daily_Chokepoints_Data.csv`, 78.960 righe; la pagina
