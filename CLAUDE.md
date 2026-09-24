@@ -1446,8 +1446,12 @@ sezione). Resta aperto:
   **Aggiornamento 7/9/2026**: con `fetch-mimit-prices` che ora apre/chiude
   un record in `fetch_runs` (vedi cron MIMIT sopra), l'esclusione di
   `/provincia/[slug]` non è più necessaria — il dato non sarebbe più
-  inventato. Non ancora cablato: prossimo passo naturale, stesso pattern
-  di `checks` già usato altrove, nessuna query nuova da scrivere.
+  inventato. **FATTO lo stesso 7/9 (commit `656c2b3`, verificato il
+  24/9)**: `/provincia/[slug]` passa `checks` del job
+  `fetch-mimit-prices` a `SourceNote` e mostra un avviso sopra i numeri
+  quando la freschezza `mimit` non è `aggiornato`; `/italia` ha la stessa
+  riga `checks`. La frase "non ancora cablato" scritta qui era rimasta
+  indietro rispetto al codice.
 - **Vercel Analytics — FATTO (Cowork, 4-7 set 2026), in preparazione
   della pubblicazione sui social.** Prima di iniziare a promuovere il
   sito Yuri ha chiesto un parere su cosa mancasse: dominio personalizzato
