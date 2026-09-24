@@ -1,0 +1,58 @@
+# CI minima di Mercuriale: a ogni push e a ogni pull request verso main
+# controlla tipi, lint e test. Sono gli stessi controlli che CLAUDE.md
+# chiede di lanciare a mano prima di ogni commit: qui girano da soli, e
+# una PR con un errore si vede rossa prima del merge invece che in
+# produzione.
+#
+# Non si collega al database né alle API esterne: i test coprono solo
+# funzioni pure, quindi non servono segreti.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Se arriva un push nuovo sullo stesso branch mentre la CI precedente sta
+# ancora girando, quella vecchia si annulla: il suo esito non interessa più.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          # Tiene in cache la cartella dei pacchetti npm tra un run e
+          # l'altro: l'installazione passa da minuti a secondi.
+          cache: npm
+
+      # `npm ci` e non `npm install`: installa ESATTAMENTE le versioni di
+      # package-lock.json e fallisce se il lock non è allineato a
+      # package.json. `.npmrc` (legacy-peer-deps, per react-simple-maps)
+      # viene letto da solo.
+      - name: Installa le dipendenze
+        run: npm ci
+
+      # Next genera alcuni tipi (es. `LayoutProps` in layout.tsx) solo con
+      # `next dev`/`next build`. Senza questo passo `tsc` fallisce con
+      # "Cannot find name 'LayoutProps'" anche se il codice è corretto.
+      - name: Genera i tipi di Next
+        run: npx next typegen
+
+      - name: Controllo dei tipi
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
