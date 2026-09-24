@@ -971,8 +971,11 @@ ISTAT".
   (`4`) e variazione annua (`7`) — un solo dataflow basta, niente `_2`.
   Quindi la **variazione annua non richiede raccordi** (si prende già
   fatta da ISTAT e si cuce al cambio di base); il coefficiente ufficiale
-  serve SOLO per il grafico dell'indice. Prossimo passo: trovare i
-  coefficienti in `DF_BULK_DCSP_NIC1B2025_TB1…TB3`.
+  serve SOLO per il grafico dell'indice. Coefficienti: `TB1` = codici
+  ECOICOP (`00`, `01`), `TB2` = tipologie (`FOODHPC`, `ENRGY`), `TB3` =
+  per regione (non serve). **Le tabelle `DF_BULK_…` NON si leggono via
+  SDMX** (query 10: "doesn't contain a mapping set", sono
+  `isExternalReference`): vanno scaricate come file dal sito IstatData.
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
@@ -2338,7 +2341,14 @@ sezione). Resta aperto:
     2025 da gen 2026, fino ad agosto: stessi valori già noti (+3,3%,
     +1,2%, +17,1%, +0,9%). Gli aggregati `FOODHPC`/`ENRGY`, che in `_1`
     non c'erano, in `_6` ci sono.
-  - **Query fatte: 9** (la nona sopra). Le prime 8, tutte dal PC di Yuri e a minuti di distanza, senza
+  - **Query 10 (24/9)**: `/rest/data/IT1,DF_BULK_DCSP_NIC1B2025_TB1,1.0/all`
+    → errore di 187 byte "Error while retrieving Mappings from Mapping
+    Store… doesn't contain a mapping set". I dataflow `DF_BULK` sono solo
+    download, non dati interrogabili: non riprovare con altre chiavi. I
+    nomi di `TB1…TB3` si leggono in locale dal file `allstubs` già
+    scaricato (con `Get-Content -Raw` e regex `(?s)`: il nome è su un'altra
+    riga), senza query.
+  - **Query fatte: 10** (la nona e la decima sopra). Le prime 8, tutte dal PC di Yuri e a minuti di distanza, senza
     segnali di blocco: struttura di `_1` (10,2 MB con
     `references=Descendants`), dati di `_1` (12 serie su 18), elenco dei
     dataflow (`/rest/dataflow/IT1?detail=allstubs`, 4.910 dataflow, 2,3
