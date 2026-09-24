@@ -953,8 +953,9 @@ ISTAT".
   `claude/focused-pascal-flzbqz` il 24/9 (sera)**: schema, fetcher,
   raccordo, cron, backfill (512 righe in produzione), pagina `/inflazione`
   06, grafico, anteprima in home, metodologia. Dettaglio sotto e nella
-  voce "Ricognizione ISTAT". Da fare: verifica di Yuri sulla Preview, PR,
-  merge. Tutto quello che serve sapere è nella voce "Ricognizione
+  voce "Ricognizione ISTAT". In produzione fino al passo 1 (PR
+  drakekluser99/Mercuriale#27, cron attivo); grafico, home e metodologia
+  in attesa di una PR nuova. Tutto quello che serve sapere è nella voce "Ricognizione
   ISTAT" in fondo. Due vincoli da non dimenticare:
   - **limite ISTAT: 5 query al minuto per IP, blocco di 1-2 giorni** se
     superato. Dal cloud ISTAT non si raggiunge e Yuri ha deciso di NON
@@ -1175,9 +1176,13 @@ ISTAT".
   mese dopo). In "Frequenza di aggiornamento": cron giornaliero e 77
   giorni di cadenza attesa. Verificata sulla pagina VERA (non legge il
   database) a 1400 e 400 px.
-  **La sezione inflazione è COMPLETA sul branch** (passi 1-4). Prima
-  della PR: Yuri verifica la Preview con i dati veri. Il cron parte solo
-  dopo il merge.
+  **Stato (24/9, sera)**: schema, fetcher, raccordo, cron, backfill e
+  passo 1 (pagina + header) sono IN PRODUZIONE con la PR
+  drakekluser99/Mercuriale#27, fusa da Yuri: **il cron
+  `fetch-istat-nic` gira da quel merge**, ogni giorno alle 11 UTC. I
+  passi 2-4 (grafico, home, metodologia) sono stati riportati sopra
+  `main` con un rebase e aspettano una PR nuova, dopo la verifica di
+  Yuri sulla Preview.
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
