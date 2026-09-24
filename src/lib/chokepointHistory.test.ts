@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { dailyWindow, findDateGaps, monthlyAverages } from "./chokepointHistory";
+import {
+  dailyWindow,
+  findDateGaps,
+  flatBaseline,
+  monthlyAverages,
+  seasonalBaseline,
+} from "./chokepointHistory";
 
 describe("findDateGaps", () => {
   it("calendario continuo: nessun buco", () => {
@@ -46,5 +52,62 @@ describe("dailyWindow", () => {
       "2024-01-08",
       "2024-01-15",
     ]);
+  });
+});
+
+/** Serie giornaliera continua con un valore calcolato dalla data. */
+function series(from: string, to: string, value: (date: string) => number) {
+  const out: { date: string; transitCalls: number }[] = [];
+  for (let t = Date.parse(`${from}T00:00:00Z`); t <= Date.parse(`${to}T00:00:00Z`); t += 86_400_000) {
+    const date = new Date(t).toISOString().slice(0, 10);
+    out.push({ date, transitCalls: value(date) });
+  }
+  return out;
+}
+
+describe("flatBaseline", () => {
+  it("media sui giorni del periodo, estremi inclusi, ignorando quelli fuori", () => {
+    const pts = series("2023-12-10", "2023-12-20", (d) => (d <= "2023-12-15" ? 10 : 99));
+    expect(flatBaseline(pts, { from: "2023-12-12", to: "2023-12-15" })).toEqual({
+      mean: 10,
+      days: 4,
+      min: 10,
+      max: 10,
+    });
+  });
+
+  it("si ferma se manca un giorno del periodo", () => {
+    const pts = series("2023-01-01", "2023-01-10", () => 5).filter((p) => p.date !== "2023-01-04");
+    expect(() => flatBaseline(pts, { from: "2023-01-01", to: "2023-01-10" })).toThrow(
+      /mancano 1 giorni.*2023-01-04/
+    );
+  });
+
+  it("si ferma su un giorno ripetuto", () => {
+    const pts = [...series("2023-01-01", "2023-01-02", () => 5), { date: "2023-01-02", transitCalls: 6 }];
+    expect(() => flatBaseline(pts, { from: "2023-01-01", to: "2023-01-02" })).toThrow(/due volte/);
+  });
+});
+
+describe("seasonalBaseline", () => {
+  // Valore = numero del mese × 10: ogni mese ha la sua media esatta.
+  const pts = series("2022-11-01", "2025-10-31", (d) => Number(d.slice(5, 7)) * 10);
+  const out = seasonalBaseline(pts, { from: "2022-11-01", to: "2025-10-31" });
+
+  it("un valore per mese, in ordine da gennaio a dicembre", () => {
+    expect(out.map((m) => m.month)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    expect(out.map((m) => m.mean)).toEqual([10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120]);
+  });
+
+  it("tre anni di giorni per mese, febbraio 2024 bisestile compreso", () => {
+    expect(out.find((m) => m.month === 2)?.days).toBe(28 + 29 + 28);
+    expect(out.find((m) => m.month === 1)?.days).toBe(93);
+    expect(out.find((m) => m.month === 4)?.days).toBe(90);
+  });
+
+  it("si ferma se il periodo non copre tutti i dodici mesi", () => {
+    expect(() => seasonalBaseline(pts, { from: "2023-01-01", to: "2023-06-30" })).toThrow(
+      /6 mesi su 12/
+    );
   });
 });
