@@ -89,6 +89,16 @@ interface Props {
 type FuelKey = "petrol" | "diesel";
 type MeasureKey = "price" | "taxShare" | "excise";
 
+/** Contorno del paese sotto il mouse, disegnato sopra gli altri. */
+const HOVER_OUTLINE = {
+  fill: "none",
+  stroke: INK_HEX,
+  strokeWidth: 1.6,
+  strokeLinejoin: "round" as const,
+  outline: "none",
+  pointerEvents: "none" as const,
+};
+
 const FUELS: ReadonlyArray<{ key: FuelKey; label: string }> = [
   { key: "petrol", label: "Benzina" },
   { key: "diesel", label: "Diesel" },
@@ -310,14 +320,20 @@ export default function EuropeFuelMap({ prices, euAverage, euWeighted }: Props) 
       >
         <ZoomableGroup center={[0, 0]} zoom={1} minZoom={1} maxZoom={5}>
           <Geographies geography={GEO_URL}>
-            {({ geographies }) =>
-              // Italia disegnata per ULTIMA, perché il suo contorno ambra non
-              // sia coperto dai bordi bianchi dei vicini (in SVG vince
-              // l'ultimo disegnato; trovato sulla mappa dei passaggi
-              // marittimi il 24/9). Solo l'Italia, che è fissa: spostare
-              // nel DOM il paese sotto il mouse farebbe perdere il focus a
-              // chi naviga da tastiera.
-              [...geographies]
+            {({ geographies }) => {
+              const hoveredGeo = hovered
+                ? geographies.find((g) => g.properties.name === hovered.countryName)
+                : undefined;
+              return (
+                <>
+              {/* Italia disegnata per ULTIMA, perché il suo contorno ambra
+                  non sia coperto dai bordi bianchi dei vicini (in SVG vince
+                  l'ultimo disegnato; trovato sulla mappa dei passaggi
+                  marittimi il 24/9). Solo l'Italia, che è fissa: spostare
+                  nel DOM il paese sotto il mouse farebbe perdere il focus a
+                  chi naviga da tastiera. Per quello c'è il contorno
+                  ridisegnato in fondo. */}
+              {[...geographies]
                 .sort((a, b) => Number(a.properties.name === "Italy") - Number(b.properties.name === "Italy"))
                 .map((geo) => {
                 const name = geo.properties.name as string;
@@ -403,8 +419,24 @@ export default function EuropeFuelMap({ prices, euAverage, euWeighted }: Props) 
                     }}
                   />
                 );
-              })
-            }
+              })}
+              {/* Il bordo del paese sotto il mouse, ridisegnato DOPO tutti
+                  gli altri (25 set 2026): i vicini, disegnati dopo, ne
+                  coprivano una parte col loro bordo bianco. Una copia del
+                  solo contorno, che non riceve mouse né focus: vedi lo
+                  stesso commento in ItalyProvinceMap. */}
+              {hoveredGeo && (
+                <Geography
+                  key={`contorno-${hoveredGeo.rsmKey}`}
+                  geography={hoveredGeo}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  style={{ default: HOVER_OUTLINE, hover: HOVER_OUTLINE, pressed: HOVER_OUTLINE }}
+                />
+              )}
+                </>
+              );
+            }}
           </Geographies>
         </ZoomableGroup>
       </ComposableMap>

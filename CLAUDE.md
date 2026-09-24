@@ -927,8 +927,8 @@ decorative. Escluso per ora: redesign totale, Oceania/LatAm,
 estrapolazioni causali. (Media UE ponderata e storico lungo, esclusi in
 origine, sono stati fatti il 15 set 2026: vedi i blocchi A e C in fondo.)
 
-**PUNTO DI RIPRESA — fine sessione 24 set 2026, sera tardi (Claude Code
-nel cloud, dopo le PR #29 e #30).** Leggere questo blocco per primo. Il
+**PUNTO DI RIPRESA — 25 set 2026 (Claude Code nel cloud, dopo le PR
+#29–#32).** Leggere questo blocco per primo. Il
 dettaglio è nelle voci in fondo a questa sezione: "Traffico marittimo",
 "CI rifatta", "Ricognizione ISTAT", "Sezione inflazione" e "Controllo
 grafico di tutto il sito".
@@ -953,6 +953,7 @@ grafico di tutto il sito".
 | #29 | Controllo grafico PC/telefono: barra, numero del giorno, tabella province, formati del grafico (voce "Controllo grafico" in fondo) |
 | #30 | Tabelle di Europa, calcolatore e materie prime leggibili su telefono |
 | #31 | Pagine `/paese/[slug]` e `/provincia/[slug]` nella cornice comune (header scuro, barra, link di ritorno) |
+| #32 | Bordo completo della forma sotto il mouse nelle mappe di province ed Europa |
 
 - **Stato**: traffico marittimo e sezione inflazione COMPLETI, tutto in
   `main` e in produzione: dati ISTAT (512 righe dal 2016), cron
@@ -2695,6 +2696,24 @@ sezione). Resta aperto:
     "provincia").
   - Verificato a 1400 e 390 px con i dati finti: nessuno sbordo, barra
     con la voce giusta accesa.
+
+- **Bordo completo al passaggio del mouse sulle mappe (25 set 2026, PR
+  drakekluser99/Mercuriale#32).**
+  In `ItalyProvinceMap` ed `EuropeFuelMap` il contorno scuro della forma
+  sotto il mouse era coperto in parte dai bordi bianchi delle forme
+  disegnate dopo (in SVG vince l'ultimo disegnato), e nella mappa d'Europa
+  il confine con l'Italia spariva sotto il suo contorno ambra. Stessa
+  causa della mappa dei passaggi marittimi (24/9), ma lì la forma era
+  fissa (l'Italia) e bastava disegnarla per ultima; qui cambia col mouse,
+  e spostarla nel DOM farebbe perdere il focus da tastiera.
+  Soluzione: dentro `Geographies` si disegna, DOPO tutte le forme, una
+  copia della sola forma evidenziata con `HOVER_OUTLINE` (niente
+  riempimento, bordo `INK_HEX`, `pointerEvents: "none"`, `tabIndex={-1}`,
+  `aria-hidden`). `pointerEvents: "none"` è necessario: se la copia
+  ricevesse il mouse, passarci sopra farebbe "uscire" il mouse dalla forma
+  originale e il bordo lampeggerebbe. Verificato con screenshot prima/dopo
+  (Firenze, Austria). Chi aggiunge un'altra mappa con evidenziazione al
+  passaggio del mouse usi lo stesso schema.
 
 ## Skill: vercel-react-best-practices
 

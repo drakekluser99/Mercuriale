@@ -37,6 +37,16 @@ import type { ProvinceFuelRow } from "./ItalyProvinceFuelTable";
 
 const GEO_URL = "/geo/italy-provinces-2025.topo.json";
 
+/** Contorno della provincia sotto il mouse, disegnato sopra le altre. */
+const HOVER_OUTLINE = {
+  fill: "none",
+  stroke: INK_HEX,
+  strokeWidth: 1.4,
+  strokeLinejoin: "round" as const,
+  outline: "none",
+  pointerEvents: "none" as const,
+};
+
 type FuelKey = "petrolSelf" | "dieselSelf";
 const FUELS: { key: FuelKey; label: string }[] = [
   { key: "petrolSelf", label: "Benzina self" },
@@ -160,8 +170,13 @@ export function ItalyProvinceMap({ rows, average }: Props) {
         style={{ width: "100%", height: "auto", maxHeight: "34rem" }}
       >
         <Geographies geography={GEO_URL}>
-          {({ geographies }) =>
-            geographies.map((geo) => {
+          {({ geographies }) => {
+            const hoveredGeo = hovered
+              ? geographies.find((g) => g.properties.prov_acr === hovered.provinceCode)
+              : undefined;
+            return (
+              <>
+            {geographies.map((geo) => {
               const code = geo.properties.prov_acr as string;
               const row = byCode.get(code);
               const value = row ? row[fuel] : null;
@@ -199,8 +214,28 @@ export function ItalyProvinceMap({ rows, average }: Props) {
                   style={{ default: shape, hover: shape, pressed: shape }}
                 />
               );
-            })
-          }
+            })}
+            {/* Il bordo della provincia evidenziata, ridisegnato DOPO
+                tutte le altre (25 set 2026). In SVG vince l'ultimo
+                elemento disegnato: le province vicine, che vengono dopo,
+                coprivano col loro bordo bianco metà del contorno scuro.
+                Non si sposta la provincia in fondo all'elenco perché
+                perderebbe il focus da tastiera; si disegna una copia del
+                solo contorno, che non riceve mouse (`pointerEvents:
+                "none"`, altrimenti passarci sopra farebbe "uscire" il mouse
+                dalla provincia) né focus, ed è nascosta agli screen reader. */}
+            {hoveredGeo && (
+              <Geography
+                key={`contorno-${hoveredGeo.rsmKey}`}
+                geography={hoveredGeo}
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ default: HOVER_OUTLINE, hover: HOVER_OUTLINE, pressed: HOVER_OUTLINE }}
+              />
+            )}
+              </>
+            );
+          }}
         </Geographies>
       </ComposableMap>
 
