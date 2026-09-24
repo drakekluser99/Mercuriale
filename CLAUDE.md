@@ -1890,11 +1890,17 @@ sezione). Resta aperto:
     etichetta e badge per `fetch-chokepoint-transits`.
   - **PUNTO DI RIPRESA (aggiornato 24 set 2026, sera)**.
     - **In `main`**: backend (PR drakekluser99/Mercuriale#11, #12, #13),
-      pagina con le schede (#14), grafico transiti + Brent (#15), mappa
-      regionale (#16).
-    - **Passo 4 (home) FATTO sul branch `claude/youthful-knuth-dixxvo`,
-      in attesa della verifica di Yuri sulla Preview** — vedi la voce
-      "Home" qui sotto. Poi PR e merge, poi passo 5 (metodologia).
+      schede (#14), grafico (#15), mappa (#16), home (#17).
+    - **Passo 5 (metodologia) FATTO sul branch
+      `claude/youthful-knuth-dixxvo`, in attesa della verifica di Yuri** —
+      vedi la voce "Metodologia" qui sotto. Con il suo merge la UI del
+      traffico marittimo è COMPLETA.
+    - **Resta aperto**: l'unità del campo `capacity` (da leggere su
+      PortWatch "Data & Methodology" dal browser; dal cloud il sito è
+      bloccato). Confermata quella, si mostra la capacità nelle schede
+      (`capacityReading` è pronto) e si aggiorna il paragrafo "La capacità
+      stimata" in metodologia. Aggiungere Suez è una riga in `CHOKEPOINTS`
+      più baseline, coordinate, nomi.
     - **Decisioni già prese da Yuri, da NON ridiscutere**: baseline
       (Hormuz stagionale variante B, Bab el-Mandeb piatta), tre stati con
       nome e colori neutro / ocra / ruggine, soglie p5 per passaggio e
@@ -2039,6 +2045,18 @@ sezione). Resta aperto:
         così la home non fa a ogni visita la query di un anno.
       - `CHOKEPOINT_SHORT_NAMES` in `chokepointStatus.ts` (prima dentro
         la mappa), condiviso da mappa e fascia.
+    - **Metodologia (passo 5, 24 set 2026)**: sezione 04 "Traffico
+      marittimo" in `/metodologia` (ancora `#traffico-marittimo`, linkata
+      dalla nota Fonte della pagina; "Codice sorgente" e "API pubblica"
+      passate a 05 e 06), testo in
+      `components/methodology/ShippingMethodology.tsx`. Periodi, rotture,
+      valori mensili del normale e soglie sono LETTI da
+      `CHOKEPOINT_BASELINES` e `STRONGLY_REDUCED_BELOW_PCT`, non scritti a
+      mano; le motivazioni sono prosa e vanno riviste se cambiano i
+      periodi. Aggiunti anche la scheda fonte IMF PortWatch e i 9 giorni
+      di cadenza in "Frequenza di aggiornamento". I dodici mesi di Hormuz
+      sono una griglia (6 per riga sul telefono), non una tabella che
+      scorreva di lato.
     - **Verifica visiva**: dal cloud il database non si raggiunge, quindi
       pagina di prova con dati finti a 1.400 e 400 px, screenshot a Yuri
       prima del push; verifica sui dati veri sulla Preview.

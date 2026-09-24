@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ChokepointCard, type ChokepointCardData } from "@/components/ChokepointCard";
 import { ChokepointMap } from "@/components/ChokepointMap";
 import { KeyFigure } from "@/components/KeyFigure";
@@ -85,7 +86,13 @@ export function ShippingSection({
         &quot;fortemente ridotto&quot; sotto{" "}
         {formatPercent(STRONGLY_REDUCED_BELOW_PCT, 0)} · Brent: Alpha
         Vantage (dati EIA), prezzi giornalieri pubblicati una volta a settimana
-        · confini: Natural Earth (dominio pubblico)
+        · confini: Natural Earth (dominio pubblico) ·{" "}
+        <Link
+          href="/metodologia#traffico-marittimo"
+          className="text-system-accent underline decoration-dotted underline-offset-2 hover:decoration-solid"
+        >
+          come sono calcolati normale e stati
+        </Link>
       </SourceNote>
     </section>
   );

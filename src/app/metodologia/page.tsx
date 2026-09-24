@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SystemCard } from "@/components/SystemCard";
 import { ProvenanceStamp } from "@/components/ProvenanceStamp";
+import { ShippingMethodology } from "@/components/methodology/ShippingMethodology";
 
 export const metadata = {
   title: "Metodologia — Mercuriale",
@@ -51,6 +52,11 @@ export default function Metodologia() {
             desc="Fonte del «numero del giorno» in home: una cifra dal bilancio annuale dell'attività dell'Agenzia, non un dato aggiornato da un cron — vedi «Frequenza di aggiornamento» qui sotto."
             link="https://www.adm.gov.it"
           />
+          <SourceItem
+            name="IMF PortWatch — Fondo Monetario Internazionale"
+            desc="Navi in transito ogni giorno negli stretti di Hormuz e Bab el-Mandeb, stimate dai segnali AIS delle navi. Pubblicate una volta a settimana; storico dal 2019. Metodo nella sezione «Traffico marittimo» qui sotto."
+            link="https://portwatch.imf.org"
+          />
         </Section>
 
         <Section index="02" title="Frequenza di aggiornamento">
@@ -76,7 +82,9 @@ export default function Metodologia() {
               gas naturale (prezzi giornalieri che l&apos;EIA pubblica una
               volta a settimana), 7 per i carburanti, 80 per metalli e
               agricole (medie mensili che arrivano con circa due mesi di
-              ritardo), 62 per i carburanti svizzeri (media mensile).
+              ritardo), 62 per i carburanti svizzeri (media mensile), 9 per
+              il traffico marittimo (dati giornalieri pubblicati una volta a
+              settimana, fino alla domenica precedente).
             </li>
             <li>
               <strong>&quot;In attesa&quot;</strong> — la cadenza attesa è
@@ -143,7 +151,11 @@ export default function Metodologia() {
           </ul>
         </Section>
 
-        <Section index="04" title="Codice sorgente">
+        <Section index="04" title="Traffico marittimo" id="traffico-marittimo">
+          <ShippingMethodology />
+        </Section>
+
+        <Section index="05" title="Codice sorgente">
           <p className="text-sm leading-relaxed text-system-ink-secondary">
             Questo è un progetto open source: chiunque può ispezionare il
             codice, verificare come i dati vengono raccolti e processati,
@@ -153,7 +165,7 @@ export default function Metodologia() {
           </p>
         </Section>
 
-        <Section index="05" title="API pubblica">
+        <Section index="06" title="API pubblica">
           <p className="text-sm leading-relaxed text-system-ink-secondary">
             Gli stessi ultimi prezzi mostrati sulla dashboard sono
             disponibili in JSON, per riusarli in altri progetti:
@@ -224,14 +236,19 @@ export default function Metodologia() {
 function Section({
   index,
   title,
+  id,
   children,
 }: {
   index: string;
   title: string;
+  /** Ancora per i link da altre pagine (es. /metodologia#traffico-marittimo). */
+  id?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section>
+    // `scroll-mt-16`: arrivando da un link con l'ancora, il titolo non
+    // finisce sotto il bordo superiore della finestra.
+    <section id={id} className="scroll-mt-16">
       <div className="flex items-baseline gap-3">
         <span className="font-mono text-xs text-system-ink-muted">{index} /</span>
         <h2 className="text-lg font-semibold text-system-ink">{title}</h2>
