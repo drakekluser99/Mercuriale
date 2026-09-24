@@ -17,9 +17,7 @@ import {
   INK_HEX,
   NO_DATA_FILL,
 } from "@/lib/divergingColor";
-
-const GEO_URL =
-  "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
+import { WORLD_ATLAS_50M_URL as GEO_URL } from "@/lib/geo";
 
 export interface CountryFuelData {
   countryName: string;
@@ -313,7 +311,15 @@ export default function EuropeFuelMap({ prices, euAverage, euWeighted }: Props) 
         <ZoomableGroup center={[0, 0]} zoom={1} minZoom={1} maxZoom={5}>
           <Geographies geography={GEO_URL}>
             {({ geographies }) =>
-              geographies.map((geo) => {
+              // Italia disegnata per ULTIMA, perché il suo contorno ambra non
+              // sia coperto dai bordi bianchi dei vicini (in SVG vince
+              // l'ultimo disegnato; trovato sulla mappa dei passaggi
+              // marittimi il 24/9). Solo l'Italia, che è fissa: spostare
+              // nel DOM il paese sotto il mouse farebbe perdere il focus a
+              // chi naviga da tastiera.
+              [...geographies]
+                .sort((a, b) => Number(a.properties.name === "Italy") - Number(b.properties.name === "Italy"))
+                .map((geo) => {
                 const name = geo.properties.name as string;
                 const data = dataByCountry.get(name);
                 const value = stats?.byCountry.get(name) ?? null;
