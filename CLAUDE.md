@@ -952,6 +952,7 @@ grafico di tutto il sito".
 | #28 | Inflazione: grafico dal 2016, anteprima in home, metodologia |
 | #29 | Controllo grafico PC/telefono: barra, numero del giorno, tabella province, formati del grafico (voce "Controllo grafico" in fondo) |
 | #30 | Tabelle di Europa, calcolatore e materie prime leggibili su telefono |
+| #31 | Pagine `/paese/[slug]` e `/provincia/[slug]` nella cornice comune (header scuro, barra, link di ritorno) |
 
 - **Stato**: traffico marittimo e sezione inflazione COMPLETI, tutto in
   `main` e in produzione: dati ISTAT (512 righe dal 2016), cron
@@ -1001,10 +1002,10 @@ grafico di tutto il sito".
   4.0, non ancora scritta in metodologia perché non verificata);
   pubblicare il post LinkedIn (numeri da ricontrollare sul sito il giorno
   stesso: PortWatch aggiorna il martedì).
-- **Resta aperto, lavoro di codice**: `/paese/[slug]` e
-  `/provincia/[slug]` hanno ancora la cornice vecchia (niente header
-  scuro né barra delle sezioni); la barra delle sezioni sta in 1280 px
-  senza margine, un'etichetta più lunga la fa scorrere di nuovo.
+- **Resta aperto, lavoro di codice**: la barra delle sezioni sta in
+  1280 px senza margine, un'etichetta più lunga la fa scorrere di nuovo.
+  (`/paese/[slug]` e `/provincia/[slug]` nella cornice comune: fatto il
+  25/9, vedi "Pagine paese e provincia nella cornice comune" in fondo.)
 - **Come si è lavorato**: sessione Claude Code nel cloud, con accesso
   diretto al repo e alle PR via GitHub. Un passo alla volta: codice e
   screenshot con dati finti (Playwright, pagina di prova temporanea mai
@@ -2660,12 +2661,40 @@ sezione). Resta aperto:
   1400 px). Scorrono ancora di lato, di proposito: la tabella dati
   dell'inflazione (dentro "Vedi i dati"), il JSON di esempio in
   metodologia, le correzioni in `/stato-dati`.
-  **Resta aperto**: le pagine
-  `/paese/[slug]` e `/provincia/[slug]` hanno ancora la cornice vecchia
-  (senza header scuro né barra).
   Nello stesso giro: script Playwright per screenshot e video del post
   LinkedIn, da lanciare dal PC contro la produzione (dal cloud il sito
   non si raggiunge). Non è nel repository.
+
+- **Pagine paese e provincia nella cornice comune (25 set 2026, Claude
+  Code nel cloud, PR drakekluser99/Mercuriale#31).** `/paese/[slug]` e `/provincia/[slug]` erano le
+  ultime pagine con l'header chiaro fatto a mano, senza barra delle
+  sezioni né "Come citare": chi ci arrivava dalla mappa sembrava uscire
+  dal sito. Ora usano `PageShell`.
+  - **`backLink`** (prop opzionale nuova di `PageShell`/`SiteHeader`):
+    link alla sezione madre sopra il titolo, nell'header scuro ("←
+    Carburanti in Europa", "← Province italiane"). Le pagine che non la
+    passano sono identiche a prima.
+  - **`sectionForPath`** in `siteNav.ts` (pura, testata in
+    `siteNav.test.ts`): dice a quale sezione appartiene un indirizzo;
+    `DETAIL_PAGE_SECTIONS` porta `/paese/*` a `/europa` e `/provincia/*`
+    a `/italia`. `SectionNav` la usa: sulla pagina esatta
+    `aria-current="page"`, su una pagina di dettaglio `"true"` (la voce è
+    la sezione in cui ci si trova, non la pagina corrente). Il
+    centramento della voce attiva cerca `a[aria-current]`.
+  - Contenuto con lo schema delle altre pagine: `SectionHeading` col
+    numero della sezione madre (01, 04) e `KeyFigure` con la frase che
+    prima stava nell'header (quota di imposte per il paese, prezzo self e
+    posizione per la provincia). Schede in `md:grid-cols-2
+    lg:grid-cols-3`: benzina, diesel/gasolio e il confronto con la media
+    (scelta di Yuri, 25/9). Calcoli e testi delle schede invariati. La
+    nota "perché qui non c'è la quota fiscale" della provincia è un
+    paragrafo sotto le schede, non più una scheda.
+  - Titoli: "Benzina e diesel in <paese>", "Benzina e gasolio a
+    <provincia>" (la pagina ha sempre mostrato entrambi i carburanti).
+    Ordinale della provincia corretto da "12°" a "12ª" (concorda con
+    "provincia").
+  - Verificato a 1400 e 390 px con i dati finti: nessuno sbordo, barra
+    con la voce giusta accesa.
 
 ## Skill: vercel-react-best-practices
 

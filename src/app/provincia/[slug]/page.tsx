@@ -7,8 +7,12 @@ import { ALL_PROVINCES, provinceForSlug } from "@/lib/provinces";
 import { formatFuelPrice, formatDate, currencySymbol } from "@/lib/format";
 import { computeFreshness, getFreshnessConfig } from "@/lib/freshness/compute";
 import { SystemCard } from "@/components/SystemCard";
-import { ProvenanceStamp } from "@/components/ProvenanceStamp";
 import { SourceNote } from "@/components/SourceNote";
+import { KeyFigure } from "@/components/KeyFigure";
+import { SectionHeading } from "@/components/SectionHeading";
+import { PageShell } from "@/components/site/PageShell";
+import { getNow } from "@/lib/dashboard";
+import { sectionPage } from "@/lib/siteNav";
 
 // Stesso motivo di /paese/[slug]: il dato arriva da un cron (per ora uno
 // script lanciato a mano, vedi CLAUDE.md), non dalla build. `force-dynamic`
@@ -45,9 +49,18 @@ export async function generateMetadata({
   };
 }
 
-/** Ordinale italiano ("1°", "12°", "107°") — concorda con "posto". */
+// La pagina di una provincia è un dettaglio della sezione "Province
+// italiane" (25 set 2026): stessa cornice, stesso numero, link di ritorno
+// alla mappa e alla classifica da cui ci si arriva.
+const ITALY = sectionPage("/italia");
+const BACK_LINK = { href: ITALY.href, label: ITALY.label };
+const INTRO =
+  "Prezzo medio di benzina e gasolio, self-service e servito, dai prezzi che ogni distributore della provincia comunica al Ministero, a confronto con la media nazionale.";
+
+/** Ordinale italiano al femminile ("1ª", "12ª", "107ª") — concorda con
+ *  "provincia". Era "12°", che concorda con "posto" ma non con la frase. */
 function ordinal(n: number): string {
-  return `${n}°`;
+  return `${n}ª`;
 }
 
 export default async function ProvincePage({ params }: PageProps) {
@@ -76,28 +89,21 @@ export default async function ProvincePage({ params }: PageProps) {
   // stesso principio di /paese/[slug].
   if (!province) {
     return (
-      <div className="min-h-screen bg-system-bg text-system-ink">
-        <header className="border-b border-system-border bg-system-surface">
-          <div className="mx-auto max-w-3xl px-6 py-8">
-            <Link
-              href="/italia"
-              className="text-xs font-semibold uppercase tracking-[0.14em] text-system-accent hover:underline"
-            >
-              ← Tutte le province
-            </Link>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-              Benzina a {provinceRoute.name}
-            </h1>
-          </div>
-        </header>
-        <main className="mx-auto max-w-3xl px-6 py-10">
-          <p className="text-sm leading-relaxed text-system-ink-secondary">
+      <PageShell
+        title={`Benzina e gasolio a ${provinceRoute.name}`}
+        intro={INTRO}
+        backLink={BACK_LINK}
+        consultedOn={getNow()}
+      >
+        <section>
+          <SectionHeading number={ITALY.number} title={`Prezzi a ${provinceRoute.name}`} />
+          <p className="mt-4 text-sm leading-relaxed text-system-ink-secondary">
             Non abbiamo ancora un prezzo registrato per {provinceRoute.name}.
             Il dataset del MIMIT potrebbe non avere ancora impianti
             classificati per questa provincia nell&apos;ultima estrazione.
           </p>
-        </main>
-      </div>
+        </section>
+      </PageShell>
     );
   }
 
@@ -115,43 +121,32 @@ export default async function ProvincePage({ params }: PageProps) {
     : "non_aggiornato";
 
   return (
-    <div className="min-h-screen bg-system-bg text-system-ink">
-      <header className="border-b border-system-border bg-system-surface">
-        <div className="mx-auto max-w-3xl px-6 py-8">
-          <Link
-            href="/italia"
-            className="text-xs font-semibold uppercase tracking-[0.14em] text-system-accent hover:underline"
-          >
-            ← Tutte le province
-          </Link>
-          <h1 className="mt-2 flex items-center gap-2 text-3xl font-semibold tracking-tight">
-            <ProvenanceStamp size={20} className="text-system-accent" />
-            Benzina a {province.provinceName}
-          </h1>
-          <p className="mt-2 text-sm leading-relaxed text-system-ink-secondary">
-            {province.petrolSelf !== null ? (
-              <>
-                Il self costa{" "}
-                <strong className="text-system-ink">
-                  {formatFuelPrice(province.petrolSelf)} €/L
-                </strong>
-                {petrolRank
-                  ? `, ${ordinal(petrolRank.rank)} provincia più cara su ${
-                      petrolRank.total
-                    }`
-                  : ""}
-                .
-              </>
-            ) : (
-              "Non abbiamo ancora un prezzo self registrato per questa provincia."
-            )}
+    <PageShell
+      title={`Benzina e gasolio a ${province.provinceName}`}
+      intro={INTRO}
+      backLink={BACK_LINK}
+      consultedOn={getNow()}
+    >
+      <section>
+        <SectionHeading number={ITALY.number} title={`Prezzi a ${province.provinceName}`} />
+        {/* La frase che prima stava nell'header è la cifra chiave, come
+            nelle pagine di sezione. */}
+        {province.petrolSelf !== null ? (
+          <KeyFigure value={`${formatFuelPrice(province.petrolSelf)} €/L`}>
+            il prezzo medio della benzina self a {province.provinceName}
+            {petrolRank
+              ? `: la ${ordinal(petrolRank.rank)} provincia più cara su ${petrolRank.total}`
+              : ""}
+            .
+          </KeyFigure>
+        ) : (
+          <p className="mt-4 text-sm leading-relaxed text-system-ink-secondary">
+            Non abbiamo ancora un prezzo self registrato per questa provincia.
           </p>
-        </div>
-      </header>
+        )}
 
-      <main className="mx-auto max-w-3xl px-6 py-10 space-y-8">
         {freshnessState !== "aggiornato" && (
-          <p className="rounded-md border border-system-signal-wait/40 bg-system-surface px-4 py-3 text-xs text-system-signal-wait">
+          <p className="mt-4 rounded-md border border-system-signal-wait/40 bg-system-surface px-4 py-3 text-xs text-system-signal-wait">
             {freshnessState === "non_aggiornato"
               ? "Dato non aggiornato"
               : "In attesa dell'aggiornamento"}
@@ -160,7 +155,9 @@ export default async function ProvincePage({ params }: PageProps) {
           </p>
         )}
 
-        <section className="grid gap-4 sm:grid-cols-2">
+        {/* Tre schede in una riga da `lg`, due da `md`, una sotto l'altra
+            sul telefono: benzina, gasolio e il confronto con la media. */}
+        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <FuelStatCard
             label="Benzina"
             self={province.petrolSelf}
@@ -179,52 +176,52 @@ export default async function ProvincePage({ params }: PageProps) {
             avgSelf={average.dieselSelf}
             currency="EUR"
           />
-        </section>
+          <SystemCard
+            eyebrow="Confronto"
+            title={`${province.provinceName} rispetto alla media nazionale`}
+          >
+            <p className="text-sm leading-relaxed text-system-ink-secondary">
+              {vsAveragePetrolSelf !== null && average.petrolSelf !== null ? (
+                <>
+                  Il self a {province.provinceName} costa{" "}
+                  <strong
+                    className={
+                      vsAveragePetrolSelf >= 0
+                        ? "text-system-signal-up"
+                        : "text-system-signal-down"
+                    }
+                  >
+                    {vsAveragePetrolSelf >= 0 ? "+" : "−"}
+                    {formatFuelPrice(Math.abs(vsAveragePetrolSelf))} €/L
+                  </strong>{" "}
+                  rispetto alla media nazionale pesata sul numero di impianti (
+                  {formatFuelPrice(average.petrolSelf)} €/L).
+                </>
+              ) : (
+                "Il confronto con la media nazionale non è disponibile per questa estrazione."
+              )}
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-system-ink-muted">
+              Media PESATA sul numero di impianti di ogni provincia, non una
+              media semplice fra le 107: una provincia con centinaia di
+              distributori non deve contare quanto una con poche decine.
+            </p>
+          </SystemCard>
+        </div>
 
-        <SystemCard
-          eyebrow="Confronto"
-          title={`${province.provinceName} rispetto alla media nazionale`}
-        >
-          <p className="text-sm leading-relaxed text-system-ink-secondary">
-            {vsAveragePetrolSelf !== null && average.petrolSelf !== null ? (
-              <>
-                Il self a {province.provinceName} costa{" "}
-                <strong
-                  className={
-                    vsAveragePetrolSelf >= 0
-                      ? "text-system-signal-up"
-                      : "text-system-signal-down"
-                  }
-                >
-                  {vsAveragePetrolSelf >= 0 ? "+" : "−"}
-                  {formatFuelPrice(Math.abs(vsAveragePetrolSelf))} €/L
-                </strong>{" "}
-                rispetto alla media nazionale pesata sul numero di impianti (
-                {formatFuelPrice(average.petrolSelf)} €/L).
-              </>
-            ) : (
-              "Il confronto con la media nazionale non è disponibile per questa estrazione."
-            )}
-          </p>
-          <p className="mt-2 text-xs leading-relaxed text-system-ink-muted">
-            Media PESATA sul numero di impianti di ogni provincia, non una
-            media semplice fra le 107: una provincia con centinaia di
-            distributori non deve contare quanto una con poche decine.
-          </p>
-        </SystemCard>
-
-        <SystemCard eyebrow="Nota" title="Perché qui non c'è la quota fiscale">
-          <p className="text-sm leading-relaxed text-system-ink-secondary">
-            L&apos;accisa sui carburanti è uguale in tutta Italia: non varia
-            da provincia a provincia, quindi scomporla qui ripeterebbe lo
-            stesso numero 107 volte invece di dire qualcosa di nuovo su{" "}
-            {province.provinceName}. La trovi già calcolata in{" "}
-            <Link href="/paese/italia" className="underline hover:text-system-ink">
-              /paese/italia
-            </Link>
-            .
-          </p>
-        </SystemCard>
+        {/* Nota a tutta larghezza sotto le schede: non è un dato, spiega
+            perché un dato manca. */}
+        <p className="mt-4 text-sm leading-relaxed text-system-ink-secondary">
+          <strong className="text-system-ink">Perché qui non c&apos;è la quota fiscale.</strong>{" "}
+          L&apos;accisa sui carburanti è uguale in tutta Italia: non varia da
+          provincia a provincia, quindi scomporla qui ripeterebbe lo stesso
+          numero 107 volte invece di dire qualcosa di nuovo su{" "}
+          {province.provinceName}. La trovi già calcolata nella{" "}
+          <Link href="/paese/italia" className="text-system-accent underline hover:no-underline">
+            pagina dell&apos;Italia
+          </Link>
+          .
+        </p>
 
         <SourceNote
           sources={["mimit"]}
@@ -236,8 +233,8 @@ export default async function ProvincePage({ params }: PageProps) {
           rilevazione:{" "}
           {province.recordedAt ? formatDate(province.recordedAt) : "—"}
         </SourceNote>
-      </main>
-    </div>
+      </section>
+    </PageShell>
   );
 }
 

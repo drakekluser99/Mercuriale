@@ -28,7 +28,7 @@ import {
   LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
-import { PAGE_LINKS, SECTION_PAGES } from "@/lib/siteNav";
+import { PAGE_LINKS, SECTION_PAGES, sectionForPath } from "@/lib/siteNav";
 
 const ICONS: Record<string, LucideIcon> = {
   "/": LayoutGrid,
@@ -47,13 +47,14 @@ const ITEMS = [
 
 export function SectionNav() {
   const pathname = usePathname();
+  const activeSection = sectionForPath(pathname);
   const stripRef = useRef<HTMLDivElement>(null);
 
   // Su mobile la striscia scorre in orizzontale: portiamo in vista la voce
   // della pagina aperta, spostando solo la striscia e non la pagina.
   useEffect(() => {
     const strip = stripRef.current;
-    const link = strip?.querySelector<HTMLElement>('a[aria-current="page"]');
+    const link = strip?.querySelector<HTMLElement>("a[aria-current]");
     if (!strip || !link) return;
     const target = link.offsetLeft - (strip.clientWidth - link.offsetWidth) / 2;
     strip.scrollTo({ left: Math.max(0, target) });
@@ -71,15 +72,19 @@ export function SectionNav() {
         {ITEMS.map(({ href, label, number }) => {
           const Icon = ICONS[href] ?? Globe2;
           // La home è attiva solo su "/" esatto; le sezioni anche sulle
-          // eventuali sotto-pagine (es. /italia/qualcosa).
-          const isActive =
-            href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+          // sotto-pagine e sulle pagine di dettaglio (/paese/italia accende
+          // "Carburanti in Europa"): vedi sectionForPath in siteNav.ts.
+          const isActive = href === "/" ? pathname === "/" : activeSection === href;
+          // "page" solo sulla pagina esatta; su una pagina di dettaglio la
+          // voce è la sezione in cui ci si trova, non la pagina corrente,
+          // e per uno screen reader "true" dice proprio questo.
+          const current = !isActive ? undefined : pathname === href ? "page" : "true";
           return (
             <Link
               key={href}
               href={href}
               // `aria-current="page"`: per uno screen reader, "sei qui".
-              aria-current={isActive ? "page" : undefined}
+              aria-current={current}
               className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-l border-l-system-chrome-border px-4 py-3 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors first:border-l-0 hover:bg-white/[0.03] hover:text-system-chrome-accent sm:px-5 lg:px-3 ${
                 isActive
                   ? "border-b-system-chrome-accent bg-white/[0.05] text-system-chrome-accent"
