@@ -1,4 +1,5 @@
 import { ChokepointCard, type ChokepointCardData } from "@/components/ChokepointCard";
+import { ChokepointMap } from "@/components/ChokepointMap";
 import { KeyFigure } from "@/components/KeyFigure";
 import { ShippingHistoryChart } from "@/components/ShippingHistoryChart";
 import { SectionHeading } from "@/components/SectionHeading";
@@ -53,11 +54,17 @@ export function ShippingSection({
       {chokepoints.length === 0 ? (
         <EmptyState label={NO_DATA_YET} />
       ) : (
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          {chokepoints.map((c) => (
-            <ChokepointCard key={c.key} data={c} />
-          ))}
-        </div>
+        <>
+          {/* Prima DOVE (la mappa), poi i numeri (le schede). */}
+          <div className="mt-4">
+            <ChokepointMap chokepoints={chokepoints} />
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {chokepoints.map((c) => (
+              <ChokepointCard key={c.key} data={c} />
+            ))}
+          </div>
+        </>
       )}
       {chart.length > 0 && (
         <div className="mt-6">
@@ -78,6 +85,7 @@ export function ShippingSection({
         &quot;fortemente ridotto&quot; sotto{" "}
         {formatPercent(STRONGLY_REDUCED_BELOW_PCT, 0)} · Brent: Alpha
         Vantage (dati EIA), prezzi giornalieri pubblicati una volta a settimana
+        · confini: Natural Earth (dominio pubblico)
       </SourceNote>
     </section>
   );

@@ -17,9 +17,7 @@ import {
   INK_HEX,
   NO_DATA_FILL,
 } from "@/lib/divergingColor";
-
-const GEO_URL =
-  "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
+import { WORLD_ATLAS_50M_URL as GEO_URL } from "@/lib/geo";
 
 export interface CountryFuelData {
   countryName: string;

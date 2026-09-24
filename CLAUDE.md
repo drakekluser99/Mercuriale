@@ -1892,12 +1892,12 @@ sezione). Resta aperto:
     - **In `main`**: tabella, cron giornaliero, storico dal 2019,
       `CHOKEPOINT_BASELINES` (PR drakekluser99/Mercuriale#11 e #12),
       registri fonte/freschezza/`/stato-dati`, soglie e `transitState`
-      (drakekluser99/Mercuriale#13), pagina `/traffico-marittimo` con le
-      schede, passo 1 (drakekluser99/Mercuriale#14).
-    - **Passo 2 (grafico) FATTO sul branch `claude/youthful-knuth-dixxvo`,
-      in attesa della verifica di Yuri sulla Preview (dati veri)** — vedi
-      la voce "Grafico transiti + Brent" qui sotto. Poi PR e merge, poi
-      passo 3 (mappa).
+      (drakekluser99/Mercuriale#13), pagina con le schede, passo 1
+      (drakekluser99/Mercuriale#14), grafico transiti + Brent, passo 2
+      (drakekluser99/Mercuriale#15).
+    - **Passo 3 (mappa) FATTO sul branch `claude/youthful-knuth-dixxvo`,
+      in attesa della verifica di Yuri sulla Preview** — vedi la voce
+      "Mappa regionale" qui sotto. Poi PR e merge, poi passo 4 (home).
     - **Decisioni già prese da Yuri, da NON ridiscutere**: baseline
       (Hormuz stagionale variante B, Bab el-Mandeb piatta), tre stati con
       nome e colori neutro / ocra / ruggine, soglie p5 per passaggio e
@@ -1990,6 +1990,28 @@ sezione). Resta aperto:
         `components/HistoryWindowSelector.tsx`, estratto da
         `PriceHistoryChart` e ora condiviso dai due grafici.
       - Nota "Fonte" della sezione: aggiunto Alpha Vantage per il Brent.
+    - **Mappa regionale (passo 3, 24 set 2026)**: `components/ChokepointMap.tsx`,
+      fra il testo introduttivo e le schede ("prima DOVE, poi i numeri").
+      - Proiezione `geoAzimuthalEqualArea`, centro 30°E / 27°N, scala
+        720, viewBox 800×540: dall'Italia (contorno ambra, come nella
+        mappa d'Europa) al Golfo di Aden, Hormuz a destra.
+      - Un `Marker` per passaggio (coordinate approssimate al decimo di
+        grado in `COORDINATES`), colore per stato (neutro / ocra /
+        ruggine, grigio per "dati incompleti") e accanto, SCRITTI, nome,
+        scostamento e stato: il colore non è mai l'unico veicolo.
+        Etichette con alone chiaro (`paint-order: stroke`); Hormuz a
+        sinistra del punto, Bab el-Mandeb sotto (a destra usciva dal
+        riquadro). Per il numero la classe `font-mono` e non una var()
+        scritta a mano (usciva in Courier).
+      - Niente zoom né tooltip: i numeri sono nelle schede. SVG
+        `aria-hidden`, descrizione nell'`aria-label` del contenitore;
+        larghezza massima `max-w-3xl` perché il testo SVG cresce con la
+        mappa.
+      - `src/lib/geo.ts` (`WORLD_ATLAS_50M_URL`): l'atlante ora è una
+        costante condivisa con `EuropeFuelMap`.
+      - Dal cloud jsdelivr è bloccato: per gli screenshot si scarica
+        `world-atlas@2` con `npm pack` e Playwright lo serve con
+        `page.route` al posto dell'URL della CDN.
     - **Verifica visiva**: dal cloud il database non si raggiunge, quindi
       pagina di prova con dati finti a 1.400 e 400 px, screenshot a Yuri
       prima del push; verifica sui dati veri sulla Preview.
