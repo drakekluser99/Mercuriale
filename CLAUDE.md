@@ -1765,8 +1765,10 @@ sezione). Resta aperto:
   norma il giovedì; USA a inizio settimana; MIMIT ogni giorno; Svizzera
   nei primi giorni del mese.
 
-- **Traffico marittimo nei passaggi obbligati — BACKEND FATTO (24 set
-  2026), UI ancora da fare.** Punto 3 della roadmap del 23/9 (`docs/`
+- **Traffico marittimo nei passaggi obbligati — FATTO (24 set 2026):
+  backend e UI in produzione, PR drakekluser99/Mercuriale#11–#18.** Resta
+  aperta solo la capacità (vedi "STATO" in fondo alla voce). Punto 3 della
+  roadmap del 23/9 (`docs/`
   non contiene la roadmap: è stata passata come allegato in chat).
   - **Fonte**: IMF PortWatch, "Daily Chokepoint Transit Calls and Trade
     Volume Estimates", servizio ArcGIS REST in JSON
@@ -1888,27 +1890,27 @@ sezione). Resta aperto:
     giornalieri pubblicati il martedì fino alla domenica prima: subito
     prima dell'uscita successiva il dato ha ~9 giorni); `/stato-dati` ha
     etichetta e badge per `fetch-chokepoint-transits`.
-  - **PUNTO DI RIPRESA (aggiornato 24 set 2026, sera)**.
-    - **In `main`**: backend (PR drakekluser99/Mercuriale#11, #12, #13),
-      schede (#14), grafico (#15), mappa (#16), home (#17).
-    - **Passo 5 (metodologia) FATTO sul branch
-      `claude/youthful-knuth-dixxvo`, in attesa della verifica di Yuri** —
-      vedi la voce "Metodologia" qui sotto. Con il suo merge la UI del
-      traffico marittimo è COMPLETA.
+  - **STATO (fine sessione 24 set 2026)**.
+    - **Tutto in `main` / produzione**: backend (PR
+      drakekluser99/Mercuriale#11, #12, #13), schede (#14), grafico (#15),
+      mappa (#16), home (#17), metodologia (#18). La UI è COMPLETA: i
+      cinque passi qui sotto sono tutti fatti e restano come registro
+      delle scelte.
     - **Resta aperto**: l'unità del campo `capacity` (da leggere su
       PortWatch "Data & Methodology" dal browser; dal cloud il sito è
       bloccato). Confermata quella, si mostra la capacità nelle schede
       (`capacityReading` è pronto) e si aggiorna il paragrafo "La capacità
-      stimata" in metodologia. Aggiungere Suez è una riga in `CHOKEPOINTS`
-      più baseline, coordinate, nomi.
+      stimata" in `ShippingMethodology.tsx`. Aggiungere Suez è una riga in
+      `CHOKEPOINTS` più baseline, coordinate, nomi brevi e posizione
+      dell'etichetta sulla mappa.
     - **Decisioni già prese da Yuri, da NON ridiscutere**: baseline
       (Hormuz stagionale variante B, Bab el-Mandeb piatta), tre stati con
       nome e colori neutro / ocra / ruggine, soglie p5 per passaggio e
       −40% comune, freschezza 9 + 4, sesta cella nella fascia della home
       (non una sostituzione), mappa REGIONALE Italia–Golfo e non un
       planisfero, `capacity = 0` con transiti = "stima non disponibile".
-    - **Prossimi passi della UI, uno alla volta con verifica di Yuri fra
-      l'uno e l'altro** (impostazione approvata il 24/9):
+    - **Passi della UI, uno alla volta con verifica di Yuri fra l'uno e
+      l'altro** (impostazione approvata il 24/9; tutti FATTI, PR #14–#18):
       1. **Pagina `/traffico-marittimo`, sezione 05** "Traffico
          marittimo": voce in `SECTION_PAGES` (`siteNav.ts`) + icona
          (`Ship` di lucide) nelle mappe `ICONS` di `SectionNav.tsx` e
@@ -2060,6 +2062,20 @@ sezione). Resta aperto:
     - **Verifica visiva**: dal cloud il database non si raggiunge, quindi
       pagina di prova con dati finti a 1.400 e 400 px, screenshot a Yuri
       prima del push; verifica sui dati veri sulla Preview.
+
+- **Fonti in metodologia complete (24 set 2026, sera).** L'elenco "Fonti
+  dei dati" di `/metodologia` aveva solo Alpha Vantage, Commissione, EIA,
+  ADM (e PortWatch dal passo 5): mancavano MIMIT, BFS, BCE ed Eurostat,
+  già citate nelle note "Fonte" del sito. Ora ci sono tutte e nove,
+  ordinate per argomento (carburanti, materie prime, traffico, cifre
+  annuali), con cosa forniscono, licenza dove nota, cadenza. Corrette
+  nello stesso giro due schede imprecise: Alpha Vantage ("aggregati da
+  mercati finanziari") ora dice che rilancia EIA e FMI; ADM non è più
+  "il numero del giorno" ma una delle cifre della raccolta `/numeri`. In
+  "Frequenza di aggiornamento" aggiunti MIMIT (1 giorno), PortWatch e
+  Svizzera fra i controlli automatici. **Regola**: chi aggiunge una fonte
+  a `src/lib/sources.ts` aggiunge anche la sua scheda qui (commento in
+  testa all'elenco).
 
 ## Skill: vercel-react-best-practices
 

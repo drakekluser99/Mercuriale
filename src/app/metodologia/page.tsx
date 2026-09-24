@@ -32,14 +32,14 @@ export default function Metodologia() {
 
       <main className="mx-auto max-w-3xl px-6 py-10 space-y-10">
         <Section index="01" title="Fonti dei dati">
-          <SourceItem
-            name="Alpha Vantage"
-            desc="Prezzi di mercato per materie prime globali (petrolio, gas naturale, metalli, agricole). Dati giornalieri, aggregati da mercati finanziari internazionali."
-            link="https://www.alphavantage.co"
-          />
+          {/* Ordine per argomento: carburanti, materie prime, traffico
+              marittimo, cifre annuali. Ogni fonte citata in una nota
+              "Fonte:" del sito (registro in src/lib/sources.ts) deve avere
+              qui la sua scheda: chi aggiunge una fonte aggiunge anche
+              questa. */}
           <SourceItem
             name="Commissione Europea — Weekly Oil Bulletin"
-            desc="Prezzi medi settimanali di benzina e diesel, rilevati ufficialmente in ciascuno dei 27 Stati membri UE."
+            desc="Prezzi medi settimanali di benzina e diesel in ciascuno dei 27 Stati membri UE, con il prezzo al netto delle imposte, l'accisa e l'aliquota IVA (da cui la scomposizione fiscale) e la media UE ponderata sui consumi."
             link="https://energy.ec.europa.eu/data-and-analysis/weekly-oil-bulletin_en"
           />
           <SourceItem
@@ -48,14 +48,39 @@ export default function Metodologia() {
             link="https://www.eia.gov/opendata"
           />
           <SourceItem
-            name="Agenzia delle Dogane e dei Monopoli"
-            desc="Fonte del «numero del giorno» in home: una cifra dal bilancio annuale dell'attività dell'Agenzia, non un dato aggiornato da un cron — vedi «Frequenza di aggiornamento» qui sotto."
-            link="https://www.adm.gov.it"
+            name="MIMIT — Ministero delle Imprese e del Made in Italy"
+            desc="Prezzi di benzina e gasolio comunicati ogni giorno da ciascun distributore italiano, con l'anagrafica degli impianti (licenza IODL 2.0). Il sito non salva i singoli distributori: calcola le medie per provincia, self e servito separati."
+            link="https://www.mimit.gov.it/it/open-data/elenco-dataset/carburanti-prezzi-praticati-e-anagrafica-degli-impianti"
+          />
+          <SourceItem
+            name="Ufficio federale di statistica svizzero (BFS)"
+            desc="Prezzi medi mensili di benzina e diesel in Svizzera, in franchi, dalla tabella dell'indice dei prezzi al consumo (su-d-05.02.91, licenza OPEN-BY). Usati nel confronto con i paesi confinanti: la Svizzera non è nel bollettino UE."
+            link="https://www.bfs.admin.ch"
+          />
+          <SourceItem
+            name="Banca Centrale Europea"
+            desc="Cambio di riferimento medio mensile franco svizzero / euro (serie EXR.M.CHF.EUR.SP00.A), con cui i prezzi svizzeri vengono convertiti in euro nello stesso mese."
+            link="https://data.ecb.europa.eu"
+          />
+          <SourceItem
+            name="Alpha Vantage"
+            desc="Prezzi di petrolio, gas naturale, metalli e materie prime agricole. È un aggregatore commerciale: rilancia dati di altri enti — EIA per petrolio e gas (prezzi giornalieri pubblicati una volta a settimana), Fondo Monetario Internazionale per metalli e agricole (medie mensili con circa due mesi di ritardo)."
+            link="https://www.alphavantage.co"
           />
           <SourceItem
             name="IMF PortWatch — Fondo Monetario Internazionale"
             desc="Navi in transito ogni giorno negli stretti di Hormuz e Bab el-Mandeb, stimate dai segnali AIS delle navi. Pubblicate una volta a settimana; storico dal 2019. Metodo nella sezione «Traffico marittimo» qui sotto."
             link="https://portwatch.imf.org"
+          />
+          <SourceItem
+            name="Eurostat"
+            desc="Cifre annuali della raccolta «Numeri» (dipendenza energetica, importazioni di petrolio, imposte sull'energia, trasporto merci su strada), dai comunicati dell'ufficio statistico dell'UE. Aggiornate a mano a ogni nuova edizione, non da un cron."
+            link="https://ec.europa.eu/eurostat"
+          />
+          <SourceItem
+            name="Agenzia delle Dogane e dei Monopoli"
+            desc="Il gettito delle accise sui prodotti energetici, dal bilancio annuale dell'attività dell'Agenzia: una delle cifre della raccolta «Numeri» e del «numero del giorno» in home. Aggiornata a mano ogni primavera, non da un cron."
+            link="https://www.adm.gov.it"
           />
         </Section>
 
@@ -67,7 +92,10 @@ export default function Metodologia() {
             settimanali (il bollettino UE esce di norma il giovedì), ma il
             giorno di pubblicazione può slittare, e un controllo
             quotidiano lo porta sul sito appena esce invece che una
-            settimana dopo. Non sono dati in tempo reale
+            settimana dopo. Ogni mattina i prezzi delle province italiane
+            (MIMIT), ogni giorno il traffico marittimo (PortWatch, che
+            pubblica una volta a settimana), nei primi dieci giorni di ogni
+            mese i carburanti svizzeri. Non sono dati in tempo reale
             minuto per minuto — il titolo &quot;in tempo quasi reale&quot; si
             riferisce a questo: aggiornati regolarmente, non istantanei.
           </p>
@@ -82,7 +110,8 @@ export default function Metodologia() {
               gas naturale (prezzi giornalieri che l&apos;EIA pubblica una
               volta a settimana), 7 per i carburanti, 80 per metalli e
               agricole (medie mensili che arrivano con circa due mesi di
-              ritardo), 62 per i carburanti svizzeri (media mensile), 9 per
+              ritardo), 1 per i prezzi delle province italiane (MIMIT, ogni
+              giorno), 62 per i carburanti svizzeri (media mensile), 9 per
               il traffico marittimo (dati giornalieri pubblicati una volta a
               settimana, fino alla domenica precedente).
             </li>
