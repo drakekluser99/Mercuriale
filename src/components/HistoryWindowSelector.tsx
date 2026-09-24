@@ -1,4 +1,4 @@
-import { HISTORY_WINDOWS, type HistoryWindowKey } from "@/lib/historyWindows";
+import type { HistoryWindowKey } from "@/lib/historyWindows";
 
 /**
  * Pulsanti del periodo (1 mese … 10 anni) con lo stato del caricamento.
@@ -8,18 +8,25 @@ import { HISTORY_WINDOWS, type HistoryWindowKey } from "@/lib/historyWindows";
  * Nessun hook: lo stato (periodo attivo, caricamento) resta nel grafico
  * che lo usa, qui arriva solo da mostrare.
  */
-export function HistoryWindowSelector({
+export function HistoryWindowSelector<K extends string = HistoryWindowKey>({
   active,
   status,
   onSelect,
+  windows,
 }: {
-  active: HistoryWindowKey | undefined;
+  active: K | undefined;
   status: "idle" | "loading" | "error";
-  onSelect: (key: HistoryWindowKey) => void;
+  onSelect: (key: K) => void;
+  /**
+   * I periodi da offrire: `HISTORY_WINDOWS` (1 mese … 10 anni) per gli
+   * storici di prezzo, `INFLATION_WINDOWS` per il grafico dell'inflazione
+   * (24 set 2026: con un dato al mese "1 mese" sarebbe un punto solo).
+   */
+  windows: readonly { key: K; label: string }[];
 }) {
   return (
     <div role="group" aria-label="Periodo del grafico" className="flex flex-wrap items-center gap-1">
-      {HISTORY_WINDOWS.map((w) => (
+      {windows.map((w) => (
         <button
           key={w.key}
           type="button"

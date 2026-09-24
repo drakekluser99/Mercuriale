@@ -14,6 +14,7 @@ import {
   getConsumerPriceIndex,
 } from "@/lib/db/queries";
 import { summarizeInflation } from "@/lib/inflation";
+import { buildInflationChart } from "@/lib/inflationChart";
 import { monthToDate } from "@/lib/fetchers/istatNic";
 import {
   CHOKEPOINT_SHORT_NAMES,
@@ -519,7 +520,8 @@ export const loadInflation = cache(async () => {
     ? computeFreshness(monthToDate(latestMonth), getFreshnessConfig("istat_nic"), now)
     : null;
   return {
-    rows,
+    // Solo i punti del grafico vanno al browser, non le righe grezze.
+    chartPoints: buildInflationChart(rows),
     series,
     headline: series.find((s) => s.code === "00") ?? null,
     latestMonth,

@@ -15,12 +15,12 @@ export const metadata: Metadata = {
 };
 
 /**
- * /inflazione — sezione 06 (24 set 2026): una scheda per serie (passo 1).
- * Grafico, anteprima in home e metodologia arrivano nei passi successivi
- * (CLAUDE.md).
+ * /inflazione — sezione 06 (24 set 2026): una scheda per serie (passo 1)
+ * e il grafico dal 2016 (passo 2). Anteprima in home e metodologia
+ * arrivano nei passi successivi (CLAUDE.md).
  */
 export default async function InflazionePage() {
-  const { series, headline, latestMonth, freshness, run } = await loadInflation();
+  const { series, headline, latestMonth, freshness, run, chartPoints } = await loadInflation();
   const now = getNow();
 
   return (
@@ -36,6 +36,7 @@ export default async function InflazionePage() {
         latestMonth={latestMonth}
         freshness={freshness}
         checkedAt={run?.startedAt ?? null}
+        chartPoints={chartPoints}
       />
     </PageShell>
   );

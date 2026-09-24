@@ -151,6 +151,25 @@
    * Contrasto del testo avorio sopra: circa 7,6:1 (AA anche a 12px).
    */
   --color-system-mark: #a3163a;
+
+  /*
+   * `system-series-1…3` — colori di IDENTITÀ per i grafici con più serie
+   * (24 set 2026, grafico dell'inflazione: carrello, alimentari,
+   * energetici; l'indice generale usa `system-ink`, linea più spessa).
+   * Dicono solo "quale serie", mai "sale/scende": per questo niente
+   * ruggine né verde (segnali), niente cremisi (struttura), niente ambra
+   * del marchio. Viola, verde-acqua, ocra dorato.
+   * Verificati con lo script del validatore delle palette (sfondo
+   * #fffdf8, confronto fra TUTTE le coppie): luminosità e saturazione nei
+   * limiti, coppia peggiore ΔE 12,3 per il daltonismo deuteranopo (soglia
+   * 8) e 20,6 per la visione normale (soglia 15), contrasto ≥ 3:1.
+   * Scartati prima: blu + viola (ΔE 3,1 per i protanopi) e un verde-acqua
+   * più scuro (troppo poco saturo, si leggeva grigio). Chi cambia un
+   * valore rilancia il validatore.
+   */
+  --color-system-series-1: #7b4fb0;
+  --color-system-series-2: #00959e;
+  --color-system-series-3: #a06a00;
   /*
    * Stessa storia delle due ambre: i colori di segnale tarati per il
    * fondo avorio sono troppo scuri sul bruno del chrome (la ruggine

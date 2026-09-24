@@ -651,6 +651,9 @@ ogni dato deve avere fonte, data, e limiti dichiarati esplicitamente.
     modello di freshness a 3 stati (`src/lib/freshness/`). Tono neutro e
     non un ambra "warning" acceso: comunica "in attesa del prossimo dato",
     non un problema
+  - `system-series-1…3` (#7b4fb0 / #00959e / #a06a00, 24 set 2026) —
+    colori di IDENTITÀ per grafici con più serie (oggi: inflazione),
+    validati con lo script della skill dataviz; mai significato
   - `system-chrome` (#14110c) / `system-chrome-raised` (#1c1811) — fondo
     del chrome e strato sollevato sopra di esso (la fascia sintetica). La
     differenza è volutamente minima: deve leggersi come uno strato, non
@@ -1123,8 +1126,31 @@ ISTAT".
   voci delle sezioni `lg:px-4`. Misurato: a 1280 e 1400 px la barra sta
   in 1280 px esatti. **Una settima sezione non ci starà più**: servirà
   accorciare le etichette o togliere i numeri.
-  Prossimo: grafico (variazione annua dal 2016, indice raccordato),
-  anteprima in home, sezione di metodologia.
+  **UI, passo 2 — grafico (24/9, branch)**: `components/InflationChart.tsx`
+  (client) sotto le schede. Quattro serie su UN asse (stessa unità),
+  interruttore di misura "Variazione annua" (predefinita) / "Indice
+  (2025 = 100)", periodi `INFLATION_WINDOWS` (1 anno = 13 mesi, 5 anni =
+  61, "Dal 2016") — non 1/3 mesi: il dato è mensile. Linea tratteggiata
+  a 0 (variazione) o 100 (indice). Punti preparati sul server da
+  `buildInflationChart` (`src/lib/inflationChart.ts`, puro e testato:
+  un punto per mese, indice già raccordato, null se manca una serie) e
+  filtrati nel browser: nessuna richiesta al cambio di periodo.
+  **Colori**: nuovi token `system-series-1…3` in globals.css (viola
+  #7b4fb0 carrello, verde-acqua #00959e alimentari, ocra dorato #a06a00
+  energetici), indice generale in `system-ink` più spesso. Validati con
+  lo script della skill dataviz, TUTTE le coppie, sfondo #fffdf8: peggiore
+  ΔE 12,3 deutan (soglia 8), 20,6 visione normale (soglia 15). Scartati:
+  blu+viola (ΔE 3,1 protan), verde-acqua scuro (saturazione < 0,10).
+  Mai ruggine/verde/cremisi/ambra del marchio per identità.
+  **Legenda cliccabile**: sulla variazione gli energetici (≈+70% nel
+  2022) schiacciano le altre voci (0-13%); un clic nasconde una serie e
+  la scala si stringe. Di partenza tutte visibili, l'ultima non si
+  toglie. Tooltip con testo in inchiostro e ordine della legenda
+  (`itemStyle`, `itemSorter`); tabella dei dati in `<details>` chiuso.
+  `HistoryWindowSelector` ora vuole `windows` esplicito (generico sulla
+  chiave): i due grafici esistenti passano `HISTORY_WINDOWS`.
+  Screenshot con dati FINTI (forme inventate) a 1400 e 400 px.
+  Prossimo: anteprima in home, sezione di metodologia.
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
