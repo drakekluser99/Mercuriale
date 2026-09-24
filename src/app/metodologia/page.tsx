@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SystemCard } from "@/components/SystemCard";
 import { ProvenanceStamp } from "@/components/ProvenanceStamp";
+import { InflationMethodology } from "@/components/methodology/InflationMethodology";
 import { ShippingMethodology } from "@/components/methodology/ShippingMethodology";
 
 export const metadata = {
@@ -100,7 +101,9 @@ export default function Metodologia() {
             settimana dopo. Ogni mattina i prezzi delle province italiane
             (MIMIT), ogni giorno il traffico marittimo (PortWatch, che
             pubblica una volta a settimana), nei primi dieci giorni di ogni
-            mese i carburanti svizzeri. Non sono dati in tempo reale
+            mese i carburanti svizzeri, ogni giorno l&apos;inflazione (ISTAT
+            pubblica il dato di un mese verso la metà del mese successivo,
+            con un calendario che può spostarsi). Non sono dati in tempo reale
             minuto per minuto — il titolo &quot;in tempo quasi reale&quot; si
             riferisce a questo: aggiornati regolarmente, non istantanei.
           </p>
@@ -118,7 +121,10 @@ export default function Metodologia() {
               ritardo), 1 per i prezzi delle province italiane (MIMIT, ogni
               giorno), 62 per i carburanti svizzeri (media mensile), 9 per
               il traffico marittimo (dati giornalieri pubblicati una volta a
-              settimana, fino alla domenica precedente).
+              settimana, fino alla domenica precedente), 77 per
+              l&apos;inflazione (il dato di un mese resta il più recente
+              fino all&apos;uscita del successivo, circa due mesi e mezzo
+              dopo la sua data).
             </li>
             <li>
               <strong>&quot;In attesa&quot;</strong> — la cadenza attesa è
@@ -189,7 +195,11 @@ export default function Metodologia() {
           <ShippingMethodology />
         </Section>
 
-        <Section index="05" title="Codice sorgente">
+        <Section index="05" title="Inflazione" id="inflazione">
+          <InflationMethodology />
+        </Section>
+
+        <Section index="06" title="Codice sorgente">
           <p className="text-sm leading-relaxed text-system-ink-secondary">
             Questo è un progetto open source: chiunque può ispezionare il
             codice, verificare come i dati vengono raccolti e processati,
@@ -199,7 +209,7 @@ export default function Metodologia() {
           </p>
         </Section>
 
-        <Section index="06" title="API pubblica">
+        <Section index="07" title="API pubblica">
           <p className="text-sm leading-relaxed text-system-ink-secondary">
             Gli stessi ultimi prezzi mostrati sulla dashboard sono
             disponibili in JSON, per riusarli in altri progetti:

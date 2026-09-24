@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FreshnessBadge } from "@/components/FreshnessBadge";
 import { InflationCard } from "@/components/InflationCard";
 import { InflationChart } from "@/components/InflationChart";
@@ -110,7 +111,13 @@ export function InflationSection({
         con lo stesso metodo (
         {CALCULATED_SPLICE_2015_TO_2025.FOODHPC?.toLocaleString("it-IT") ?? "—"} e{" "}
         {CALCULATED_SPLICE_2015_TO_2025.ENRGY?.toLocaleString("it-IT") ?? "—"}),
-        perché ISTAT non li pubblica per questi aggregati
+        perché ISTAT non li pubblica per questi aggregati ·{" "}
+        <Link
+          href="/metodologia#inflazione"
+          className="text-system-accent underline decoration-dotted underline-offset-2 hover:decoration-solid"
+        >
+          come si raccordano le basi
+        </Link>
       </SourceNote>
     </section>
   );

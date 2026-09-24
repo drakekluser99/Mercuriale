@@ -949,9 +949,12 @@ ISTAT".
   ogni PR e push su `main` (typegen, tipi, lint, test). Il ruleset
   "Proteggi main" blocca il merge finché il check `check` non è verde:
   una PR appena aperta risulta "blocked" per ~40 secondi, è normale.
-- **Prossimo lavoro naturale: sezione inflazione (ISTAT, NIC)**. La
-  ricognizione è FINITA (8 query), manca tutto il resto: schema, fetcher,
-  cron, UI. Tutto quello che serve sapere è nella voce "Ricognizione
+- **Sezione inflazione (ISTAT, NIC) — FATTA sul branch
+  `claude/focused-pascal-flzbqz` il 24/9 (sera)**: schema, fetcher,
+  raccordo, cron, backfill (512 righe in produzione), pagina `/inflazione`
+  06, grafico, anteprima in home, metodologia. Dettaglio sotto e nella
+  voce "Ricognizione ISTAT". Da fare: verifica di Yuri sulla Preview, PR,
+  merge. Tutto quello che serve sapere è nella voce "Ricognizione
   ISTAT" in fondo. Due vincoli da non dimenticare:
   - **limite ISTAT: 5 query al minuto per IP, blocco di 1-2 giorni** se
     superato. Dal cloud ISTAT non si raggiunge e Yuri ha deciso di NON
@@ -1159,7 +1162,22 @@ ISTAT".
   fascia (decisione del 24/9). Nuovo `formatAtMonth` in format.ts: "ad
   agosto", "ad aprile", "a settembre" — la prima versione scriveva "a
   agosto" in home, nella cifra chiave e nelle schede.
-  Prossimo: sezione di metodologia (raccordo, coefficienti, limiti).
+  **UI, passo 4 — metodologia (24/9, branch)**: sezione **05
+  "Inflazione"** in `/metodologia` (ancora `#inflazione`, linkata dalla
+  nota Fonte di `/inflazione`; "Codice sorgente" e "API pubblica" passate
+  a 06 e 07), testo in `components/methodology/InflationMethodology.tsx`.
+  Cosa è il NIC (non IPCA, non FOI), le quattro serie, la variazione
+  annua presa da ISTAT, il cambio di base con l'esempio 146,1 → 98,9,
+  tabella dei coefficienti LETTA da `spliceCoefficient` (valore e
+  provenienza ISTAT / calcolato da Mercuriale), il controllo del metodo,
+  i limiti (serie ricostruite in ECOICOP v2, un decimale, revisioni in
+  "Stato dei dati", nessun segnale di dato provvisorio, uscita a metà del
+  mese dopo). In "Frequenza di aggiornamento": cron giornaliero e 77
+  giorni di cadenza attesa. Verificata sulla pagina VERA (non legge il
+  database) a 1400 e 400 px.
+  **La sezione inflazione è COMPLETA sul branch** (passi 1-4). Prima
+  della PR: Yuri verifica la Preview con i dati veri. Il cron parte solo
+  dopo il merge.
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
