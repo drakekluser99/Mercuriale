@@ -197,3 +197,76 @@ export function seasonalBaseline(
     .sort(([a], [b]) => a - b)
     .map(([month, list]) => ({ month, ...summarize(list) }));
 }
+
+// ─── Baseline fissate (24 set 2026) ───────────────────────────────────────
+
+export type ChokepointBaseline =
+  | {
+      method: "stagionale";
+      period: BaselinePeriod;
+      /** Primo giorno del nuovo regime di traffico. */
+      breakDate: string;
+      /** Transiti medi al giorno per mese, indice 0 = gennaio. */
+      monthly: readonly number[];
+    }
+  | {
+      method: "piatta";
+      period: BaselinePeriod;
+      breakDate: string;
+      /** Transiti medi al giorno. */
+      value: number;
+    };
+
+/**
+ * Il "traffico normale" di ciascun passaggio, per colorare la mappa e per
+ * la metodologia. Calcolato il 24/9/2026 con `npm run chokepoint:baselines`
+ * (seasonalBaseline / flatBaseline qui sopra) sui dati giornalieri PortWatch
+ * salvati in chokepoint_transits; periodi decisi con Yuri guardando lo
+ * storico dal 2019 (medie mensili e giorni attorno alle rotture).
+ *
+ * NUMERI FISSI, non ricalcolati a ogni richiesta: il riferimento scritto in
+ * metodologia deve restare quello anche se un giorno la fonte rivede un
+ * dato storico (stesso principio di `weekly_narratives`). Lo script resta
+ * come verifica: se ricalcolando i valori non coincidono più, la fonte ha
+ * rivisto lo storico, e si decide a mano se aggiornare.
+ *
+ * HORMUZ — stagionale, 01/11/2022 – 31/10/2025 (1.096 giorni: tre anni
+ * pieni, 29/2/2024 compreso). Il traffico ha un ciclo annuale: circa 73-78
+ * navi al giorno d'inverno, circa 97-104 da aprile a settembre. Un valore
+ * unico farebbe sembrare anomalo ogni inverno normale. Esclusi: 2019-2021,
+ * su un livello più basso (circa 55-90, COVID nel 2020), e l'inverno
+ * 2025-26, il più basso dal 2019 (nov 67,4 · dic 55,5 · gen 58,5): potrebbe
+ * essere un primo segnale della crisi, non lo sappiamo, e resta fuori dal
+ * "normale". Rottura il 01/03/2026: 20 transiti, poi 0-7 al giorno per
+ * tutto marzo; nessun calo anticipato a febbraio (13-26/2 fra 54 e 127).
+ *
+ * BAB EL-MANDEB — piatta, 16/12/2022 – 15/12/2023 (365 giorni): l'anno che
+ * precede la rottura. Nessun ciclo annuale nei dati (medie mensili 2023
+ * fra 70 e 79), ma una crescita lenta dal 2019 (circa 53) al 2023: gli
+ * anni più vecchi abbasserebbero il riferimento. Rottura il 16/12/2023:
+ * fino al 15/12 valori fra 59 e 95, poi 65, 57, 52... e 31-37 stabili dal
+ * 2024. Il 19/11/2023 (59) è un giorno isolato, non l'inizio del calo:
+ * prima 84, dopo 72, 87, 84.
+ */
+export const CHOKEPOINT_BASELINES = {
+  hormuz: {
+    method: "stagionale",
+    period: { from: "2022-11-01", to: "2025-10-31" },
+    breakDate: "2026-03-01",
+    //        gen    feb    mar    apr     mag     giu     lug    ago    set    ott    nov    dic
+    monthly: [73.14, 77.8, 88.28, 99.98, 103.85, 103.04, 99.67, 97.17, 98.1, 91.55, 81.62, 74.88],
+  },
+  bab_el_mandeb: {
+    method: "piatta",
+    period: { from: "2022-12-16", to: "2023-12-15" },
+    breakDate: "2023-12-16",
+    value: 74.8,
+  },
+} as const satisfies Record<string, ChokepointBaseline>;
+
+/** Il valore "normale" per un giorno: quello del suo mese, o quello unico. */
+export function baselineFor(baseline: ChokepointBaseline, date: string): number {
+  return baseline.method === "stagionale"
+    ? baseline.monthly[Number(date.slice(5, 7)) - 1]
+    : baseline.value;
+}

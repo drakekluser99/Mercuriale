@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  baselineFor,
+  CHOKEPOINT_BASELINES,
   dailyWindow,
   findDateGaps,
   flatBaseline,
@@ -109,5 +111,21 @@ describe("seasonalBaseline", () => {
     expect(() => seasonalBaseline(pts, { from: "2023-01-01", to: "2023-06-30" })).toThrow(
       /6 mesi su 12/
     );
+  });
+});
+
+describe("CHOKEPOINT_BASELINES", () => {
+  it("la baseline stagionale ha 12 mesi e i periodi finiscono prima della rottura", () => {
+    expect(CHOKEPOINT_BASELINES.hormuz.monthly).toHaveLength(12);
+    for (const b of Object.values(CHOKEPOINT_BASELINES)) {
+      expect(b.period.from < b.period.to).toBe(true);
+      expect(b.period.to < b.breakDate).toBe(true);
+    }
+  });
+
+  it("baselineFor sceglie il mese giusto o il valore unico", () => {
+    expect(baselineFor(CHOKEPOINT_BASELINES.hormuz, "2026-09-20")).toBe(98.1);
+    expect(baselineFor(CHOKEPOINT_BASELINES.hormuz, "2026-01-05")).toBe(73.14);
+    expect(baselineFor(CHOKEPOINT_BASELINES.bab_el_mandeb, "2026-09-20")).toBe(74.8);
   });
 });
