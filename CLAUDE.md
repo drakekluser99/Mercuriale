@@ -956,10 +956,19 @@ ISTAT".
   - il cron su Vercel farà query vere a ISTAT: va progettato con UNA
     richiesta per esecuzione (le categorie si chiedono insieme con `+`),
     niente tentativi ripetuti.
-  Da decidere con Yuri prima di scrivere codice: quali categorie
-  mostrare, se serve lo storico dal 1996 (richiede i coefficienti di
-  raccordo `DF_BULK_…`) o basta dal 2016/2026, dove sta nel sito (pagina
-  nuova o sezione esistente).
+  **Decisioni prese con Yuri (24 set 2026), da NON ridiscutere**:
+  - numero principale = **variazione annua** (tendenziale, misura `7`);
+    l'**indice** (misura `4`) sotto, per i confronti nel tempo. La
+    congiunturale per ora no;
+  - **4 serie**: generale `00`, carrello `FOODHPC`, beni energetici
+    `ENRGY`, alimentari `01`. Le altre divisioni eventualmente dopo;
+  - storico **dal 2016**: un solo raccordo (base 2015 → 2025), con il
+    coefficiente ufficiale `DF_BULK_…`, non ricalcolato;
+  - pagina propria **`/inflazione`, sezione 06**, con anteprima in home;
+    NESSUNA cella in più nella fascia (ne ha già sei).
+  Da verificare prima dello schema (query dal PC di Yuri): se `_6` ha
+  anche `FOODHPC`/`ENRGY` nella base 2015 e se la misura `7` esiste nella
+  base 2015 (in quel caso la variazione annua non ha bisogno di raccordi).
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
