@@ -1815,11 +1815,50 @@ sezione). Resta aperto:
     capacità 0) = stima NON disponibile, non capacità nulla. Nel database
     resta il dato grezzo della fonte; **in UI va mostrato come "stima non
     disponibile"**, non come zero.
-  - **Da fare**: backfill dello storico (priorità successiva), baseline
-    "traffico normale" calcolata da noi sui dati (periodo pre-crisi scelto
-    dove inizia davvero la deviazione, da dichiarare in metodologia), poi
-    la UI (cella nella fascia, mappa a punti, pagina dedicata con il Brent
-    affiancato). Con la UI vanno aggiunti anche `imf_portwatch` a
+  - **Backfill — FATTO (24 set 2026).** `npm run backfill:chokepoints`
+    (`scripts/backfill-chokepoints.ts`): senza argomenti solo lettura
+    (righe ricevute contro `returnCountOnly` della fonte, buchi nel
+    calendario, medie mensili; `--around AAAA-MM-GG --weeks N` per i
+    giorni attorno a una data; `--only <chiave>`); `--save` scrive con lo
+    stesso upsert del cron e si RIFIUTA se il calendario ha buchi, salvo
+    `--accept-gaps` dopo aver verificato che siano dichiarati da PortWatch.
+    Paginazione in `fetchChokepointHistory` (`portwatch.ts`): pagine da
+    1000 in ordine crescente con `resultOffset`, stesso parser del cron,
+    stop su giorno ripetuto fra pagine. Esito: **2.820 righe per
+    passaggio, 01/01/2019 → 20/09/2026, nessun giorno mancante**; 11 giorni
+    di Hormuz con capacità 0. `saveChokepointTransits` fa `coalesce` su
+    `fetch_run_id`: il backfill (senza run) non cancella l'id del cron.
+  - **Baseline del "traffico normale" — FISSATE (24 set 2026)** in
+    `CHOKEPOINT_BASELINES` (`src/lib/chokepointHistory.ts`, commento con
+    tutte le motivazioni), calcolate dai dati giornalieri con
+    `seasonalBaseline`/`flatBaseline` (media sui singoli giorni; si
+    fermano se manca un giorno). **Numeri fissi, non ricalcolati a ogni
+    richiesta**: il riferimento dichiarato in metodologia non deve cambiare
+    se la fonte rivede lo storico. `npm run chokepoint:baselines`
+    (`scripts/chokepoint-baselines.ts`, sola lettura) ricalcola e dice se
+    coincidono ancora con la costante. `baselineFor(baseline, data)` dà il
+    valore da usare per un giorno.
+    - **Hormuz — stagionale**, 01/11/2022–31/10/2025 (1.096 giorni), un
+      valore per mese: gen 73,14 · feb 77,80 · mar 88,28 · apr 99,98 ·
+      mag 103,85 · giu 103,04 · lug 99,67 · ago 97,17 · set 98,10 ·
+      ott 91,55 · nov 81,62 · dic 74,88. Stagionale perché il traffico ha
+      un ciclo annuale netto (inverno ~73–78, aprile–settembre ~97–104).
+      Esclusi il 2019–2021 (livello più basso) e l'inverno 2025-26, il più
+      basso dal 2019: stato ambiguo, forse un primo segnale della crisi.
+      **Rottura 01/03/2026**, nessun calo anticipato a febbraio.
+    - **Bab el-Mandeb — piatta**, 16/12/2022–15/12/2023 (365 giorni),
+      **74,80**: "l'anno che precede la rottura". Nessun ciclo annuale,
+      ma crescita lenta dal 2019: gli anni vecchi abbasserebbero il
+      riferimento. **Rottura 16/12/2023**; il 19/11/2023 (59) è un giorno
+      isolato, non l'inizio del calo.
+    - Al 14–20/9/2026: Hormuz 3,14 transiti/giorno (−96,8% sulla baseline
+      di settembre), Bab el-Mandeb 24,71 (−67,0%). Anche Bab el-Mandeb è
+      sceso ad agosto–settembre 2026 (27,4 e 25,9 di media, contro 31–37
+      del 2024–2026): osservato, non interpretato.
+  - **Da fare**: la UI (cella nella fascia, mappa a punti colorata sullo
+    scostamento da `CHOKEPOINT_BASELINES`, pagina dedicata con il Brent
+    affiancato) e la sezione in metodologia che dichiara i due metodi, i
+    periodi e le date di rottura. Con la UI vanno aggiunti anche `imf_portwatch` a
     `sources.ts` e a `freshness/config.ts` e l'etichetta del job in
     `/stato-dati`: fino ad allora la card lì mostra il nome grezzo
     `fetch-chokepoint-transits` (scelta accettata).

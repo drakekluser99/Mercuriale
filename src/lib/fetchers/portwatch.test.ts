@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   CHOKEPOINTS,
+  buildHistoryPageUrl,
   buildQueryUrl,
+  fetchChokepointHistory,
   parseDateOnly,
   parsePortwatchResponse,
 } from "./portwatch";
@@ -127,5 +129,71 @@ describe("buildQueryUrl", () => {
     expect(url.searchParams.get("outFields")).toBe("*");
     expect(url.searchParams.get("outSR")).toBe("4326");
     expect(url.searchParams.get("f")).toBe("json");
+  });
+});
+
+// Una riga valida per il giorno `i` dopo il 1/1/2019.
+function dayRow(i: number) {
+  const d = new Date(Date.UTC(2019, 0, 1 + i));
+  return row({
+    date: d.toISOString().slice(0, 10),
+    year: d.getUTCFullYear(),
+    month: d.getUTCMonth() + 1,
+    day: d.getUTCDate(),
+  });
+}
+
+/**
+ * Finto servizio ArcGIS con `total` righe: risponde al conteggio e alle
+ * pagine leggendo resultOffset/resultRecordCount dall'URL, come quello vero.
+ * `ignoreOffset` simula un servizio che restituisce sempre la prima pagina.
+ */
+function fakeService(total: number, opts: { declared?: number; ignoreOffset?: boolean } = {}) {
+  const all = Array.from({ length: total }, (_, i) => dayRow(i));
+  return vi.fn(async (input: string | URL) => {
+    const url = new URL(String(input));
+    if (url.searchParams.get("returnCountOnly") === "true") {
+      return Response.json({ count: opts.declared ?? total });
+    }
+    const offset = opts.ignoreOffset ? 0 : Number(url.searchParams.get("resultOffset"));
+    const size = Number(url.searchParams.get("resultRecordCount"));
+    const features = all.slice(offset, offset + size);
+    return Response.json({ features, exceededTransferLimit: offset + size < total });
+  });
+}
+
+describe("fetchChokepointHistory", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("scorre le pagine fino alla fine e controlla il totale", async () => {
+    vi.stubGlobal("fetch", fakeService(25));
+    const out = await fetchChokepointHistory(HORMUZ, 10);
+    expect(out.points).toHaveLength(25);
+    expect(out.pages).toBe(3);
+    expect(out.points[0].date).toBe("2019-01-01");
+    expect(out.points.at(-1)?.date).toBe("2019-01-25");
+  });
+
+  it("finisce bene anche quando il totale è un multiplo esatto della pagina", async () => {
+    vi.stubGlobal("fetch", fakeService(20));
+    const out = await fetchChokepointHistory(HORMUZ, 10);
+    expect(out.points).toHaveLength(20);
+  });
+
+  it("si ferma se le righe ricevute non sono quelle dichiarate", async () => {
+    vi.stubGlobal("fetch", fakeService(25, { declared: 26 }));
+    await expect(fetchChokepointHistory(HORMUZ, 10)).rejects.toThrow(/la fonte ne dichiara 26/);
+  });
+
+  it("si ferma se il servizio ignora l'offset (stesso giorno in due pagine)", async () => {
+    vi.stubGlobal("fetch", fakeService(25, { ignoreOffset: true }));
+    await expect(fetchChokepointHistory(HORMUZ, 10)).rejects.toThrow(/due pagine diverse/);
+  });
+
+  it("chiede lo storico dal giorno più vecchio, con l'offset", () => {
+    const url = new URL(buildHistoryPageUrl(HORMUZ, 2000, 1000));
+    expect(url.searchParams.get("orderByFields")).toBe("date ASC");
+    expect(url.searchParams.get("resultOffset")).toBe("2000");
+    expect(url.searchParams.get("resultRecordCount")).toBe("1000");
   });
 });
