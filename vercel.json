@@ -35,6 +35,10 @@
     {
       "path": "/api/cron/fetch-ch-fuel-prices",
       "schedule": "0 9 1-10 * *"
+    },
+    {
+      "path": "/api/cron/fetch-chokepoint-transits",
+      "schedule": "0 15 * * *"
     }
   ]
 }

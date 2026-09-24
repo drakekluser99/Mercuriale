@@ -447,3 +447,59 @@ export const swissFuelPrices = pgTable(
     ),
   })
 );
+
+/**
+ * CHOKEPOINT_TRANSITS
+ * Traffico marittimo nei passaggi obbligati (23 set 2026): transiti
+ * giornalieri di navi da IMF PortWatch, dataset "Daily Chokepoint Transit
+ * Calls and Trade Volume Estimates". Per ora solo Hormuz e Bab el-Mandeb
+ * (vedi CHOKEPOINTS in src/lib/fetchers/portwatch.ts), non tutti e 28.
+ *
+ * Tabella a sé e non un'altra riga in `price_history`: non è un prezzo,
+ * non ha valuta né unità di prezzo, e mescolarla con le materie prime la
+ * farebbe entrare in "Maggiori variazioni" e nelle altre classifiche.
+ *
+ * Il dato è giornaliero ma la fonte lo pubblica una volta a settimana (di
+ * norma il martedì), a blocchi di sette giorni: il cron gira ogni giorno e
+ * l'upsert sul vincolo unico riscrive i giorni già salvati invece di
+ * duplicarli.
+ */
+export const chokepointTransits = pgTable(
+  "chokepoint_transits",
+  {
+    id: serial("id").primaryKey(),
+    // Chiave nostra, stabile e leggibile ("hormuz" | "bab_el_mandeb"), non
+    // il `portname` della fonte: se PortWatch un giorno rinomina un
+    // passaggio, il fetcher si ferma con un errore (vedi portwatch.ts) e
+    // lo storico già salvato non cambia chiave sotto i piedi.
+    chokepoint: varchar("chokepoint", { length: 32 }).notNull(),
+    // Il giorno a cui si riferisce il conteggio (campo `date` della fonte),
+    // a mezzanotte UTC. `timestamp` e non `date` per coerenza con tutte le
+    // altre tabelle dati e con chi le legge (freschezza, fetch_runs,
+    // getLatest*), che lavorano con oggetti Date.
+    recordedAt: timestamp("recorded_at").notNull(),
+    // Numero di navi transitate quel giorno (campo `n_total`: tutte le
+    // categorie — container, rinfuse, tanker, ro-ro, carico generale).
+    transitCalls: integer("transit_calls").notNull(),
+    // Stima della capacità transitata (campo `capacity`, così come la
+    // pubblica la fonte). È una STIMA costruita dal FMI sui segnali AIS
+    // delle navi, non una misura: il nome della colonna lo dice. L'unità
+    // (tonnellate) va confermata sulla documentazione PortWatch prima di
+    // mostrarla in pagina. Nullable: se la fonte non la dà quel giorno resta
+    // vuota, non diventa zero.
+    tradeVolumeEst: numeric("trade_volume_est", { precision: 16, scale: 2 }),
+    retrievedAt: timestamp("retrieved_at"),
+    // Il run che ha scritto (o riscritto) la riga per ultimo. Nullable per
+    // la stessa regola di fetchRunLog.ts: se `fetch_runs` non è
+    // scrivibile, `startFetchRun` restituisce null e il dato si salva lo
+    // stesso — il logging non deve mai far fallire il fetch.
+    fetchRunId: integer("fetch_run_id").references(() => fetchRuns.id),
+    source: varchar("source", { length: 64 }).notNull().default("imf_portwatch"),
+  },
+  (table) => ({
+    // Bersaglio dell'upsert: una sola riga per (passaggio, giorno).
+    chokepointRecordedUnique: uniqueIndex(
+      "chokepoint_transits_chokepoint_recorded_at_unique"
+    ).on(table.chokepoint, table.recordedAt),
+  })
+);
