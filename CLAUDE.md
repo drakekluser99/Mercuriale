@@ -2265,15 +2265,52 @@ sezione). Resta aperto:
     16/9/2026): generale +3,3% tendenziale / +0,5% congiunturale;
     alimentari +1,2%; abitazione +9,1%; trasporti +6,1%; beni energetici
     +17,1%; carrello +0,9%.
-  - **Aperto**: storico prima del 2026 (`_5`/`_6`: non sappiamo se in base
-    2025 o nelle basi originali, né se usino la stessa chiave; serve una
-    query di struttura prima); significato di `Test=true`; revisioni del
-    dato (coperte comunque da `data_corrections` se la fonte ripubblica).
-  - **Query fatte: 4**, tutte dal PC di Yuri e a minuti di distanza, senza
+  - **Storico dal 1996 (ricognizione del 24/9, query 5–8)**:
+    - `_5` e `_6` usano la STESSA struttura `DCSP_NIC1B2025` e lo stesso
+      archivio (`DDBDataflow` `5A5CF502…`) di `_1`/`_2`: stessa chiave,
+      cambia solo `DATA_TYPE`. **Usare `_6`** ("tutte le basi"): si
+      aggiorna ogni mese con `_1` (ultimo aggiornamento 16/9/2026); `_5` è
+      un archivio chiuso 1996–2025, fermo al 4/6/2026.
+    - **Basi, indice generale** (`firstNObservations=1`): `1` = 1995=100
+      da gen 1996; `9` = 2010=100 da gen 2011; `39` = 2015=100 da gen 2016
+      a **dic 2025** (visto); `85` = 2025=100 da **gen 2026**. `7`
+      (dic 1998=100) non ha dati. La fine di `1` e `9` (dic 2010, dic
+      2015) è dedotta dallo schema, non verificata (`lastNObservations=1`
+      la darebbe). **Nessuna sovrapposizione**: ogni base parte a gennaio
+      dell'anno dopo il suo anno di riferimento, la precedente si ferma a
+      dicembre.
+    - **Lo storico NON è riportato in base 2025**: resta nelle basi
+      originali. Per una serie continua servono tre raccordi.
+      Coefficiente = 100 ÷ media dei 12 mesi dell'anno base nella serie
+      vecchia (la base vecchia copre sempre l'anno base della nuova).
+      Verificato sui numeri ISTAT: generale, media 2025 in base 2015 =
+      122,63 → coefficiente 0,8154 → agosto 2025 = 100,55 → agosto 2026
+      (103,9) = **+3,3%**, come ISTAT; alimentari 134,41 → 0,7440 →
+      +1,25% contro 1,2% ISTAT (scarto dovuto agli indici arrotondati).
+      **Nel codice usare i coefficienti ufficiali** di
+      `DF_BULK_DCSP_NIC1B2025_TB1…TB3`, non quelli ricalcolati.
+    - **Nota ufficiale di `_6`**: le serie 1996–2025 sono RICOSTRUITE da
+      ISTAT in ECOICOP v2. Nessun effetto sull'indice generale; per le
+      categorie i valori ricostruiti **non sostituiscono** quelli diffusi
+      fino a dic 2025 con la vecchia classificazione, quindi possono
+      differire dai numeri pubblicati all'epoca. Se si mostrano categorie
+      prima del 2026, va dichiarato in metodologia.
+    - **Parametri su questo server**: `startPeriod` e `firstNObservations`
+      funzionano; **`endPeriod` viene IGNORATO** (chiesto 2026-02, arrivato
+      fino ad agosto 2026). Nel codice non fidarsi di `endPeriod`: filtrare
+      il periodo dopo aver letto la risposta. `references=datastructure`
+      dà dataflow + struttura in pochi KB (contro i 10 MB di
+      `references=Descendants`, che include tutti gli elenchi di codici).
+  - **Aperto**: significato di `Test=true`; revisioni del dato (coperte
+    comunque da `data_corrections` se la fonte ripubblica); fine delle
+    basi 1995 e 2010 non verificata.
+  - **Query fatte: 8**, tutte dal PC di Yuri e a minuti di distanza, senza
     segnali di blocco: struttura di `_1` (10,2 MB con
     `references=Descendants`), dati di `_1` (12 serie su 18), elenco dei
     dataflow (`/rest/dataflow/IT1?detail=allstubs`, 4.910 dataflow, 2,3
-    MB), dati di `_2` (6 serie su 6).
+    MB), dati di `_2` (6 serie su 6), struttura di `_6` e di `_5`
+    (`references=datastructure`), dati di `_6` con 5 basi da dic 2024 (4
+    serie), primo mese di ogni base (`firstNObservations=1`, 4 serie).
 
 ## Skill: vercel-react-best-practices
 
