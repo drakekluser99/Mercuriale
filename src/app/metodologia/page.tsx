@@ -69,7 +69,7 @@ export default function Metodologia() {
           />
           <SourceItem
             name="IMF PortWatch — Fondo Monetario Internazionale"
-            desc="Navi in transito ogni giorno negli stretti di Hormuz e Bab el-Mandeb, stimate dai segnali AIS delle navi. Pubblicate una volta a settimana; storico dal 2019. Metodo nella sezione «Traffico marittimo» qui sotto."
+            desc="Navi in transito ogni giorno a Hormuz, Bab el-Mandeb e Suez, stimate dai segnali AIS delle navi. Pubblicate una volta a settimana; storico dal 2019. Metodo nella sezione «Traffico marittimo» qui sotto."
             link="https://portwatch.imf.org"
           />
           <SourceItem

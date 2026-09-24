@@ -16,7 +16,7 @@ import { WORLD_ATLAS_50M_URL } from "@/lib/geo";
  *
  * REGIONALE e non un planisfero (decisione di Yuri): dall'Italia al Golfo,
  * con Mediterraneo, Suez e Mar Rosso in mezzo. È la rotta che interessa a
- * chi legge il sito, e su un planisfero i due stretti sarebbero due punti
+ * chi legge il sito, e su un planisfero i passaggi sarebbero punti
  * a pochi millimetri l'uno dall'altro.
  *
  * Il colore del punto dice lo stato, ma NON è mai l'unico veicolo: accanto
@@ -39,16 +39,25 @@ import { WORLD_ATLAS_50M_URL } from "@/lib/geo";
 const COORDINATES: Record<ChokepointKey, [number, number]> = {
   hormuz: [56.3, 26.6],
   bab_el_mandeb: [43.3, 12.6],
+  // Metà del canale, all'altezza di Ismailia: il canale è lungo 1,5 gradi
+  // di latitudine, un punto solo lo rappresenta tutto.
+  suez: [32.3, 30.6],
 };
 
 /**
- * Dove scrivere l'etichetta. Hormuz sta vicino al bordo destro: testo a
- * sinistra, sopra il Golfo. Bab el-Mandeb: sotto il punto, centrato, sul
- * Golfo di Aden (a destra non ci starebbe, a sinistra coprirebbe l'Africa).
+ * Dove scrivere l'etichetta, provato a video con tutti e tre i passaggi:
+ * - Hormuz: SOTTO il punto, allineata a destra, sulla penisola arabica.
+ *   Centrata uscirebbe dal bordo destro; a sinistra (com'era con due
+ *   passaggi) la seconda riga passava proprio sotto il punto di Suez e si
+ *   leggeva come se fosse di Suez;
+ * - Bab el-Mandeb: sotto, centrata, sul Golfo di Aden (a destra non ci
+ *   starebbe, a sinistra coprirebbe l'Africa);
+ * - Suez: SOPRA, centrata, sul Mediterraneo orientale.
  */
-const LABEL_POSITION: Record<ChokepointKey, "left" | "below"> = {
-  hormuz: "left",
+const LABEL_POSITION: Record<ChokepointKey, "belowLeft" | "below" | "above"> = {
+  hormuz: "belowLeft",
   bab_el_mandeb: "below",
+  suez: "above",
 };
 
 // Variabili CSS e non hex: i token restano la fonte unica dei colori
@@ -128,12 +137,13 @@ export function ChokepointMap({ chokepoints }: { chokepoints: ChokepointSummary[
 
           {chokepoints.map((c) => {
             const color = c.state ? STATE_COLORS[c.state] : INCOMPLETE_COLOR;
-            const below = LABEL_POSITION[c.key] === "below";
-            // Due righe: nome (grassetto) e scostamento · stato. A sinistra
-            // allineate a destra sul punto; sotto, centrate.
-            const x = below ? 0 : -18;
-            const [y1, y2] = below ? [50, 80] : [-4, 26];
-            const anchor = below ? "middle" : "end";
+            const position = LABEL_POSITION[c.key];
+            // Due righe: nome (grassetto) e scostamento · stato. Sopra e
+            // sotto centrate sul punto; "belowLeft" allineate a destra poco
+            // oltre il punto, così il testo cresce verso ovest.
+            const x = position === "belowLeft" ? 14 : 0;
+            const [y1, y2] = position === "above" ? [-52, -22] : [50, 80];
+            const anchor = position === "belowLeft" ? "end" : "middle";
             // Alone chiaro attorno al testo (`paintOrder: stroke`): si
             // legge anche sopra la terra e i confini.
             const halo = {

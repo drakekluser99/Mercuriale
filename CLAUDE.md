@@ -1779,9 +1779,9 @@ sezione). Resta aperto:
     bloccato**: la verifica si fa dal PC con lo script sotto.
   - **Passaggi seguiti** (`CHOKEPOINTS` in `src/lib/fetchers/portwatch.ts`):
     `hormuz` = portid `chokepoint6` / portname "Strait of Hormuz";
-    `bab_el_mandeb` = `chokepoint4` / "Bab el-Mandeb Strait". Suez
-    (`chokepoint1`, "Suez Canal") esiste nella fonte ma non si salva:
-    aggiungerlo è una riga in `CHOKEPOINTS`. Filtro con `=` sul nome esatto
+    `bab_el_mandeb` = `chokepoint4` / "Bab el-Mandeb Strait"; dal 24/9
+    anche `suez` = `chokepoint1` / "Suez Canal" (vedi la voce Suez sotto
+    "STATO"). Filtro con `=` sul nome esatto
     (non `LIKE`) e controllo incrociato del `portid`.
   - **Tabella `chokepoint_transits`** (migrazione `0013`): `chokepoint`,
     `recorded_at` (timestamp a mezzanotte UTC, non `date`: coerenza con le
@@ -1900,9 +1900,38 @@ sezione). Resta aperto:
       PortWatch "Data & Methodology" dal browser; dal cloud il sito è
       bloccato). Confermata quella, si mostra la capacità nelle schede
       (`capacityReading` è pronto) e si aggiorna il paragrafo "La capacità
-      stimata" in `ShippingMethodology.tsx`. Aggiungere Suez è una riga in
-      `CHOKEPOINTS` più baseline, coordinate, nomi brevi e posizione
-      dell'etichetta sulla mappa.
+      stimata" in `ShippingMethodology.tsx`.
+    - **Suez — FATTO (24 set 2026, sera), in `main` con la PR
+      drakekluser99/Mercuriale#20 (Preview verificata da Yuri).**
+      - **Dati**: `suez` in `CHOKEPOINTS` (`chokepoint1`, "Suez Canal").
+        Backfill fatto da Yuri: 2.820 righe dal 2019-01-01 al 2026-09-20,
+        calendario continuo, nessun giorno con capacità 0.
+      - **Normale**: PIATTA, 23/12/2022 – 22/12/2023, **73,98**; soglia di
+        "ridotto" **−7,7%** (p5 su 359 finestre). Rottura **23/12/2023**,
+        una settimana dopo Bab el-Mandeb (dal 16 al 22/12 ancora 69-91). Il
+        candidato provvisorio con le date di Bab el-Mandeb dava 73,81 e
+        −7,5%: spostato per applicare la stessa regola ("l'anno che precede
+        la rottura DEL passaggio"). Motivazioni nel commento di
+        `CHOKEPOINT_BASELINES`. Esito: periodo 342 normale / 17 ridotto;
+        dopo la rottura 942 fortemente ridotto / 55 ridotto (5,5%) / 0
+        normale; settimana 14–20/9/2026 −43,4%.
+      - **Limite dichiarato in metodologia, soglia NON cambiata**: dal 2024
+        Suez sta attorno a −46% (p95 dopo la rottura −39,8%), quindi circa
+        una settimana su venti è "ridotto" invece di "fortemente ridotto".
+        La soglia comune −40% resta (decisione di Yuri).
+      - **UI**: nomi "Canale di Suez" / "Suez"; mappa con `COORDINATES`
+        [32.3, 30.6] (Ismailia) e etichetta SOPRA. Con tre passaggi
+        l'etichetta di Hormuz è passata a `belowLeft` (sotto, allineata a
+        destra): a sinistra la sua seconda riga finiva sotto il punto di
+        Suez e si leggeva come sua. Schede `lg:grid-cols-3`; pulsanti del
+        grafico con `CHOKEPOINT_SHORT_NAMES` (prima tagliavano "Stretto di "
+        dal nome lungo). Testi aggiornati in pagina, home, metodologia.
+      - `npm run chokepoint:baselines` senza argomenti verifica ora anche
+        Suez (le due baseline piatte sono un ciclo unico); la modalità
+        `--candidate` resta per il prossimo passaggio da aggiungere.
+      - Il backfill di Suez è stato fatto dal branch, prima del merge:
+        per questo le sue righe fino al 20/9 non hanno `fetch_run_id`. Il
+        cron lo salva dal primo run dopo il merge.
     - **Decisioni già prese da Yuri, da NON ridiscutere**: baseline
       (Hormuz stagionale variante B, Bab el-Mandeb piatta), tre stati con
       nome e colori neutro / ocra / ruggine, soglie p5 per passaggio e

@@ -16,8 +16,9 @@ import { isAuthorizedCronRequest } from "@/lib/cronAuth";
  * script di verifica `npm run inspect:portwatch -- --save`.
  */
 
-// Due richieste JSON da 60 righe l'una: pochi secondi bastano. 10 come le
-// altre fonti JSON (EIA, Alpha Vantage).
+// Una richiesta JSON da 60 righe per passaggio (tre dal 24/9, con Suez;
+// con due il run durava 1,5 s): pochi secondi bastano. 10 come le altre
+// fonti JSON (EIA, Alpha Vantage).
 export const maxDuration = 10;
 
 export async function GET(request: NextRequest) {

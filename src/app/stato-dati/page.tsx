@@ -41,7 +41,7 @@ const JOB_LABELS: Record<string, string> = {
   "fetch-us-fuel-prices": "Carburanti — Stati Uniti",
   "fetch-mimit-prices": "Carburanti — Italia, per provincia (MIMIT)",
   "fetch-ch-fuel-prices": "Carburanti — Svizzera (BFS, mensile)",
-  "fetch-chokepoint-transits": "Traffico marittimo — Hormuz e Bab el-Mandeb (IMF PortWatch)",
+  "fetch-chokepoint-transits": "Traffico marittimo — Hormuz, Bab el-Mandeb e Suez (IMF PortWatch)",
 };
 
 /**

@@ -255,6 +255,21 @@ export type ChokepointBaseline = BaselineValues & { reducedBelowPct: number };
  * fino al 15/12 valori fra 59 e 95, poi 65, 57, 52... e 31-37 stabili dal
  * 2024. Il 19/11/2023 (59) è un giorno isolato, non l'inizio del calo:
  * prima 84, dopo 72, 87, 84.
+ *
+ * SUEZ — piatta, 23/12/2022 – 22/12/2023 (365 giorni): l'anno che precede
+ * la rottura, stesso criterio di Bab el-Mandeb (aggiunto il 24/9/2026,
+ * periodo scelto con Yuri sulle medie mensili dal 2019). Nessun ciclo
+ * annuale (2019 fra 50 e 57, 2023 fra 70 e 77 senza un inverno basso che
+ * si ripeta), ma una crescita lenta dal 2019 (circa 50) al 2023 (circa
+ * 74): gli anni più vecchi abbasserebbero il riferimento. Rottura il
+ * 23/12/2023, una settimana DOPO Bab el-Mandeb: dal 16 al 22/12 ancora
+ * 69-91, dal 23/12 56, 60, 58, 58, 54 e poi 45-63 a gennaio (il 28/12, 71,
+ * è un giorno isolato dentro il calo). Marzo 2021 ha un giorno a 2 navi,
+ * fuori dal periodo: non incide. Dal 2024 la media a 7 giorni sta attorno
+ * a −46%, poco sotto la soglia comune di −40% (p95 dopo la rottura
+ * −39,8%): circa una settimana su venti risulta "ridotto" invece di
+ * "fortemente ridotto". Accettato e dichiarato in metodologia, invece di
+ * una soglia su misura per Suez.
  */
 export const CHOKEPOINT_BASELINES = {
   hormuz: {
@@ -274,6 +289,14 @@ export const CHOKEPOINT_BASELINES = {
     value: 74.8,
     // 5° percentile nel periodo di riferimento (359 finestre; minimo −13,3%).
     reducedBelowPct: -8.1,
+  },
+  suez: {
+    method: "piatta",
+    period: { from: "2022-12-23", to: "2023-12-22" },
+    breakDate: "2023-12-23",
+    value: 73.98,
+    // 5° percentile nel periodo di riferimento (359 finestre; minimo −13,1%).
+    reducedBelowPct: -7.7,
   },
 } as const satisfies Record<string, ChokepointBaseline>;
 

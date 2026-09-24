@@ -26,12 +26,14 @@ export type ChokepointKey = keyof typeof CHOKEPOINT_BASELINES;
 export const CHOKEPOINT_NAMES: Record<ChokepointKey, string> = {
   hormuz: "Stretto di Hormuz",
   bab_el_mandeb: "Stretto di Bab el-Mandeb",
+  suez: "Canale di Suez",
 };
 
 /** Nomi brevi, per la mappa e la fascia della home. */
 export const CHOKEPOINT_SHORT_NAMES: Record<ChokepointKey, string> = {
   hormuz: "Hormuz",
   bab_el_mandeb: "Bab el-Mandeb",
+  suez: "Suez",
 };
 
 const MONTH_NAMES = [

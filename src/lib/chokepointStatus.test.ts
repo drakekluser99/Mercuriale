@@ -39,6 +39,18 @@ describe("summarizeChokepoint", () => {
     expect(s?.state).toBe("normale");
   });
 
+  it("Suez: baseline piatta e soglia propria (−7,7%)", () => {
+    // 42 navi al giorno, come la settimana 14–20/9/2026: circa −43%.
+    const s = summarizeChokepoint("suez", week("suez", [42, 42, 42, 42, 42, 42, 42]));
+    expect(s?.baseline).toBe(73.98);
+    expect(s?.baselineLabel).toBe("normale");
+    expect(s?.deviationPct).toBeCloseTo(-43.2, 1);
+    expect(s?.state).toBe("fortemente_ridotto");
+    // −7,0% è dentro l'oscillazione normale di Suez, −8,0% no.
+    expect(summarizeChokepoint("suez", week("suez", Array(7).fill(73.98 * 0.93)))?.state).toBe("normale");
+    expect(summarizeChokepoint("suez", week("suez", Array(7).fill(73.98 * 0.92)))?.state).toBe("ridotto");
+  });
+
   it("con un giorno mancante nella finestra non calcola media né stato", () => {
     const rows = week("hormuz", [90, 90, 90, 90, 90, 90, 90]).filter((r) => r.date !== "2026-09-16");
     const s = summarizeChokepoint("hormuz", rows);

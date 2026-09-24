@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { HistoryWindowSelector } from "@/components/HistoryWindowSelector";
 import { HISTORY_WINDOWS, type HistoryWindowKey } from "@/lib/historyWindows";
+import { CHOKEPOINT_SHORT_NAMES } from "@/lib/chokepointStatus";
 import type { ShippingChartSeries } from "@/lib/shippingChart";
 import { formatCommodityPrice, formatDecimal, formatIsoDay } from "@/lib/format";
 
@@ -152,7 +153,7 @@ export function ShippingHistoryChart({
                   : "border-system-border text-system-ink-secondary hover:border-system-accent hover:text-system-accent"
               }`}
             >
-              {s.name.replace("Stretto di ", "")}
+              {CHOKEPOINT_SHORT_NAMES[s.key]}
             </button>
           ))}
         </div>

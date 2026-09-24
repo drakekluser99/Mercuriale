@@ -28,6 +28,7 @@ function SubHeading({ children }: { children: React.ReactNode }) {
 export function ShippingMethodology() {
   const hormuz = CHOKEPOINT_BASELINES.hormuz;
   const bab = CHOKEPOINT_BASELINES.bab_el_mandeb;
+  const suez = CHOKEPOINT_BASELINES.suez;
   const period = (p: { from: string; to: string }) =>
     `dal ${formatIsoDay(p.from)} al ${formatIsoDay(p.to)}`;
 
@@ -35,8 +36,9 @@ export function ShippingMethodology() {
     <div>
       <SubHeading>Cosa si misura</SubHeading>
       <p className={`mt-2 ${text}`}>
-        Il numero di navi che ogni giorno attraversano lo Stretto di Hormuz e
-        lo Stretto di Bab el-Mandeb, di tutte le categorie (portacontainer,
+        Il numero di navi che ogni giorno attraversano lo Stretto di Hormuz,
+        lo Stretto di Bab el-Mandeb e il Canale di Suez, di tutte le
+        categorie (portacontainer,
         rinfuse, petroliere, ro-ro, carico generale). Lo pubblica il Fondo
         Monetario Internazionale con <strong>IMF PortWatch</strong>, che lo
         ricava dai segnali AIS trasmessi dalle navi: è una{" "}
@@ -101,15 +103,25 @@ export function ShippingMethodology() {
           ciclo annuale non c&apos;è, ma il traffico cresceva lentamente dal
           2019: includere gli anni più vecchi abbasserebbe il riferimento.
         </li>
+        <li>
+          <strong>Canale di Suez — un valore unico</strong>,{" "}
+          {formatDecimal(suez.value)} navi al giorno, periodo{" "}
+          {period(suez.period)}: l&apos;anno che precede la rottura, con lo
+          stesso criterio di Bab el-Mandeb. Anche qui nessun ciclo annuale e
+          una crescita lenta, da circa 50 navi al giorno nel 2019 a circa 74
+          nel 2023.
+        </li>
       </ul>
 
       <SubHeading>Le rotture</SubHeading>
       <p className={`mt-2 ${text}`}>
         La data dalla quale il traffico cambia livello e non torna indietro,
         letta nei dati giornalieri: <strong>{formatIsoDay(bab.breakDate)}</strong>{" "}
-        per Bab el-Mandeb, <strong>{formatIsoDay(hormuz.breakDate)}</strong>{" "}
-        per Hormuz. Il sito registra quando il traffico cambia, non ne
-        attribuisce le cause.
+        per Bab el-Mandeb, <strong>{formatIsoDay(suez.breakDate)}</strong>{" "}
+        per Suez (una settimana dopo) e{" "}
+        <strong>{formatIsoDay(hormuz.breakDate)}</strong> per Hormuz. Il
+        sito registra quando il traffico cambia, non ne attribuisce le
+        cause.
       </p>
 
       <SubHeading>Gli stati</SubHeading>
@@ -128,18 +140,23 @@ export function ShippingMethodology() {
         <li>
           <strong>Ridotto</strong> — sotto il 5° percentile del periodo di
           riferimento: {formatPercent(hormuz.reducedBelowPct)} per Hormuz,{" "}
-          {formatPercent(bab.reducedBelowPct)} per Bab el-Mandeb. Le soglie
-          sono diverse perché Hormuz oscilla circa il doppio anche in tempi
-          normali. Circa una settimana normale su venti risulta comunque
+          {formatPercent(bab.reducedBelowPct)} per Bab el-Mandeb,{" "}
+          {formatPercent(suez.reducedBelowPct)} per Suez. Le soglie sono
+          diverse perché Hormuz oscilla circa il doppio degli altri due anche
+          in tempi normali. Circa una settimana normale su venti risulta comunque
           &quot;ridotto&quot;: è un segnale, non un allarme.
         </li>
         <li>
           <strong>Fortemente ridotto</strong> — sotto{" "}
-          {formatPercent(STRONGLY_REDUCED_BELOW_PCT, 0)}, per entrambi: più
+          {formatPercent(STRONGLY_REDUCED_BELOW_PCT, 0)}, per tutti e tre: più
           in basso di qualunque settimana del periodo di riferimento. Non
           {" "}{formatPercent(-50, 0)}: dal 2024 Bab el-Mandeb oscilla attorno a
           quel valore e lo stato cambierebbe di continuo senza che la
-          situazione cambi.
+          situazione cambi. Un limite dichiarato: dal 2024 Suez sta attorno
+          a −46%, poco sotto la soglia, e circa una settimana su venti
+          risulta &quot;ridotto&quot; invece di &quot;fortemente
+          ridotto&quot;. Quella settimana il traffico è stato davvero meno
+          lontano dal normale: la soglia resta la stessa per tutti.
         </li>
       </ul>
       <p className={`mt-2 ${text}`}>
