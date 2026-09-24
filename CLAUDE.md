@@ -2187,9 +2187,19 @@ sezione). Resta aperto:
   quei tipi li genera solo Next (`next dev`/`build`/`typegen`); sul PC
   non si vede perché `npm run dev` li ha già generati. La vecchia CI
   (Node 20, senza typegen né test) sarebbe fallita lì. Nessun segreto
-  necessario: i test sono solo su funzioni pure. È una spia, non un
-  blocco: per impedire il merge di una PR rossa servirebbe una regola di
-  protezione di `main` (Settings → Branches), non attivata.
+  necessario: i test sono solo su funzioni pure.
+  **Ruleset "Proteggi main" attivo (24 set 2026, creato da Yuri)**, in
+  Settings → Rules → Rulesets, target = branch predefinito: blocca
+  cancellazione e force push e **richiede il check `check` (GitHub
+  Actions) verde** prima che `main` si aggiorni — una PR rossa non si
+  fonde, nemmeno da Claude. Bypass: "Repository admin, Always allow", così
+  Yuri può ancora fare commit diretti su `main` dal sito spuntando "Bypass
+  rules". Volutamente SPENTI: "Require a pull request" (con approvazioni
+  obbligatorie Yuri si bloccherebbe da solo: GitHub non fa approvare le
+  proprie PR) e "Require branches to be up to date" (costringerebbe a
+  riaggiornare ogni PR aperta a ogni avanzamento di `main`). Se si rinomina
+  il job in `ci.yml`, va aggiornato anche il nome del check nel ruleset,
+  altrimenti ogni PR resta in attesa di un controllo che non arriva più.
 
 ## Skill: vercel-react-best-practices
 
