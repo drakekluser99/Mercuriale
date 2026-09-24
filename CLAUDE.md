@@ -950,6 +950,7 @@ ISTAT" e "Sezione inflazione".
 | #27 | Inflazione: schema, fetcher ISTAT, raccordo, cron, backfill, pagina `/inflazione` (06), pagine secondarie nell'header |
 | #28 | Inflazione: grafico dal 2016, anteprima in home, metodologia |
 | #29 | Controllo grafico PC/telefono: barra, numero del giorno, tabella province, formati del grafico (voce "Controllo grafico" in fondo) |
+| #30 | Tabelle di Europa, calcolatore e materie prime leggibili su telefono |
 
 - **Stato**: traffico marittimo e sezione inflazione COMPLETI, tutto in
   `main` e in produzione: dati ISTAT (512 righe dal 2016), cron
@@ -2614,7 +2615,8 @@ sezione). Resta aperto:
     `shortUnit`. Prezzo e "€" su una riga in `FuelPriceTable`.
   - "Europa (media UE)" → "Europa (media dei 27)" nel calcolatore e nelle
     serie del grafico carburanti (è la media semplice).
-  **Tabelle su telefono — FATTO subito dopo (24 set 2026, sera).** Le
+  **Tabelle su telefono — FATTO subito dopo (24 set 2026, sera, PR
+  drakekluser99/Mercuriale#30).** Le
   tabelle di `/europa`, `/calcolatore` e `/materie-prime` scorrevano di
   lato e nascondevano una colonna (la data; nel calcolatore gli Stati
   Uniti). Sotto `sm` ora:
