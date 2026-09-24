@@ -12,7 +12,7 @@
 
 export type SourceKind = "primaria" | "aggregata";
 
-export type SourceId = "eu-commission" | "eia" | "alpha-vantage" | "mimit" | "adm" | "eurostat" | "bfs" | "ecb" | "imf-portwatch";
+export type SourceId = "eu-commission" | "eia" | "alpha-vantage" | "mimit" | "adm" | "eurostat" | "bfs" | "ecb" | "imf-portwatch" | "istat";
 
 type SourceMeta = {
   /** Nome per esteso, usato nel testo delle note "Fonte:". */
@@ -71,6 +71,12 @@ export const SOURCES: Record<SourceId, SourceMeta> = {
   // passaggi: lo dice la metodologia, non il badge.
   "imf-portwatch": {
     label: "IMF PortWatch (Fondo Monetario Internazionale)",
+    kind: "primaria",
+  },
+  // Inflazione (24 set 2026): indice dei prezzi al consumo NIC. Istituto
+  // nazionale di statistica, fonte primaria per legge.
+  istat: {
+    label: "ISTAT (Istituto Nazionale di Statistica)",
     kind: "primaria",
   },
 };

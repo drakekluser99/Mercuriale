@@ -161,3 +161,19 @@ export function formatIsoDay(day: string): string {
   const [y, m, d] = day.split("-");
   return `${d}/${m}/${y}`;
 }
+
+const MONTH_NAMES_IT = [
+  "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno",
+  "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre",
+];
+
+/**
+ * Un mese "AAAA-MM" in parole ("agosto 2026"), per i dati mensili (ISTAT).
+ * Come `formatIsoDay`, senza passare da `Date`: un mese è un'etichetta,
+ * non un istante, e nessun fuso orario deve poterlo spostare.
+ */
+export function formatMonthYear(month: string): string {
+  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(month);
+  if (!m) return month;
+  return `${MONTH_NAMES_IT[Number(m[2]) - 1]} ${m[1]}`;
+}

@@ -24,6 +24,7 @@ import {
   BarChart3,
   MapPin,
   Ship,
+  Percent,
   LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
@@ -36,6 +37,7 @@ const ICONS: Record<string, LucideIcon> = {
   "/materie-prime": BarChart3,
   "/italia": MapPin,
   "/traffico-marittimo": Ship,
+  "/inflazione": Percent,
 };
 
 const ITEMS = [
@@ -78,7 +80,7 @@ export function SectionNav() {
               href={href}
               // `aria-current="page"`: per uno screen reader, "sei qui".
               aria-current={isActive ? "page" : undefined}
-              className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-l border-l-system-chrome-border px-4 py-3 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors first:border-l-0 hover:bg-white/[0.03] hover:text-system-chrome-accent sm:px-5 ${
+              className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-l border-l-system-chrome-border px-4 py-3 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors first:border-l-0 hover:bg-white/[0.03] hover:text-system-chrome-accent sm:px-5 lg:px-4 ${
                 isActive
                   ? "border-b-system-chrome-accent bg-white/[0.05] text-system-chrome-accent"
                   : "border-b-transparent text-system-chrome-ink-muted"
@@ -94,15 +96,15 @@ export function SectionNav() {
             </Link>
           );
         })}
-        {/* Pagine secondarie solo da `sm`: su mobile sono nel menu.
-            Padding più stretto delle sezioni: con nove voci in riga,
-            a 1400 px l'ultima ("Stato dei dati") finiva fuori schermo. */}
+        {/* Pagine secondarie solo fra `sm` e `lg`: sotto `sm` sono nel
+            menu, da `lg` nell'header (HeaderPageLinks, 24 set 2026 — con
+            sei sezioni qui finivano fuori schermo a 1400 px). */}
         {PAGE_LINKS.map(({ href, label }, i) => (
           <Link
             key={href}
             href={href}
             aria-current={pathname === href ? "page" : undefined}
-            className={`hidden shrink-0 items-center whitespace-nowrap border-l border-system-chrome-border px-3 py-3 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors hover:text-system-chrome-accent sm:flex ${
+            className={`hidden shrink-0 items-center whitespace-nowrap border-l border-system-chrome-border px-3 py-3 font-mono text-[11px] uppercase tracking-[0.1em] transition-colors hover:text-system-chrome-accent sm:flex lg:hidden ${
               pathname === href ? "text-system-chrome-accent" : "text-system-chrome-ink-muted"
             } ${i === 0 ? "sm:ml-auto" : ""}`}
           >

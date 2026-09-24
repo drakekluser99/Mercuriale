@@ -39,6 +39,10 @@
     {
       "path": "/api/cron/fetch-chokepoint-transits",
       "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/cron/fetch-istat-nic",
+      "schedule": "0 11 * * *"
     }
   ]
 }

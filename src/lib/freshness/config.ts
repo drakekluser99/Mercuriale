@@ -70,4 +70,12 @@ export const FRESHNESS_CONFIG: Record<string, FreshnessConfig> = {
     graceDays: 4,
     label: 'IMF PortWatch (giornaliero, pubblicato ogni settimana)',
   },
+
+  // ISTAT, indice NIC (inflazione, 24 set 2026): dato MENSILE datato al
+  // primo del mese, pubblicato in via definitiva verso metà del mese dopo
+  // (agosto 2026 uscito il 16/9). Il mese successivo esce un mese più
+  // tardi: subito prima, il dato più recente ha circa 76 giorni (1/8 →
+  // 16/10). 77 sono quindi ancora "aggiornato"; 10 di tolleranza per un
+  // calendario che slitta (es. le uscite di agosto).
+  istat_nic: { expectedIntervalDays: 77, graceDays: 10, label: 'ISTAT NIC (mensile)' },
 };

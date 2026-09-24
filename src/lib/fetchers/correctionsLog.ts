@@ -24,6 +24,20 @@ export interface CorrectionCandidate {
 }
 
 /**
+ * La regola di "cosa è una correzione", in un posto solo: un valore già
+ * salvato (non null) che arriva diverso oltre la tolleranza. Esportata
+ * perché chi salva può anche voler CONTARE le correzioni (es. il NIC),
+ * senza ricopiare la soglia.
+ */
+export function isCorrection(
+  candidate: Pick<CorrectionCandidate, "oldValue" | "newValue">
+): boolean {
+  const { oldValue, newValue } = candidate;
+  if (oldValue === null || newValue === null) return false;
+  return Math.abs(oldValue - newValue) >= EPSILON;
+}
+
+/**
  * Confronta vecchio e nuovo valore per lo stesso campo della stessa riga e,
  * se sono davvero diversi, scrive una riga in `data_corrections`.
  *
@@ -42,9 +56,9 @@ export interface CorrectionCandidate {
 export async function logCorrectionIfChanged(
   candidate: CorrectionCandidate
 ): Promise<void> {
+  if (!isCorrection(candidate)) return;
   const { oldValue, newValue } = candidate;
   if (oldValue === null || newValue === null) return;
-  if (Math.abs(oldValue - newValue) < EPSILON) return;
 
   try {
     await db.insert(dataCorrections).values({

@@ -56,6 +56,12 @@ export const SECTION_PAGES: readonly SectionPage[] = [
     title: "Traffico marittimo nei passaggi obbligati",
     number: "05",
   },
+  {
+    href: "/inflazione",
+    label: "Inflazione",
+    title: "Inflazione in Italia",
+    number: "06",
+  },
 ];
 
 /** Pagine secondarie (metodo, glossario...). */

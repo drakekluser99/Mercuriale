@@ -504,3 +504,66 @@ export const chokepointTransits = pgTable(
     ).on(table.chokepoint, table.recordedAt),
   })
 );
+
+/**
+ * CONSUMER_PRICE_INDEX
+ * Inflazione in Italia (24 set 2026): indice dei prezzi al consumo per
+ * l'intera collettività (NIC) di ISTAT, mensile, dataset
+ * `167_745_DF_DCSP_NIC1B2025_6` ("tutte le basi"). Quattro serie: indice
+ * generale (`00`), alimentari e bevande analcoliche (`01`), "carrello della
+ * spesa" (`FOODHPC`) e beni energetici (`ENRGY`).
+ *
+ * Tabella a sé e non un'altra riga in `price_history`: non è un prezzo ma
+ * un numero indice, senza valuta né unità, e mescolarlo con le materie
+ * prime lo farebbe entrare in "Maggiori variazioni".
+ *
+ * L'indice si salva NELLA BASE IN CUI ISTAT LO PUBBLICA (2015=100 fino a
+ * dicembre 2025, 2025=100 da gennaio 2026), e il raccordo si applica in
+ * lettura. Stesso principio di `swiss_fuel_prices`, che salva i franchi e
+ * il cambio e calcola l'euro dopo: il dato in tabella resta confrontabile
+ * riga per riga con la fonte, e se un coefficiente di raccordo venisse
+ * corretto non ci sarebbe niente da riscrivere.
+ */
+export const consumerPriceIndex = pgTable(
+  "consumer_price_index",
+  {
+    id: serial("id").primaryKey(),
+    // Il codice ECOICOP della fonte ("00", "01", "FOODHPC", "ENRGY"), non
+    // una chiave inventata: è lo standard europeo, stabile da un cambio di
+    // base all'altro, e con lo stesso codice si ritrova la serie su
+    // IstatData.
+    category: varchar("category", { length: 16 }).notNull(),
+    // Primo giorno del mese a mezzanotte UTC (la fonte dà "AAAA-MM"), come
+    // `swiss_fuel_prices`.
+    recordedAt: timestamp("recorded_at").notNull(),
+    // Anno base dell'indice (2015 o 2025): dice in quale "scala" è
+    // espresso `index_value`. Un intero leggibile e non il codice
+    // DATA_TYPE della fonte ("39", "85"), che da solo non dice niente;
+    // la corrispondenza sta nel fetcher.
+    baseYear: integer("base_year").notNull(),
+    // Numero indice (misura 4), come pubblicato: un decimale nella fonte.
+    indexValue: numeric("index_value", { precision: 10, scale: 3 }).notNull(),
+    // Variazione % sullo stesso mese dell'anno prima (misura 7), già
+    // calcolata da ISTAT: è il numero dell'inflazione nei comunicati, e
+    // non richiede raccordi fra basi. Nullable: se la fonte non la dà per
+    // un mese resta vuota, non si ricava dall'indice.
+    yoyChangePct: numeric("yoy_change_pct", { precision: 6, scale: 2 }),
+    retrievedAt: timestamp("retrieved_at"),
+    // Il run che ha scritto la riga per ultimo; nullable per la regola di
+    // fetchRunLog.ts (il logging non fa mai fallire il fetch), come in
+    // `chokepoint_transits`.
+    fetchRunId: integer("fetch_run_id").references(() => fetchRuns.id),
+    source: varchar("source", { length: 64 }).notNull().default("istat_nic"),
+  },
+  (table) => ({
+    // Bersaglio dell'upsert: un solo valore per (serie, mese). Le basi non
+    // si sovrappongono (la 2015 finisce a dicembre 2025, la 2025 comincia a
+    // gennaio 2026, verificato con la query 9 del 24/9), quindi la base NON
+    // fa parte della chiave: se un giorno ISTAT pubblicasse lo stesso mese
+    // in due basi, il conflitto farebbe emergere il problema invece di
+    // salvare due valori per lo stesso mese.
+    categoryRecordedUnique: uniqueIndex(
+      "consumer_price_index_category_recorded_at_unique"
+    ).on(table.category, table.recordedAt),
+  })
+);

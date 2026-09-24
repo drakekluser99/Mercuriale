@@ -9,7 +9,14 @@ import {
   type DataCorrectionRow,
 } from "@/lib/db/queries";
 import { computeFreshness, getFreshnessConfig } from "@/lib/freshness/compute";
-import { formatCommodityPrice, formatFuelPrice, formatDate, formatDateTime } from "@/lib/format";
+import {
+  formatCommodityPrice,
+  formatFuelPrice,
+  formatDate,
+  formatDateTime,
+  formatDecimal,
+  formatPercent,
+} from "@/lib/format";
 
 export const metadata = {
   title: "Stato dei dati — Mercuriale",
@@ -42,6 +49,7 @@ const JOB_LABELS: Record<string, string> = {
   "fetch-mimit-prices": "Carburanti — Italia, per provincia (MIMIT)",
   "fetch-ch-fuel-prices": "Carburanti — Svizzera (BFS, mensile)",
   "fetch-chokepoint-transits": "Traffico marittimo — Hormuz, Bab el-Mandeb e Suez (IMF PortWatch)",
+  "fetch-istat-nic": "Inflazione — prezzi al consumo NIC (ISTAT, mensile)",
 };
 
 /**
@@ -62,12 +70,14 @@ const JOB_LABELS: Record<string, string> = {
 // `bfs_lik` (Svizzera, mensile) aggiunto il 15 set 2026, stessa logica.
 // `imf_portwatch` (traffico marittimo) aggiunto il 24 set 2026: un job,
 // una cadenza per tutta la fonte (vedi FRESHNESS_CONFIG).
+// `istat_nic` (inflazione, mensile) aggiunto il 24 set 2026, stessa logica.
 const SOURCE_LEVEL_FRESHNESS = new Set([
   "eu_weekly_oil_bulletin",
   "eia_us",
   "mimit",
   "bfs_lik",
   "imf_portwatch",
+  "istat_nic",
 ]);
 
 /** Quante correzioni mostrare — vedi getRecentCorrections in queries.ts,
@@ -79,6 +89,8 @@ const FIELD_LABELS: Record<string, string> = {
   price_net: "prezzo netto",
   excise_eur: "accisa",
   vat_rate_percent: "aliquota IVA",
+  index_value: "indice",
+  yoy_change_pct: "variazione annua",
 };
 
 export default async function StatoDati() {
@@ -418,6 +430,11 @@ function formatCorrectionValue(
       minimumFractionDigits: 1,
       maximumFractionDigits: 3,
     }).format(value)}%`;
+  }
+  // Inflazione (NIC, 24 set 2026): un numero indice, senza unità, e una
+  // variazione percentuale col segno. Né l'uno né l'altra sono un prezzo.
+  if (tableName === "consumer_price_index") {
+    return field === "yoy_change_pct" ? formatPercent(value) : formatDecimal(value, 1);
   }
   return tableName === "retail_fuel_prices"
     ? formatFuelPrice(value)
