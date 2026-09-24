@@ -521,7 +521,9 @@ export default function EuropeFuelMap({ prices, euAverage, euWeighted }: Props) 
               />
             )}
           </svg>
-          <div className="mt-1 flex justify-between font-mono text-[11px] text-system-ink-muted">
+          {/* Su telefono "media dei 27" va sopra il suo valore: in una
+              riga sola i tre gruppi finivano attaccati l'uno all'altro. */}
+          <div className="mt-1 flex justify-between gap-2 font-mono text-[11px] text-system-ink-muted">
             <span className="tabular-nums">
               {activeMeasure.format(stats.min)} {activeMeasure.unit}
             </span>
@@ -530,7 +532,7 @@ export default function EuropeFuelMap({ prices, euAverage, euWeighted }: Props) 
                 ponderata sui consumi (mostrata subito sotto). Dire
                 quale si sta guardando è lo stesso principio delle note
                 "Fonte:" sotto ogni sezione. */}
-            <span className="uppercase tracking-wider">
+            <span className="flex flex-col items-center uppercase tracking-wider sm:block">
               media dei 27{" "}
               <span className="tabular-nums text-system-ink">
                 {activeMeasure.format(average)} {activeMeasure.unit}

@@ -26,6 +26,10 @@ export function SummaryBand({
   figure: AnnualFigure;
   euRunAt: Date | null;
 }) {
+  // "26,7 miliardi di €" → "26,7" + "miliardi di €"; "57%" resta intero.
+  const [figureHead, ...rest] = formatFigureValue(figure.value).split(" ");
+  const figureTail = rest.join(" ");
+
   return (
         <div className="mb-12 grid gap-x-8 gap-y-12 lg:grid-cols-3">
         {narratives.length > 0 && (
@@ -161,8 +165,13 @@ export function SummaryBand({
               desktop): ora il numero sta in alto e lo spazio sotto lo
               riempiono le altre cifre della raccolta. */}
           <div className="mt-4 flex flex-1 flex-col rounded-lg border-t-4 border-x border-b border-system-border border-t-system-mark bg-system-surface p-6">
-            <p className="font-mono text-3xl font-semibold tabular-nums text-system-ink sm:text-4xl lg:text-5xl">
-              {formatFigureValue(figure.value)}
+            {/* Cifra grande e unità più piccola sulla stessa linea di base,
+                come nella fascia in alto ("98,97 $/barile"). Tutto alla
+                stessa dimensione, nella colonna stretta di `lg` andava a
+                capo lasciando "€" da solo sull'ultima riga. */}
+            <p className="flex flex-wrap items-baseline gap-x-2 font-mono font-semibold tabular-nums text-system-ink">
+              <span className="text-3xl sm:text-4xl lg:text-5xl">{figureHead}</span>
+              {figureTail && <span className="text-lg sm:text-xl">{figureTail}</span>}
             </p>
             <p className="mt-2 text-sm leading-relaxed text-system-ink-secondary">
               {figure.headline}

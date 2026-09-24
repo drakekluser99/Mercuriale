@@ -233,7 +233,7 @@ export function FuelPriceTable({
                       {f.fuelType === "petrol" ? "Benzina" : "Diesel"}
                     </td>
                     <td
-                      className="px-4 py-3 text-right font-mono tabular-nums"
+                      className="whitespace-nowrap px-4 py-3 text-right font-mono tabular-nums"
                       title={`Valore grezzo della fonte: ${f.price} ${f.currency}/litro`}
                     >
                       {formatFuelPrice(parseFloat(f.price))}{" "}
