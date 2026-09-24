@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatMonthYear } from "./format";
+import { formatAtMonth, formatMonthYear } from "./format";
 import { summarizeInflation, type NicRow } from "./inflation";
 
 // Valori veri (query 9 del 24/9/2026) più un gennaio 2016 plausibile.
@@ -43,5 +43,14 @@ describe("formatMonthYear", () => {
     expect(formatMonthYear("2026-08")).toBe("agosto 2026");
     expect(formatMonthYear("2016-01")).toBe("gennaio 2016");
     expect(formatMonthYear("2025-12")).toBe("dicembre 2025");
+  });
+});
+
+describe("formatAtMonth", () => {
+  it("mette la d eufonica solo davanti ad agosto e aprile", () => {
+    expect(formatAtMonth("2026-08")).toBe("ad agosto 2026");
+    expect(formatAtMonth("2026-04")).toBe("ad aprile 2026");
+    expect(formatAtMonth("2026-09")).toBe("a settembre 2026");
+    expect(formatAtMonth("2026-10")).toBe("a ottobre 2026");
   });
 });

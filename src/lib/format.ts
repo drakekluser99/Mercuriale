@@ -177,3 +177,14 @@ export function formatMonthYear(month: string): string {
   if (!m) return month;
   return `${MONTH_NAMES_IT[Number(m[2]) - 1]} ${m[1]}`;
 }
+
+/**
+ * "a" + mese in parole, con la d eufonica davanti alla stessa vocale:
+ * "ad agosto 2026", "ad aprile 2026", ma "a settembre 2026", "a ottobre
+ * 2026" (l'uso corrente la mette solo davanti a "a"). Scritto "a agosto"
+ * nella prima versione della pagina /inflazione, corretto il 24/9.
+ */
+export function formatAtMonth(month: string): string {
+  const words = formatMonthYear(month);
+  return words.startsWith("a") ? `ad ${words}` : `a ${words}`;
+}

@@ -1150,7 +1150,16 @@ ISTAT".
   `HistoryWindowSelector` ora vuole `windows` esplicito (generico sulla
   chiave): i due grafici esistenti passano `HISTORY_WINDOWS`.
   Screenshot con dati FINTI (forme inventate) a 1400 e 400 px.
-  Prossimo: anteprima in home, sezione di metodologia.
+  **UI, passo 3 — home (24/9, branch)**: sesta `SectionPreview`
+  (variazione annua del generale, ruggine/verde col segno; frase con
+  energetici e carrello). Con sei anteprime la griglia è tre righe da
+  due: il traffico marittimo NON ha più `md:col-span-2`. ISTAT
+  nell'intro della home; "Fonti in linea" conta anche `istat_nic`
+  (`loadSummary` legge `loadInflation`). NESSUNA cella nuova nella
+  fascia (decisione del 24/9). Nuovo `formatAtMonth` in format.ts: "ad
+  agosto", "ad aprile", "a settembre" — la prima versione scriveva "a
+  agosto" in home, nella cifra chiave e nelle schede.
+  Prossimo: sezione di metodologia (raccordo, coefficienti, limiti).
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.

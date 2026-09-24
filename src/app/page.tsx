@@ -8,11 +8,12 @@ import {
   loadCalculator,
   loadCommodities,
   loadFuel,
+  loadInflation,
   loadItaly,
   loadShipping,
   loadSummary,
 } from "@/lib/dashboard";
-import { formatDecimal, formatFuelPrice, formatPercent } from "@/lib/format";
+import { formatAtMonth, formatDecimal, formatFuelPrice, formatPercent } from "@/lib/format";
 import { sectionPage } from "@/lib/siteNav";
 
 export const dynamic = "force-dynamic";
@@ -26,21 +27,22 @@ export const dynamic = "force-dynamic";
  * - qui restano la fascia dei valori, la sintesi della settimana e una
  *   cifra chiave per ogni sezione, con il link alla sua pagina;
  * - il dettaglio (mappe, tabelle, grafici, calcolatore) vive in /europa,
- *   /calcolatore, /materie-prime, /italia e /traffico-marittimo (elenco in
- *   src/lib/siteNav.ts).
+ *   /calcolatore, /materie-prime, /italia, /traffico-marittimo e
+ *   /inflazione (elenco in src/lib/siteNav.ts).
  *
  * I dati arrivano da src/lib/dashboard.ts, lo stesso modulo che usano le
  * pagine di sezione: i numeri in anteprima sono per costruzione gli stessi
  * che si trovano aprendo la pagina.
  */
 export default async function Home() {
-  const [summary, fuel, commodities, italy, calc, shipping] = await Promise.all([
+  const [summary, fuel, commodities, italy, calc, shipping, inflation] = await Promise.all([
     loadSummary(),
     loadFuel(),
     loadCommodities(),
     loadItaly(),
     loadCalculator(),
     loadShipping(),
+    loadInflation(),
   ]);
   const now = getNow();
 
@@ -49,6 +51,10 @@ export default async function Home() {
   const materiePrime = sectionPage("/materie-prime");
   const italia = sectionPage("/italia");
   const traffico = sectionPage("/traffico-marittimo");
+  const inflazione = sectionPage("/inflazione");
+  const infl = inflation.headline;
+  const energy = inflation.series.find((s) => s.code === "ENRGY");
+  const basket = inflation.series.find((s) => s.code === "FOODHPC");
   const ship = shipping.headline;
   const { italyGap, countrySpread } = fuel;
   const mover = commodities.topMover;
@@ -56,7 +62,7 @@ export default async function Home() {
   return (
     <PageShell
       title="Prezzi di materie prime e carburanti"
-      intro="Dati raccolti da fonti pubbliche — Commissione Europea, EIA, Ministero delle Imprese, Alpha Vantage, IMF PortWatch — aggiornati alla cadenza di ciascuna fonte, con fonte, data e limiti dichiarati."
+      intro="Dati raccolti da fonti pubbliche — Commissione Europea, EIA, Ministero delle Imprese, ISTAT, Alpha Vantage, IMF PortWatch — aggiornati alla cadenza di ciascuna fonte, con fonte, data e limiti dichiarati."
       consultedOn={now}
       backdropPoints={summary.heroSeries}
       headerExtra={summary.lastUpdated && <TickerBand stats={summary.headerStats} />}
@@ -127,22 +133,43 @@ export default async function Home() {
               ? `Di differenza sulla benzina self fra ${italy.spread.highest.provinceName} e ${italy.spread.lowest.provinceName}. Mappa e classifica delle 107 province.`
               : "Mappa e classifica delle 107 province italiane."}
           </SectionPreview>
-          {/* Quinta anteprima: su due colonne resterebbe sola a metà riga,
-              quindi occupa tutta la larghezza. */}
-          <div className="md:col-span-2">
-            <SectionPreview
-              href={traffico.href}
-              number={traffico.number}
-              title={traffico.label}
-              value={
-                ship && ship.deviationPct !== null ? formatPercent(ship.deviationPct, 0) : null
-              }
-            >
-              {ship && ship.mean7 !== null
-                ? `${ship.name}: ${formatDecimal(ship.mean7)} navi al giorno negli ultimi 7 giorni, contro le ${formatDecimal(ship.baseline)} del ${ship.baselineLabel}. Mappa, schede e grafico con il Brent per Hormuz, Bab el-Mandeb e Suez.`
-                : "Navi in transito a Hormuz, Bab el-Mandeb e Suez: mappa, schede e grafico con il Brent."}
-            </SectionPreview>
-          </div>
+          {/* Sei anteprime: tre righe da due. Il traffico marittimo non
+              occupa più tutta la riga, come quando era la quinta e sola. */}
+          <SectionPreview
+            href={traffico.href}
+            number={traffico.number}
+            title={traffico.label}
+            value={
+              ship && ship.deviationPct !== null ? formatPercent(ship.deviationPct, 0) : null
+            }
+          >
+            {ship && ship.mean7 !== null
+              ? `${ship.name}: ${formatDecimal(ship.mean7)} navi al giorno negli ultimi 7 giorni, contro le ${formatDecimal(ship.baseline)} del ${ship.baselineLabel}. Mappa, schede e grafico con il Brent per Hormuz, Bab el-Mandeb e Suez.`
+              : "Navi in transito a Hormuz, Bab el-Mandeb e Suez: mappa, schede e grafico con il Brent."}
+          </SectionPreview>
+          <SectionPreview
+            href={inflazione.href}
+            number={inflazione.number}
+            title={inflazione.label}
+            value={infl && infl.yoyChangePct !== null ? formatPercent(infl.yoyChangePct) : null}
+            tone={
+              infl && infl.yoyChangePct !== null
+                ? infl.yoyChangePct > 0
+                  ? "up"
+                  : infl.yoyChangePct < 0
+                    ? "down"
+                    : "neutral"
+                : "neutral"
+            }
+          >
+            {infl && infl.yoyChangePct !== null
+              ? `Prezzi al consumo in Italia ${formatAtMonth(infl.month)} rispetto a un anno prima (ISTAT)${
+                  energy?.yoyChangePct != null && basket?.yoyChangePct != null
+                    ? `; beni energetici ${formatPercent(energy.yoyChangePct)}, carrello della spesa ${formatPercent(basket.yoyChangePct)}`
+                    : ""
+                }. Schede e grafico dal 2016.`
+              : "Prezzi al consumo in Italia, carrello della spesa, alimentari ed energetici: schede e grafico dal 2016."}
+          </SectionPreview>
         </div>
       </section>
     </PageShell>

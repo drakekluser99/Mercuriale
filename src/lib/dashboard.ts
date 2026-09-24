@@ -385,11 +385,12 @@ function shippingStat(headline: Awaited<ReturnType<typeof loadShipping>>["headli
 // ─── Panoramica (home) ──────────────────────────────────────────────────
 
 export const loadSummary = cache(async () => {
-  const [commodities, fuel, narratives, shipping] = await Promise.all([
+  const [commodities, fuel, narratives, shipping, inflation] = await Promise.all([
     loadCommodities(),
     loadFuel(),
     narrativesQ(),
     loadShipping(),
+    loadInflation(),
   ]);
   const now = getNow();
 
@@ -428,6 +429,10 @@ export const loadSummary = cache(async () => {
       "imf_portwatch",
       shipping.chokepoints.some((c) => c.freshness !== "non_aggiornato")
     );
+  }
+  // ISTAT (inflazione, 24 set 2026): una cadenza per tutta la fonte.
+  if (inflation.freshness) {
+    sourceStates.set("istat_nic", inflation.freshness !== "non_aggiornato");
   }
   const sourcesOnline = Array.from(sourceStates.values()).filter(Boolean).length;
   const sourcesTotal = sourceStates.size;
