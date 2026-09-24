@@ -966,9 +966,13 @@ ISTAT".
     coefficiente ufficiale `DF_BULK_…`, non ricalcolato;
   - pagina propria **`/inflazione`, sezione 06**, con anteprima in home;
     NESSUNA cella in più nella fascia (ne ha già sei).
-  Da verificare prima dello schema (query dal PC di Yuri): se `_6` ha
-  anche `FOODHPC`/`ENRGY` nella base 2015 e se la misura `7` esiste nella
-  base 2015 (in quel caso la variazione annua non ha bisogno di raccordi).
+  **Verificato con la query 9 (24/9)**: `_6` ha TUTTE e 4 le serie in
+  entrambe le basi (`39` fino a dic 2025, `85` da gen 2026), con indice
+  (`4`) e variazione annua (`7`) — un solo dataflow basta, niente `_2`.
+  Quindi la **variazione annua non richiede raccordi** (si prende già
+  fatta da ISTAT e si cuce al cambio di base); il coefficiente ufficiale
+  serve SOLO per il grafico dell'indice. Prossimo passo: trovare i
+  coefficienti in `DF_BULK_DCSP_NIC1B2025_TB1…TB3`.
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
@@ -2327,7 +2331,14 @@ sezione). Resta aperto:
   - **Aperto**: significato di `Test=true`; revisioni del dato (coperte
     comunque da `data_corrections` se la fonte ripubblica); fine delle
     basi 1995 e 2010 non verificata.
-  - **Query fatte: 8**, tutte dal PC di Yuri e a minuti di distanza, senza
+  - **Query 9 (24/9)**: `_6`, chiave
+    `M.IT.39+85.4+7.00+01+FOODHPC+ENRGY`, `startPeriod=2025-11` → 16
+    serie su 16. Base 2015 a dic 2025: generale 122,6 (+1,2%), alimentari
+    135,2 (+2,3%), energetici 146,1 (−4,5%), carrello 130,5 (+1,9%). Base
+    2025 da gen 2026, fino ad agosto: stessi valori già noti (+3,3%,
+    +1,2%, +17,1%, +0,9%). Gli aggregati `FOODHPC`/`ENRGY`, che in `_1`
+    non c'erano, in `_6` ci sono.
+  - **Query fatte: 9** (la nona sopra). Le prime 8, tutte dal PC di Yuri e a minuti di distanza, senza
     segnali di blocco: struttura di `_1` (10,2 MB con
     `references=Descendants`), dati di `_1` (12 serie su 18), elenco dei
     dataflow (`/rest/dataflow/IT1?detail=allstubs`, 4.910 dataflow, 2,3
