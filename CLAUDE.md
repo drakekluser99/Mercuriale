@@ -1022,8 +1022,20 @@ ISTAT".
   429 lo dice ("NON riprovare"). `monthToDate` → primo del mese UTC. Test
   in `istatNic.test.ts` sul file VERO della query 9, salvato in
   `src/lib/fetchers/fixtures/istat-nic-2025-11.xml`.
-  Prossimo: salvataggio (upsert + `data_corrections`), raccordo con i
-  coefficienti e il controllo, poi cron e backfill.
+  **Salvataggio — FATTO (24/9, branch)**: `saveNicPoints.ts`. Legge
+  con UNA query le righe già salvate nel periodo, poi `compareWithSaved`
+  (pura, testata) si FERMA se un mese salvato arriva in un'altra base
+  (sempre, anche nel backfill, prima di scrivere) ed elenca le correzioni
+  candidate (`index_value`, `yoy_change_pct`, etichetta `NIC <codice>`).
+  Upsert a blocchi da 500 con `excluded.*`; `yoy_change_pct` e
+  `fetch_run_id` con `coalesce` (una risposta senza variazione non
+  cancella quella salvata; il backfill non cancella l'id del cron).
+  Correzioni scritte solo con `logCorrections: true` (cron, non
+  backfill), DOPO il salvataggio. La soglia di "cosa è una correzione"
+  ora è `isCorrection` in `correctionsLog.ts`, usata anche da
+  `logCorrectionIfChanged`: non ricopiare `0.00005` altrove.
+  Prossimo: raccordo con i coefficienti e il controllo, poi cron e
+  backfill.
 - **Resta aperto, e dipende da Yuri**: rilanciare `npm run
   chokepoint:baselines` circa una volta al mese; dominio personalizzato
   (`SITE_URL`); manutenzione annuale di `/numeri`.
